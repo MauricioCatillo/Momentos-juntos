@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { Home } from './pages/Home';
 import { Story } from './pages/Story';
 import { Daily } from './pages/Daily';
@@ -13,7 +14,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
             <Route index element={<Home />} />
             <Route path="story" element={<Story />} />
             <Route path="daily" element={<Daily />} />

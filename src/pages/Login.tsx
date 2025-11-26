@@ -76,7 +76,7 @@ export const Login: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Tu correo electrónico"
-                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/80 border border-stone-200 text-stone-800 dark:bg-stone-800/80 dark:border-stone-700 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300/50 transition-all"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-300/50 transition-all"
                         />
                     </div>
                     <div className="relative">
@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Tu contraseña"
-                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/80 border border-stone-200 text-stone-800 dark:bg-stone-800/80 dark:border-stone-700 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300/50 transition-all"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-300/50 transition-all"
                         />
                     </div>
 

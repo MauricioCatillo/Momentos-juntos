@@ -38,7 +38,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, setState] = useState<AppState>({
-        user: { id: 'mock-user-id', email: 'test@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() } as User, // Mock user
+        user: null,
         session: null,
         anniversaryDate: '2023-01-01', // Default
         milestones: [],
@@ -68,7 +68,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     useEffect(() => {
         // Check active session
-        /*
         supabase.auth.getSession().then(({ data: { session } }) => {
             setState((prev) => ({ ...prev, session, user: session?.user ?? null }));
         });
@@ -79,9 +78,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setState((prev) => ({ ...prev, session, user: session?.user ?? null }));
         });
-        */
-
-        // Fetch initial data
 
         // Fetch initial data
         const fetchData = async () => {
@@ -107,7 +103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         fetchData();
 
-        // return () => subscription.unsubscribe();
+        return () => subscription.unsubscribe();
     }, [state.session]);
 
     useEffect(() => {
