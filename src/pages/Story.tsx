@@ -319,7 +319,7 @@ export const Story: React.FC = () => {
             {currentFolder && (
                 <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
                     {memories.length === 0 && folders.length === 0 && (
-                        <div className="text-stone-400 italic text-sm pl-4 py-10">
+                        <div className="text-stone-400 dark:text-stone-500 italic text-sm pl-4 py-10">
                             Esta carpeta está vacía. ¡Agrega sub-carpetas o recuerdos!
                         </div>
                     )}
@@ -465,7 +465,7 @@ export const Story: React.FC = () => {
                                     value={newFolderName}
                                     onChange={e => setNewFolderName(e.target.value)}
                                     placeholder="Nombre de la carpeta..."
-                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4 dark:text-stone-100"
+                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4 dark:text-stone-100 dark:placeholder:text-stone-400"
                                 />
                                 <button
                                     type="submit"
@@ -508,7 +508,7 @@ export const Story: React.FC = () => {
                                         required
                                         value={newMemory.title}
                                         onChange={e => setNewMemory({ ...newMemory, title: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100"
+                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100 dark:placeholder:text-stone-400"
                                         placeholder="Ej. Cena de aniversario"
                                     />
                                 </div>
@@ -529,7 +529,7 @@ export const Story: React.FC = () => {
                                     <textarea
                                         value={newMemory.description}
                                         onChange={e => setNewMemory({ ...newMemory, description: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all resize-none h-24 dark:text-stone-100"
+                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all resize-none h-24 dark:text-stone-100 dark:placeholder:text-stone-400"
                                         placeholder="La noche que nos reímos tanto que..."
                                     />
                                 </div>
@@ -542,7 +542,7 @@ export const Story: React.FC = () => {
                                         onClick={() => setUploadMode('file')}
                                         className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${uploadMode === 'file'
                                             ? 'bg-white text-stone-800 shadow-sm'
-                                            : 'text-stone-500 hover:text-stone-700'
+                                            : 'text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'
                                             }`}
                                     >
                                         Subir Archivo
@@ -552,7 +552,7 @@ export const Story: React.FC = () => {
                                         onClick={() => setUploadMode('drive')}
                                         className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${uploadMode === 'drive'
                                             ? 'bg-white text-stone-800 shadow-sm'
-                                            : 'text-stone-500 hover:text-stone-700'
+                                            : 'text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'
                                             }`}
                                     >
                                         Enlace de Drive
@@ -606,7 +606,7 @@ export const Story: React.FC = () => {
                                         </a>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-stone-600 mb-1">Pegar Enlace del Video</label>
+                                            <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Pegar Enlace del Video</label>
                                             <div className="relative">
                                                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
                                                 <input

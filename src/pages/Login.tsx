@@ -60,10 +60,10 @@ export const Login: React.FC = () => {
                     </motion.div>
                 </div>
 
-                <h1 className="text-3xl font-bold text-stone-800 mb-2">
-                    {isLogin ? 'Bienvenido de nuevo' : 'Crear Cuenta'}
+                <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-2">
+                    {isLogin ? 'Bienvenido, mi amor' : 'Crear Cuenta'}
                 </h1>
-                <p className="text-stone-600 mb-8">
+                <p className="text-stone-600 dark:text-stone-400 mb-8">
                     {isLogin ? 'Ingresa a nuestro espacio especial' : 'Comienza nuestra historia digital'}
                 </p>
 
@@ -76,7 +76,7 @@ export const Login: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Tu correo electrónico"
-                            className="w-full pl-12 pr-4 py-4 rounded-xl glass-input text-stone-800 placeholder:text-stone-400 focus:outline-none"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/80 border border-stone-200 text-stone-800 dark:bg-stone-800/80 dark:border-stone-700 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300/50 transition-all"
                         />
                     </div>
                     <div className="relative">
@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Tu contraseña"
-                            className="w-full pl-12 pr-4 py-4 rounded-xl glass-input text-stone-800 placeholder:text-stone-400 focus:outline-none"
+                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/80 border border-stone-200 text-stone-800 dark:bg-stone-800/80 dark:border-stone-700 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300/50 transition-all"
                         />
                     </div>
 
@@ -123,7 +123,7 @@ export const Login: React.FC = () => {
                             setIsLogin(!isLogin);
                             setError(null);
                         }}
-                        className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
+                        className="text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 text-sm font-medium transition-colors"
                     >
                         {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
                     </button>

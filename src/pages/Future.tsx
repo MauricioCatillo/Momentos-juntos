@@ -55,7 +55,7 @@ export const Future: React.FC = () => {
                             value={newItem}
                             onChange={(e) => setNewItem(e.target.value)}
                             placeholder="Agregar nuevo sueño..."
-                            className="w-full px-4 py-3 pr-12 rounded-xl glass-input shadow-sm focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100"
+                            className="w-full px-4 py-3 pr-12 rounded-xl glass-input shadow-sm focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100 dark:placeholder:text-stone-400"
                         />
                         <button
                             type="submit"

@@ -259,7 +259,7 @@ export const Daily: React.FC = () => {
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         placeholder="Escribe algo bonito..."
-                        className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-soft-blush/50 mb-4 h-24 resize-none dark:text-stone-100"
+                        className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-soft-blush/50 mb-4 h-24 resize-none dark:text-stone-100 dark:placeholder:text-stone-400"
                     />
                     <button
                         onClick={handleAddNote}
