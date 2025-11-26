@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Smile } from 'lucide-react';
+import { Calendar, Smile, LogOut, Moon, Sun } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -27,7 +27,7 @@ const BentoCard: React.FC<{
 );
 
 export const Home: React.FC = () => {
-    const { moods, user } = useApp();
+    const { moods, user, logout, theme, toggleTheme } = useApp();
     const lastMood = moods[moods.length - 1]?.mood || 'neutral';
     const [settings, setSettings] = useState<any>({
         countdown: { date: new Date().toISOString(), title: 'Cargando...' },
@@ -39,7 +39,7 @@ export const Home: React.FC = () => {
     useEffect(() => {
         loadSettings();
         // Calculate days together
-        const startDate = new Date('2023-08-15'); // Example start date
+        const startDate = new Date('2022-12-21'); // Start date for 1071 days (as of 2025-11-26)
         const today = new Date();
         setDaysTogether(differenceInDays(today, startDate));
     }, []);
@@ -68,14 +68,30 @@ export const Home: React.FC = () => {
         <div className="p-6 pb-24 space-y-6">
             <header className="flex justify-between items-center mb-2">
                 <div>
-                    <h1 className="text-3xl font-bold text-stone-800 mb-1">
+                    <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-1">
                         Hola, {user?.email?.split('@')[0] || 'Amor'} ❤️
                     </h1>
-                    <p className="text-stone-600">
+                    <p className="text-stone-600 dark:text-stone-400">
                         {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
                     </p>
                 </div>
-                <StreaksWidget count={settings.streaks?.count || 0} />
+                <div className="flex items-center gap-3">
+                    <StreaksWidget count={settings.streaks?.count || 0} />
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 bg-white dark:bg-stone-800 rounded-full text-stone-400 dark:text-stone-300 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-stone-700 transition-colors shadow-sm"
+                        title={theme === 'light' ? 'Modo Oscuro' : 'Modo Claro'}
+                    >
+                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                    </button>
+                    <button
+                        onClick={logout}
+                        className="p-2 bg-white dark:bg-stone-800 rounded-full text-stone-400 dark:text-stone-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-stone-700 transition-colors shadow-sm"
+                        title="Cerrar Sesión"
+                    >
+                        <LogOut size={20} />
+                    </button>
+                </div>
             </header>
 
             <div className="grid grid-cols-2 gap-4">
@@ -90,39 +106,39 @@ export const Home: React.FC = () => {
                 {/* Days Together Card */}
                 <div className="glass-card p-6 rounded-3xl col-span-2 flex items-center justify-between">
                     <div>
-                        <p className="text-sm font-medium text-stone-500 uppercase tracking-wider mb-1">Juntos desde hace</p>
+                        <p className="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Juntos desde hace</p>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-bold text-stone-800">{daysTogether}</span>
-                            <span className="text-stone-600">días</span>
+                            <span className="text-4xl font-bold text-stone-800 dark:text-stone-100">{daysTogether}</span>
+                            <span className="text-stone-600 dark:text-stone-400">días</span>
                         </div>
                     </div>
-                    <div className="w-12 h-12 bg-soft-blush/30 rounded-full flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 bg-soft-blush/30 dark:bg-soft-blush/20 rounded-full flex items-center justify-center text-2xl">
                         💑
                     </div>
                 </div>
 
                 {/* Mood Card */}
-                <BentoCard delay={0.1} className="flex flex-col justify-between bg-gradient-to-br from-white/60 to-rose-50/60">
+                <BentoCard delay={0.1} className="flex flex-col justify-between bg-gradient-to-br from-white/60 to-rose-50/60 dark:from-stone-800/60 dark:to-stone-900/60">
                     <div className="flex justify-between items-start">
-                        <div className="p-2 bg-white/50 rounded-full w-fit backdrop-blur-sm">
-                            <Smile size={20} className="text-stone-600" />
+                        <div className="p-2 bg-white/50 dark:bg-stone-700/50 rounded-full w-fit backdrop-blur-sm">
+                            <Smile size={20} className="text-stone-600 dark:text-stone-300" />
                         </div>
                     </div>
                     <div>
-                        <p className="text-stone-500 text-xs mb-1 font-medium uppercase">Mood Actual</p>
+                        <p className="text-stone-500 dark:text-stone-400 text-xs mb-1 font-medium uppercase">Mood Actual</p>
                         <p className="text-4xl filter drop-shadow-sm">{moodEmoji}</p>
                     </div>
                 </BentoCard>
 
                 {/* Next Date Card */}
                 <div className="glass-card p-6 rounded-3xl col-span-1 flex flex-col justify-between">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-2">
+                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
                         <Calendar size={20} />
                     </div>
                     <div>
-                        <p className="text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">Próxima Cita</p>
-                        <p className="font-bold text-stone-800 leading-tight">Cena en la playa</p>
-                        <p className="text-xs text-stone-500 mt-1">Viernes, 8:00 PM</p>
+                        <p className="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Próxima Cita</p>
+                        <p className="font-bold text-stone-800 dark:text-stone-100 leading-tight">Cena en la playa</p>
+                        <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">Viernes, 8:00 PM</p>
                     </div>
                 </div>
 

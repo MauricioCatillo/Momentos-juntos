@@ -39,7 +39,7 @@ export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title })
             <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4 text-stone-600">
                     <Clock size={18} />
-                    <span className="text-sm font-medium uppercase tracking-wider">{title}</span>
+                    <span className="text-sm font-medium uppercase tracking-wider break-words">{title}</span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 text-center">

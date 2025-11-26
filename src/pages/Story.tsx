@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MapPin, X, Folder, ChevronLeft, Video, Upload, Trash2 } from 'lucide-react';
+import { Plus, X, Folder, ChevronLeft, Video, Upload, Trash2, Pencil, Loader2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { uploadMemory, createFolder, getFolders, getMemories, deleteMemory, deleteFolder } from '../supabaseClient';
+import { uploadMemory, createFolder, getFolders, getMemories, deleteMemory, deleteFolder, updateMemory } from '../supabaseClient';
 
 interface FolderType {
     id: string;
     name: string;
     created_at: string;
+    parent_id?: string;
 }
 
 interface MemoryType {
@@ -17,6 +18,7 @@ interface MemoryType {
     date: string;
     description: string;
     media_url?: string;
+    external_url?: string;
     image?: string;
     media_type?: 'image' | 'video';
     folder_id?: string;
@@ -25,38 +27,45 @@ interface MemoryType {
 export const Story: React.FC = () => {
     // State
     const [folders, setFolders] = useState<FolderType[]>([]);
-    const [currentFolder, setCurrentFolder] = useState<FolderType | null>(null);
+    const [folderPath, setFolderPath] = useState<FolderType[]>([]);
+    const currentFolder = folderPath[folderPath.length - 1] || null;
     const [memories, setMemories] = useState<MemoryType[]>([]);
 
     // Modals
     const [isAddingFolder, setIsAddingFolder] = useState(false);
     const [isAddingMemory, setIsAddingMemory] = useState(false);
+    const [showAddMenu, setShowAddMenu] = useState(false);
+    const [isEditingMemory, setIsEditingMemory] = useState(false);
     const [selectedMemory, setSelectedMemory] = useState<MemoryType | null>(null); // For Lightbox
 
     // Form Data
     const [newFolderName, setNewFolderName] = useState('');
     const [newMemory, setNewMemory] = useState({ title: '', date: new Date().toISOString().split('T')[0], description: '' });
+    const [editMemoryData, setEditMemoryData] = useState({ title: '', date: '', description: '' });
+
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
 
+    // Drive Integration State
+    const [uploadMode, setUploadMode] = useState<'file' | 'drive'>('file');
+    const [driveLink, setDriveLink] = useState('');
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Initial Load
+    // Load data when current folder changes
     useEffect(() => {
-        loadFolders();
-    }, []);
-
-    // Load memories when folder changes
-    useEffect(() => {
+        loadFolders(currentFolder?.id);
         if (currentFolder) {
             loadMemories(currentFolder.id);
+        } else {
+            setMemories([]);
         }
     }, [currentFolder]);
 
-    const loadFolders = async () => {
+    const loadFolders = async (parentId?: string) => {
         try {
-            const data = await getFolders();
+            const data = await getFolders(parentId);
             setFolders(data || []);
         } catch (error) {
             console.error('Error loading folders:', error);
@@ -77,7 +86,7 @@ export const Story: React.FC = () => {
         if (!newFolderName.trim()) return;
 
         try {
-            const folder = await createFolder(newFolderName);
+            const folder = await createFolder(newFolderName, currentFolder?.id);
             setFolders([...folders, folder]);
             setNewFolderName('');
             setIsAddingFolder(false);
@@ -108,16 +117,19 @@ export const Story: React.FC = () => {
 
     const handleCreateMemory = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMemory.title || !selectedFile || !currentFolder) return;
+        if (!newMemory.title || !currentFolder) return;
+        if (uploadMode === 'file' && !selectedFile) return;
+        if (uploadMode === 'drive' && !driveLink) return;
 
         setIsUploading(true);
         try {
             const memory = await uploadMemory(
-                selectedFile,
+                uploadMode === 'file' ? selectedFile : null,
                 newMemory.title,
                 newMemory.description,
                 newMemory.date,
-                currentFolder.id
+                currentFolder.id,
+                uploadMode === 'drive' ? driveLink : undefined
             );
 
             const updatedMemories = [memory, ...memories].sort((a, b) =>
@@ -128,13 +140,24 @@ export const Story: React.FC = () => {
             setNewMemory({ title: '', date: new Date().toISOString().split('T')[0], description: '' });
             setSelectedFile(null);
             setPreviewUrl(null);
+            setDriveLink('');
+            setUploadMode('file');
             setIsAddingMemory(false);
-        } catch (error) {
-            alert('Error al subir el recuerdo. Intenta de nuevo.');
+        } catch (error: any) {
+            alert(error.message || 'Error al subir el recuerdo. Intenta de nuevo.');
             console.error(error);
         } finally {
             setIsUploading(false);
         }
+    };
+
+    const getDriveEmbedUrl = (url: string) => {
+        // Transform .../view to .../preview
+        // Example: https://drive.google.com/file/d/123456789/view?usp=sharing -> https://drive.google.com/file/d/123456789/preview
+        if (url.includes('/view')) {
+            return url.replace('/view', '/preview');
+        }
+        return url;
     };
 
     const handleDeleteMemory = async (memoryId: string) => {
@@ -152,19 +175,46 @@ export const Story: React.FC = () => {
         }
     };
 
+    const openEditModal = (memory: MemoryType) => {
+        setEditMemoryData({
+            title: memory.title,
+            date: memory.date ? memory.date.split('T')[0] : '',
+            description: memory.description || ''
+        });
+        setIsEditingMemory(true);
+    };
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedMemory) return;
+
+        setIsUploading(true);
+        try {
+            const updated = await updateMemory(selectedMemory.id, editMemoryData);
+            setMemories(memories.map(m => m.id === selectedMemory.id ? updated : m));
+            setSelectedMemory(updated); // Update lightbox view
+            setIsEditingMemory(false);
+        } catch (error) {
+            console.error('Error updating memory:', error);
+            alert('No se pudo actualizar el recuerdo.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     return (
         <div className="p-6 pb-24 min-h-screen">
             <header className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-2">
                     {currentFolder && (
                         <button
-                            onClick={() => setCurrentFolder(null)}
+                            onClick={() => setFolderPath(prev => prev.slice(0, -1))}
                             className="p-2 -ml-2 hover:bg-black/5 rounded-full transition-colors"
                         >
-                            <ChevronLeft size={24} className="text-stone-800" />
+                            <ChevronLeft size={24} className="text-stone-800 dark:text-stone-100" />
                         </button>
                     )}
-                    <h1 className="text-2xl font-bold text-stone-800">
+                    <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">
                         {currentFolder ? currentFolder.name : 'Nuestra Historia 📖'}
                     </h1>
                 </div>
@@ -177,70 +227,56 @@ export const Story: React.FC = () => {
                         <Plus size={24} />
                     </button>
                 ) : (
-                    <button
-                        onClick={() => setIsAddingMemory(true)}
-                        className="w-10 h-10 bg-soft-blush text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                    >
-                        <Plus size={24} />
-                    </button>
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowAddMenu(true)}
+                            className="w-10 h-10 bg-soft-blush text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                        >
+                            <Plus size={24} />
+                        </button>
+                    </div>
                 )}
             </header>
 
-            {/* View: Folder Grid */}
-            {!currentFolder && (
-                <div className="grid grid-cols-2 gap-4">
-                    {/* Love Map Card */}
-                    <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="col-span-2 mb-4 glass-card p-4 rounded-3xl cursor-pointer"
-                    >
-                        <div className="flex items-center gap-2 mb-4 text-stone-500">
-                            <MapPin size={18} />
-                            <span className="text-sm font-medium uppercase tracking-wider">Mapa de Amor</span>
-                        </div>
-                        <div className="aspect-video bg-sage-green/20 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 opacity-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')] bg-cover bg-center" />
-                            <p className="text-sage-green font-medium z-10">Explorando el mundo juntos</p>
-                        </div>
-                    </motion.div>
+            {/* View: Folder Grid (Always visible for current level) */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
 
-                    {folders.map((folder) => (
-                        <motion.div
-                            key={folder.id}
-                            className="relative group"
+
+                {folders.map((folder) => (
+                    <motion.div
+                        key={folder.id}
+                        className="relative group"
+                    >
+                        <motion.button
+                            onClick={() => setFolderPath([...folderPath, folder])}
+                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                            whileTap={{ scale: 0.95 }}
+                            className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
                         >
-                            <motion.button
-                                onClick={() => setCurrentFolder(folder)}
-                                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                                whileTap={{ scale: 0.95 }}
-                                className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
-                            >
-                                <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center text-stone-600 shadow-sm">
-                                    <Folder size={24} fill="currentColor" className="text-stone-300" />
-                                </div>
-                                <span className="font-bold text-stone-800 line-clamp-2 text-sm">{folder.name}</span>
-                            </motion.button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteFolder(folder.id);
-                                }}
-                                className="absolute top-2 right-2 p-2 bg-white/80 rounded-full text-stone-400 hover:text-red-500 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </motion.div>
-                    ))}
-                </div>
-            )}
+                            <div className="w-12 h-12 bg-stone-100 dark:bg-stone-700 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
+                                <Folder size={24} fill="currentColor" className="text-stone-300 dark:text-stone-500" />
+                            </div>
+                            <span className="font-bold text-stone-800 dark:text-stone-100 line-clamp-2 text-sm">{folder.name}</span>
+                        </motion.button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteFolder(folder.id);
+                            }}
+                            className="absolute top-2 right-2 p-2 bg-white/80 rounded-full text-stone-400 hover:text-red-500 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </motion.div>
+                ))}
+            </div>
 
             {/* View: Folder Detail (Memories) */}
             {currentFolder && (
                 <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
-                    {memories.length === 0 && (
+                    {memories.length === 0 && folders.length === 0 && (
                         <div className="text-stone-400 italic text-sm pl-4 py-10">
-                            Esta carpeta está vacía. ¡Agrega el primer recuerdo!
+                            Esta carpeta está vacía. ¡Agrega sub-carpetas o recuerdos!
                         </div>
                     )}
 
@@ -274,13 +310,18 @@ export const Story: React.FC = () => {
                                     </button>
                                 </div>
 
-                                <h3 className="text-lg font-bold text-stone-800 mb-2">{memory.title}</h3>
+                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-2">{memory.title}</h3>
                                 {memory.description && (
-                                    <p className="text-stone-600 text-sm mb-3 line-clamp-2">{memory.description}</p>
+                                    <p className="text-stone-600 dark:text-stone-400 text-sm mb-3 line-clamp-2 break-words">{memory.description}</p>
                                 )}
-                                {(memory.media_url || memory.image) && (
+                                {(memory.media_url || memory.image || memory.external_url) && (
                                     <div className="relative w-full h-48 rounded-xl overflow-hidden bg-stone-100">
-                                        {memory.media_type === 'video' ? (
+                                        {memory.external_url ? (
+                                            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-200 text-stone-500">
+                                                <Video size={48} className="mb-2 text-soft-blush" />
+                                                <span className="text-xs font-medium uppercase tracking-wider">Video de Drive</span>
+                                            </div>
+                                        ) : memory.media_type === 'video' ? (
                                             <video src={memory.media_url} className="w-full h-full object-cover" />
                                         ) : (
                                             <img
@@ -289,7 +330,7 @@ export const Story: React.FC = () => {
                                                 className="w-full h-full object-cover"
                                             />
                                         )}
-                                        {memory.media_type === 'video' && (
+                                        {(memory.media_type === 'video' || memory.external_url) && !memory.external_url && (
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                                 <div className="bg-white/30 backdrop-blur-sm p-3 rounded-full">
                                                     <Video className="text-white" size={24} />
@@ -304,6 +345,55 @@ export const Story: React.FC = () => {
                 </div>
             )}
 
+            {/* Modal: Add Options Menu */}
+            <AnimatePresence>
+                {showAddMenu && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        onClick={() => setShowAddMenu(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-3xl p-6"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h2 className="text-xl font-bold mb-6 text-center dark:text-stone-100">¿Qué deseas agregar?</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => {
+                                        setShowAddMenu(false);
+                                        setIsAddingFolder(true);
+                                    }}
+                                    className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-stone-50 dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 transition-colors"
+                                >
+                                    <div className="w-12 h-12 bg-stone-200 dark:bg-stone-600 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300">
+                                        <Folder size={24} />
+                                    </div>
+                                    <span className="font-medium text-stone-800 dark:text-stone-100">Sub-carpeta</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowAddMenu(false);
+                                        setIsAddingMemory(true);
+                                    }}
+                                    className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-soft-blush/10 dark:bg-soft-blush/20 hover:bg-soft-blush/20 dark:hover:bg-soft-blush/30 transition-colors"
+                                >
+                                    <div className="w-12 h-12 bg-soft-blush rounded-full flex items-center justify-center text-white">
+                                        <Upload size={24} />
+                                    </div>
+                                    <span className="font-medium text-soft-blush dark:text-soft-blush">Recuerdo</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Modal: Create Folder */}
             <AnimatePresence>
                 {isAddingFolder && (
@@ -317,11 +407,11 @@ export const Story: React.FC = () => {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white w-full max-w-sm rounded-3xl p-6"
+                            className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-3xl p-6"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Nueva Carpeta</h2>
-                                <button onClick={() => setIsAddingFolder(false)} className="p-2 bg-stone-100 rounded-full">
+                                <h2 className="text-xl font-bold dark:text-stone-100">Nueva Carpeta</h2>
+                                <button onClick={() => setIsAddingFolder(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full dark:text-stone-300">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -331,11 +421,11 @@ export const Story: React.FC = () => {
                                     value={newFolderName}
                                     onChange={e => setNewFolderName(e.target.value)}
                                     placeholder="Nombre de la carpeta..."
-                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 border-transparent focus:bg-white focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4"
+                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4 dark:text-stone-100"
                                 />
                                 <button
                                     type="submit"
-                                    className="w-full bg-stone-800 text-white py-3 rounded-xl font-medium"
+                                    className="w-full bg-stone-800 dark:bg-stone-900 text-white py-3 rounded-xl font-medium"
                                 >
                                     Crear Carpeta
                                 </button>
@@ -358,85 +448,141 @@ export const Story: React.FC = () => {
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            className="bg-white w-full max-w-md rounded-3xl p-6 pb-10 sm:pb-6"
+                            className="bg-white dark:bg-stone-800 w-full max-w-md rounded-3xl p-6 pb-10 sm:pb-6"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Nuevo Recuerdo</h2>
-                                <button onClick={() => setIsAddingMemory(false)} className="p-2 bg-stone-100 rounded-full">
+                                <h2 className="text-xl font-bold dark:text-stone-100">Nuevo Recuerdo</h2>
+                                <button onClick={() => setIsAddingMemory(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full dark:text-stone-300">
                                     <X size={20} />
                                 </button>
                             </div>
 
                             <form onSubmit={handleCreateMemory} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-600 mb-1">Título</label>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Título</label>
                                     <input
                                         required
                                         value={newMemory.title}
                                         onChange={e => setNewMemory({ ...newMemory, title: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 border-transparent focus:bg-white focus:ring-2 focus:ring-soft-blush/20 transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100"
                                         placeholder="Ej. Cena de aniversario"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-600 mb-1">Fecha</label>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Fecha</label>
                                     <input
                                         required
                                         type="date"
                                         value={newMemory.date}
                                         onChange={e => setNewMemory({ ...newMemory, date: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 border-transparent focus:bg-white focus:ring-2 focus:ring-soft-blush/20 transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-600 mb-1">Descripción / Anécdota</label>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Descripción / Anécdota</label>
                                     <textarea
                                         value={newMemory.description}
                                         onChange={e => setNewMemory({ ...newMemory, description: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 border-transparent focus:bg-white focus:ring-2 focus:ring-soft-blush/20 transition-all resize-none h-24"
+                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all resize-none h-24 dark:text-stone-100"
                                         placeholder="La noche que nos reímos tanto que..."
                                     />
                                 </div>
 
                                 {/* Custom File Input */}
-                                <div>
-                                    <input
-                                        type="file"
-                                        accept="image/*,video/*"
-                                        ref={fileInputRef}
-                                        onChange={handleFileSelect}
-                                        className="hidden"
-                                    />
+                                {/* Custom File Input / Drive Link Toggle */}
+                                <div className="flex gap-2 mb-4 bg-stone-100 p-1 rounded-xl">
                                     <button
                                         type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="w-full py-4 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center text-stone-500 hover:border-soft-blush hover:text-soft-blush transition-colors"
+                                        onClick={() => setUploadMode('file')}
+                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${uploadMode === 'file'
+                                            ? 'bg-white text-stone-800 shadow-sm'
+                                            : 'text-stone-500 hover:text-stone-700'
+                                            }`}
                                     >
-                                        {previewUrl ? (
-                                            <div className="relative w-full h-32 px-4">
-                                                {selectedFile?.type.startsWith('video/') ? (
-                                                    <video src={previewUrl} className="w-full h-full object-cover rounded-lg" />
-                                                ) : (
-                                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg" />
-                                                )}
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
-                                                    <span className="text-white text-sm font-medium">Cambiar</span>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <Upload size={24} className="mb-2" />
-                                                <span className="text-sm font-medium">Seleccionar Foto/Video</span>
-                                            </>
-                                        )}
+                                        Subir Archivo
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUploadMode('drive')}
+                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${uploadMode === 'drive'
+                                            ? 'bg-white text-stone-800 shadow-sm'
+                                            : 'text-stone-500 hover:text-stone-700'
+                                            }`}
+                                    >
+                                        Enlace de Drive
                                     </button>
                                 </div>
 
+                                {uploadMode === 'file' ? (
+                                    <div>
+                                        <input
+                                            type="file"
+                                            accept="image/*,video/*"
+                                            ref={fileInputRef}
+                                            onChange={handleFileSelect}
+                                            className="hidden"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="w-full py-4 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center text-stone-500 hover:border-soft-blush hover:text-soft-blush transition-colors"
+                                        >
+                                            {previewUrl ? (
+                                                <div className="relative w-full h-32 px-4">
+                                                    {selectedFile?.type.startsWith('video/') ? (
+                                                        <video src={previewUrl} className="w-full h-full object-cover rounded-lg" />
+                                                    ) : (
+                                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                                                    )}
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                                                        <span className="text-white text-sm font-medium">Cambiar</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Upload size={24} className="mb-2" />
+                                                    <span className="text-sm font-medium">Seleccionar Foto/Video</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <a
+                                            href="https://drive.google.com/drive/folders/1wZ9HbaSj74oW9O5IfQOGtrqa0RXD1Cn6?usp=sharing"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 text-blue-600 rounded-xl font-medium hover:bg-blue-100 transition-colors"
+                                        >
+                                            <Folder size={20} />
+                                            📂 Ir a nuestra Carpeta de Videos
+                                            <ExternalLink size={16} />
+                                        </a>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-stone-600 mb-1">Pegar Enlace del Video</label>
+                                            <div className="relative">
+                                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                                                <input
+                                                    type="url"
+                                                    value={driveLink}
+                                                    onChange={e => setDriveLink(e.target.value)}
+                                                    placeholder="https://drive.google.com/file/d/..."
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-stone-50 border-transparent focus:bg-white focus:ring-2 focus:ring-soft-blush/20 transition-all"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-stone-400 mt-1 ml-1">
+                                                Copia el enlace del video desde la carpeta de Drive y pégalo aquí.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     type="submit"
-                                    disabled={!selectedFile || !newMemory.title || isUploading}
+                                    disabled={(!selectedFile && !driveLink) || !newMemory.title || isUploading}
                                     className="w-full bg-stone-800 text-white py-4 rounded-xl font-medium hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isUploading ? 'Guardando...' : 'Guardar Recuerdo'}
@@ -447,65 +593,129 @@ export const Story: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            {/* Modal: Lightbox (Full Screen Viewer) */}
+            {/* Edit Memory Modal */}
             <AnimatePresence>
-                {selectedMemory && (
+                {isEditingMemory && selectedMemory && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white dark:bg-stone-800 rounded-3xl p-6 w-full max-w-md shadow-2xl"
+                        >
+                            <h2 className="text-xl font-bold mb-4 dark:text-stone-100">Editar Recuerdo</h2>
+                            <form onSubmit={handleUpdate} className="space-y-4">
+                                <input
+                                    type="text"
+                                    value={editMemoryData.title}
+                                    onChange={(e) => setEditMemoryData({ ...editMemoryData, title: e.target.value })}
+                                    placeholder="Título..."
+                                    className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-600 dark:text-stone-100"
+                                    required
+                                />
+                                <input
+                                    type="date"
+                                    value={editMemoryData.date}
+                                    onChange={(e) => setEditMemoryData({ ...editMemoryData, date: e.target.value })}
+                                    className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-600 dark:text-stone-100"
+                                    required
+                                />
+                                <textarea
+                                    value={editMemoryData.description}
+                                    onChange={(e) => setEditMemoryData({ ...editMemoryData, description: e.target.value })}
+                                    placeholder="Descripción..."
+                                    className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-600 h-24 resize-none dark:text-stone-100"
+                                />
+
+                                <div className="flex gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingMemory(false)}
+                                        className="flex-1 py-3 rounded-xl font-medium text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700"
+                                        disabled={isUploading}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 py-3 rounded-xl font-medium bg-stone-800 dark:bg-stone-900 text-white hover:bg-stone-900 dark:hover:bg-black disabled:opacity-50 flex items-center justify-center gap-2"
+                                        disabled={isUploading}
+                                    >
+                                        {isUploading ? <Loader2 className="animate-spin" /> : 'Guardar'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Lightbox */}
+            <AnimatePresence>
+                {selectedMemory && !isEditingMemory && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/90 z-[60] flex flex-col items-center justify-center p-4 backdrop-blur-md"
-                        onClick={() => setSelectedMemory(null)}
+                        className="fixed inset-0 z-50 bg-black/95 flex flex-col"
                     >
-                        <div className="absolute top-4 right-4 flex items-center gap-2">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteMemory(selectedMemory.id);
-                                }}
-                                className="p-2 bg-white/10 text-white rounded-full hover:bg-red-500/80 transition-colors"
-                            >
-                                <Trash2 size={24} />
-                            </button>
-                            <button
-                                onClick={() => setSelectedMemory(null)}
-                                className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors"
-                            >
+                        <div className="p-4 flex justify-between items-center text-white/80">
+                            <button onClick={() => setSelectedMemory(null)} className="p-2 hover:bg-white/10 rounded-full">
                                 <X size={24} />
                             </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => openEditModal(selectedMemory)}
+                                    className="p-2 hover:bg-white/10 rounded-full text-blue-300"
+                                    title="Editar"
+                                >
+                                    <Pencil size={24} />
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteMemory(selectedMemory.id)}
+                                    className="p-2 hover:bg-white/10 rounded-full text-red-400"
+                                    title="Borrar"
+                                >
+                                    <Trash2 size={24} />
+                                </button>
+                            </div>
                         </div>
 
-                        <div
-                            className="w-full max-w-4xl max-h-[80vh] flex items-center justify-center mb-6"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            {(selectedMemory.media_url || selectedMemory.image) && (
-                                selectedMemory.media_type === 'video' ? (
-                                    <video
-                                        src={selectedMemory.media_url}
-                                        controls
-                                        autoPlay
-                                        className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
-                                    />
-                                ) : (
-                                    <img
-                                        src={selectedMemory.media_url || selectedMemory.image}
-                                        alt={selectedMemory.title}
-                                        className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
-                                    />
-                                )
+                        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+                            {selectedMemory.external_url ? (
+                                <iframe
+                                    src={getDriveEmbedUrl(selectedMemory.external_url)}
+                                    className="w-full h-full rounded-lg"
+                                    allow="autoplay; fullscreen"
+                                    title={selectedMemory.title}
+                                />
+                            ) : selectedMemory.media_type === 'video' ? (
+                                <video
+                                    src={selectedMemory.media_url}
+                                    className="max-w-full max-h-full rounded-lg"
+                                    controls
+                                    autoPlay
+                                />
+                            ) : (
+                                <motion.img
+                                    layoutId={selectedMemory.id}
+                                    src={selectedMemory.media_url || selectedMemory.image}
+                                    alt={selectedMemory.title}
+                                    className="max-w-full max-h-full object-contain rounded-lg"
+                                />
                             )}
                         </div>
 
-                        <div
-                            className="w-full max-w-2xl text-center text-white"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <h2 className="text-2xl font-bold mb-2">{selectedMemory.title}</h2>
-                            <p className="text-white/80 text-lg leading-relaxed">{selectedMemory.description}</p>
-                            <p className="text-white/50 text-sm mt-4">
-                                {format(parseISO(selectedMemory.date), "d 'de' MMMM, yyyy", { locale: es })}
+                        <div className="p-6 bg-gradient-to-t from-black/80 to-transparent text-white space-y-2">
+                            <h2 className="text-2xl font-bold">{selectedMemory.title}</h2>
+                            <p className="text-white/60 text-sm">
+                                {selectedMemory.date && format(parseISO(selectedMemory.date), "d 'de' MMMM, yyyy", { locale: es })}
                             </p>
+                            {selectedMemory.description && (
+                                <p className="text-white/80 leading-relaxed max-w-2xl">
+                                    {selectedMemory.description}
+                                </p>
+                            )}
                         </div>
                     </motion.div>
                 )}

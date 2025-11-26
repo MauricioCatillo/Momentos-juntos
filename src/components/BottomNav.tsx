@@ -13,8 +13,11 @@ const navItems = [
 
 export const BottomNav: React.FC = () => {
     return (
-        <div className="w-full px-6 pb-6 pt-2 bg-gradient-to-t from-white/90 via-white/80 to-transparent backdrop-blur-sm">
-            <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-full shadow-lg shadow-stone-200/50 py-2 px-6 flex justify-between items-center">
+        <div
+            className="w-full px-6 pt-2 bg-gradient-to-t from-white/90 via-white/80 to-transparent dark:from-stone-900/90 dark:via-stone-900/80 backdrop-blur-sm"
+            style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+        >
+            <div className="bg-white/80 dark:bg-stone-800/80 backdrop-blur-xl border border-white/50 dark:border-stone-700/50 rounded-full shadow-lg shadow-stone-200/50 dark:shadow-none py-2 px-6 flex justify-between items-center">
                 {navItems.map(({ path, icon: Icon, label }) => (
                     <NavLink
                         key={path}
@@ -22,7 +25,7 @@ export const BottomNav: React.FC = () => {
                         className={({ isActive }) =>
                             cn(
                                 "flex flex-col items-center justify-center p-2 transition-all duration-300 relative group",
-                                isActive ? "text-soft-blush scale-110" : "text-stone-400 hover:text-stone-600 hover:scale-105"
+                                isActive ? "text-soft-blush scale-110" : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:scale-105"
                             )
                         }
                     >

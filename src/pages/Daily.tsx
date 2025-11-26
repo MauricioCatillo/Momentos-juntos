@@ -60,8 +60,8 @@ export const Daily: React.FC = () => {
     return (
         <div className="p-6 pb-24 space-y-8">
             <header className="mb-8">
-                <h1 className="text-2xl font-bold text-stone-800 mb-2">Conexión Diaria ✨</h1>
-                <p className="text-stone-600">Un momento para nosotros</p>
+                <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-2">Conexión Diaria ✨</h1>
+                <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
             </header>
 
             {/* Question Card */}
@@ -76,13 +76,13 @@ export const Daily: React.FC = () => {
                         <MessageCircle size={32} className="text-soft-blush" />
                     </div>
                 </div>
-                <h3 className="text-xl font-medium text-stone-800 mb-6 leading-relaxed">
+                <h3 className="text-xl font-medium text-stone-800 dark:text-stone-100 mb-6 leading-relaxed">
                     "{question}"
                 </h3>
                 {!answered ? (
                     <button
                         onClick={() => setAnswered(true)}
-                        className="text-sm font-medium text-stone-400 hover:text-stone-600 transition-colors"
+                        className="text-sm font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
                     >
                         Tocar para responder
                     </button>
@@ -90,7 +90,7 @@ export const Daily: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-stone-600 italic"
+                        className="text-stone-600 dark:text-stone-400 italic"
                     >
                         ¡Cuéntaselo en persona! ❤️
                     </motion.div>
@@ -99,7 +99,7 @@ export const Daily: React.FC = () => {
 
             {/* Mood Check */}
             <div className="glass-card rounded-3xl p-6 mb-8">
-                <h3 className="text-lg font-bold text-stone-800 mb-4">¿Cómo te sientes hoy?</h3>
+                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4">¿Cómo te sientes hoy?</h3>
                 <div className="grid grid-cols-5 gap-2">
                     {MOODS.map((mood) => (
                         <button
@@ -108,8 +108,8 @@ export const Daily: React.FC = () => {
                             className={cn(
                                 "flex flex-col items-center gap-2 p-2 rounded-2xl transition-all active:scale-95",
                                 todayMood?.mood === mood.id
-                                    ? "bg-stone-800 text-white ring-2 ring-stone-800 ring-offset-2"
-                                    : "hover:bg-white/50"
+                                    ? "bg-stone-800 dark:bg-stone-700 text-white ring-2 ring-stone-800 dark:ring-stone-600 ring-offset-2 dark:ring-offset-stone-900"
+                                    : "hover:bg-white/50 dark:hover:bg-stone-700/50"
                             )}
                         >
                             <div className={cn(
@@ -120,7 +120,7 @@ export const Daily: React.FC = () => {
                             )}>
                                 <mood.icon size={20} />
                             </div>
-                            <span className="text-[10px] font-medium">{mood.label}</span>
+                            <span className="text-[10px] font-medium dark:text-stone-300">{mood.label}</span>
                         </button>
                     ))}
                 </div>
@@ -128,7 +128,7 @@ export const Daily: React.FC = () => {
 
             {/* Daily Notes Section */}
             <div>
-                <h3 className="text-lg font-bold text-stone-800 mb-4">Notas Diarias 📝</h3>
+                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4">Notas Diarias 📝</h3>
                 <div className="grid grid-cols-2 gap-4 mb-8">
                     {notes.map((note) => (
                         <motion.div
@@ -136,9 +136,9 @@ export const Daily: React.FC = () => {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             className={`p-4 rounded-2xl shadow-sm relative group ${note.color === 'yellow' ? 'bg-yellow-100 text-yellow-900' :
-                                    note.color === 'pink' ? 'bg-pink-100 text-pink-900' :
-                                        note.color === 'blue' ? 'bg-blue-100 text-blue-900' :
-                                            'bg-green-100 text-green-900'
+                                note.color === 'pink' ? 'bg-pink-100 text-pink-900' :
+                                    note.color === 'blue' ? 'bg-blue-100 text-blue-900' :
+                                        'bg-green-100 text-green-900'
                                 }`}
                         >
                             <button
@@ -147,7 +147,7 @@ export const Daily: React.FC = () => {
                             >
                                 <X size={14} />
                             </button>
-                            <p className="font-medium text-sm">{note.content}</p>
+                            <p className="font-medium text-sm break-words">{note.content}</p>
                             <span className="text-[10px] opacity-60 mt-2 block">
                                 {new Date(note.created_at).toLocaleDateString()}
                             </span>
@@ -156,13 +156,13 @@ export const Daily: React.FC = () => {
                 </div>
 
                 <div className="glass-card p-6 rounded-3xl">
-                    <h3 className="font-bold text-stone-800 mb-4">Nueva Nota</h3>
+                    <h3 className="font-bold text-stone-800 dark:text-stone-100 mb-4">Nueva Nota</h3>
                     <div className="flex gap-2 mb-4">
                         {['yellow', 'pink', 'blue', 'green'].map((c) => (
                             <button
                                 key={c}
                                 onClick={() => setColor(c)}
-                                className={`w-8 h-8 rounded-full border-2 transition-transform ${color === c ? 'border-stone-800 scale-110' : 'border-transparent'
+                                className={`w-8 h-8 rounded-full border-2 transition-transform ${color === c ? 'border-stone-800 dark:border-stone-100 scale-110' : 'border-transparent'
                                     } ${c === 'yellow' ? 'bg-yellow-200' :
                                         c === 'pink' ? 'bg-pink-200' :
                                             c === 'blue' ? 'bg-blue-200' : 'bg-green-200'
@@ -174,12 +174,12 @@ export const Daily: React.FC = () => {
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         placeholder="Escribe algo bonito..."
-                        className="w-full p-4 rounded-xl bg-stone-50 border-none focus:ring-2 focus:ring-soft-blush/50 mb-4 h-24 resize-none"
+                        className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-soft-blush/50 mb-4 h-24 resize-none dark:text-stone-100"
                     />
                     <button
                         onClick={handleAddNote}
                         disabled={!newNote.trim()}
-                        className="w-full bg-stone-800 text-white py-3 rounded-xl font-medium disabled:opacity-50"
+                        className="w-full bg-stone-800 dark:bg-stone-900 text-white py-3 rounded-xl font-medium disabled:opacity-50"
                     >
                         Guardar Nota
                     </button>

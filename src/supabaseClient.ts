@@ -28,37 +28,62 @@ export const signOut = async () => {
     if (error) throw error;
 };
 
-export const uploadMemory = async (file: File, title: string, description: string, date: string, folder_id?: string) => {
+export const uploadMemory = async (
+    file: File | null,
+    title: string,
+    description: string,
+    date: string,
+    folder_id?: string,
+    externalUrl?: string
+) => {
     try {
-        // 1. Upload image
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        let publicUrl = '';
+        let mediaType = 'image';
 
-        const { error: uploadError } = await supabase.storage
-            .from('couple_uploads')
-            .upload(filePath, file);
+        if (externalUrl) {
+            // Case: External Drive Video
+            publicUrl = ''; // No media_url for external videos, we use external_url
+            mediaType = 'video';
+        } else if (file) {
+            // Case: File Upload
+            // Check file size (50MB limit)
+            if (file.size > 50 * 1024 * 1024) {
+                throw new Error("El archivo es demasiado grande. El límite es 50MB.");
+            }
 
-        if (uploadError) {
-            throw uploadError;
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('couple_uploads')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('couple_uploads')
+                .getPublicUrl(filePath);
+
+            publicUrl = url;
+            mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+        } else {
+            throw new Error("Debes proporcionar un archivo o un enlace externo.");
         }
 
-        // 2. Get Public URL
-        const { data: { publicUrl } } = supabase.storage
-            .from('couple_uploads')
-            .getPublicUrl(filePath);
-
-        // 3. Insert into DB
+        // Insert into DB
         const { data, error: dbError } = await supabase
             .from('memories')
             .insert([
                 {
                     title,
                     description,
-                    date: new Date(date).toISOString(), // Ensure date format matches if needed, or just string
+                    date: new Date(date).toISOString(),
                     media_url: publicUrl,
-                    media_type: file.type.startsWith('video/') ? 'video' : 'image',
-                    author: 'user', // Placeholder
+                    external_url: externalUrl || null,
+                    media_type: mediaType,
                     folder_id: folder_id || null
                 }
             ])
@@ -72,6 +97,18 @@ export const uploadMemory = async (file: File, title: string, description: strin
         console.error('Error uploading memory:', error);
         throw error;
     }
+};
+
+export const updateMemory = async (id: string, updates: { title?: string; description?: string; date?: string }) => {
+    const { data, error } = await supabase
+        .from('memories')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
 };
 
 // --- New Features Helpers ---
@@ -106,14 +143,22 @@ export const deleteNote = async (id: string) => {
 
 // --- Folders Helpers ---
 
-export const createFolder = async (name: string) => {
-    const { data, error } = await supabase.from('folders').insert([{ name }]).select().single();
+export const createFolder = async (name: string, parentId?: string) => {
+    const { data, error } = await supabase.from('folders').insert([{ name, parent_id: parentId }]).select().single();
     if (error) throw error;
     return data;
 };
 
-export const getFolders = async () => {
-    const { data, error } = await supabase.from('folders').select('*').order('created_at', { ascending: true });
+export const getFolders = async (parentId?: string) => {
+    let query = supabase.from('folders').select('*').order('created_at', { ascending: true });
+
+    if (parentId) {
+        query = query.eq('parent_id', parentId);
+    } else {
+        query = query.is('parent_id', null);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data;
 };

@@ -65,11 +65,18 @@ body {
   background: rgba(212, 140, 158, 0.8);
 }
 
+/* Dark Mode Background */
+.dark body {
+  background: linear-gradient(to bottom right, #1c1917, #292524);
+  color: #e7e5e4;
+  animation: none;
+}
+
 /* Glassmorphism Utilities */
 .glass-card {
-  @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-rose-100/20;
+  @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-lg shadow-rose-100/20 dark:bg-stone-800/60 dark:border-stone-700/50 dark:shadow-none;
 }
 
 .glass-input {
-  @apply bg-white/60 border-transparent focus:bg-white/90 focus:ring-2 focus:ring-rose-300/50 transition-all backdrop-blur-md shadow-inner;
+  @apply bg-white/60 border-transparent focus:bg-white/90 focus:ring-2 focus:ring-rose-300/50 transition-all backdrop-blur-md shadow-inner dark:bg-stone-800/60 dark:focus:bg-stone-800 dark:focus:ring-stone-600 dark:text-stone-200;
 }

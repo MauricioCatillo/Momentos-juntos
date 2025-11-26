@@ -22,6 +22,8 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
+    theme: 'light' | 'dark';
+    toggleTheme: () => void;
     login: (email: string, password: string) => Promise<void>;
     signup: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
@@ -52,6 +54,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ],
     });
 
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('theme') as 'light' | 'dark' || 'light';
+        }
+        return 'light';
+    });
+
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -67,6 +76,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         return () => subscription.unsubscribe();
     }, []);
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    };
 
     const login = async (email: string, password: string) => {
         await signInWithEmail(email, password);
@@ -122,6 +142,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         <AppContext.Provider
             value={{
                 ...state,
+                theme,
+                toggleTheme,
                 login,
                 signup,
                 logout,

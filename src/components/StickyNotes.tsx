@@ -80,7 +80,7 @@ export const StickyNotes: React.FC = () => {
                             exit={{ scale: 0.8, opacity: 0 }}
                             className={`${note.color} p-4 rounded-xl shadow-sm relative group min-h-[120px] flex flex-col justify-between transform rotate-1 hover:rotate-0 transition-transform duration-300`}
                         >
-                            <p className="font-handwriting text-stone-800 text-sm leading-relaxed">{note.content}</p>
+                            <p className="font-handwriting text-stone-800 text-sm leading-relaxed break-words">{note.content}</p>
                             <button
                                 onClick={() => handleDelete(note.id)}
                                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-black/10 rounded-full"
