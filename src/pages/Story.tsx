@@ -371,6 +371,7 @@ export const Story: React.FC = () => {
                                             <img
                                                 src={memory.media_url || memory.image}
                                                 alt={memory.title}
+                                                loading="lazy"
                                                 className="w-full h-full object-cover"
                                             />
                                         )}
@@ -578,7 +579,7 @@ export const Story: React.FC = () => {
                                                     {selectedFile?.type.startsWith('video/') ? (
                                                         <video src={previewUrl} className="w-full h-full object-cover rounded-lg" />
                                                     ) : (
-                                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                                                        <img src={previewUrl} alt="Preview" loading="lazy" className="w-full h-full object-cover rounded-lg" />
                                                     )}
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
                                                         <span className="text-white text-sm font-medium">Cambiar</span>
