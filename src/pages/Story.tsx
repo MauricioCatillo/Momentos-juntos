@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Folder, ChevronLeft, Video, Upload, Trash2, Pencil, Loader2, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { Plus, X, Folder, ChevronLeft, Video, Upload, Trash2, Pencil, Loader2, Link as LinkIcon, ExternalLink, Edit2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { uploadMemory, createFolder, getFolders, getMemories, deleteMemory, deleteFolder, updateMemory } from '../supabaseClient';
+import { uploadMemory, createFolder, getFolders, getMemories, deleteMemory, deleteFolder, updateMemory, updateFolder } from '../supabaseClient';
 
 interface FolderType {
     id: string;
@@ -36,10 +36,16 @@ export const Story: React.FC = () => {
     const [isAddingMemory, setIsAddingMemory] = useState(false);
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [isEditingMemory, setIsEditingMemory] = useState(false);
+    const [isEditingFolder, setIsEditingFolder] = useState(false);
     const [selectedMemory, setSelectedMemory] = useState<MemoryType | null>(null); // For Lightbox
+
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; folder: FolderType } | null>(null);
+    const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Form Data
     const [newFolderName, setNewFolderName] = useState('');
+    const [editFolderName, setEditFolderName] = useState('');
     const [newMemory, setNewMemory] = useState({ title: '', date: new Date().toISOString().split('T')[0], description: '' });
     const [editMemoryData, setEditMemoryData] = useState({ title: '', date: '', description: '' });
 
@@ -100,11 +106,57 @@ export const Story: React.FC = () => {
             try {
                 await deleteFolder(folderId);
                 setFolders(folders.filter(f => f.id !== folderId));
+                setContextMenu(null);
             } catch (error) {
                 console.error('Error deleting folder:', error);
                 alert('No se pudo borrar la carpeta.');
             }
         }
+    };
+
+    const handleRenameFolder = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!contextMenu || !editFolderName.trim()) return;
+
+        try {
+            const updated = await updateFolder(contextMenu.folder.id, editFolderName);
+            setFolders(folders.map(f => f.id === contextMenu.folder.id ? updated : f));
+            setIsEditingFolder(false);
+            setContextMenu(null);
+        } catch (error) {
+            console.error('Error renaming folder:', error);
+            alert('No se pudo renombrar la carpeta.');
+        }
+    };
+
+    // Long Press Handlers
+    const handleTouchStart = (e: React.TouchEvent, folder: FolderType) => {
+        const touch = e.touches[0];
+        const x = touch.clientX;
+        const y = touch.clientY;
+
+        longPressTimer.current = setTimeout(() => {
+            setContextMenu({ x, y, folder });
+        }, 500); // 500ms for long press
+    };
+
+    const handleTouchEnd = () => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    };
+
+    const handleTouchMove = () => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+        }
+    };
+
+    const handleContextMenu = (e: React.MouseEvent, folder: FolderType) => {
+        e.preventDefault();
+        setContextMenu({ x: e.clientX, y: e.clientY, folder });
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,12 +292,14 @@ export const Story: React.FC = () => {
 
             {/* View: Folder Grid (Always visible for current level) */}
             <div className="grid grid-cols-2 gap-4 mb-8">
-
-
                 {folders.map((folder) => (
                     <motion.div
                         key={folder.id}
-                        className="relative group"
+                        className="relative group select-none"
+                        onContextMenu={(e) => handleContextMenu(e, folder)}
+                        onTouchStart={(e) => handleTouchStart(e, folder)}
+                        onTouchEnd={handleTouchEnd}
+                        onTouchMove={handleTouchMove}
                     >
                         <motion.button
                             onClick={() => setFolderPath([...folderPath, folder])}
@@ -258,20 +312,10 @@ export const Story: React.FC = () => {
                             </div>
                             <span className="font-bold text-stone-800 dark:text-stone-100 line-clamp-2 text-sm">{folder.name}</span>
                         </motion.button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteFolder(folder.id);
-                            }}
-                            className="absolute top-2 right-2 p-2 bg-white/80 rounded-full text-stone-400 hover:text-red-500 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                            <Trash2 size={16} />
-                        </button>
                     </motion.div>
                 ))}
             </div>
 
-            {/* View: Folder Detail (Memories) */}
             {currentFolder && (
                 <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
                     {memories.length === 0 && folders.length === 0 && (
@@ -717,6 +761,84 @@ export const Story: React.FC = () => {
                                 </p>
                             )}
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* Context Menu */}
+            <AnimatePresence>
+                {contextMenu && (
+                    <>
+                        <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setContextMenu(null)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            style={{ top: contextMenu.y, left: contextMenu.x }}
+                            className="fixed z-50 bg-white dark:bg-stone-800 rounded-xl shadow-xl p-2 min-w-[160px] flex flex-col gap-1"
+                        >
+                            <button
+                                onClick={() => {
+                                    setEditFolderName(contextMenu.folder.name);
+                                    setIsEditingFolder(true);
+                                    setContextMenu(null);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg text-sm w-full text-left"
+                            >
+                                <Edit2 size={16} />
+                                Cambiar nombre
+                            </button>
+                            <button
+                                onClick={() => handleDeleteFolder(contextMenu.folder.id)}
+                                className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm w-full text-left"
+                            >
+                                <Trash2 size={16} />
+                                Borrar carpeta
+                            </button>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Rename Folder Modal */}
+            <AnimatePresence>
+                {isEditingFolder && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-3xl p-6"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold dark:text-stone-100">Renombrar Carpeta</h2>
+                                <button onClick={() => setIsEditingFolder(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full dark:text-stone-300">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <form onSubmit={handleRenameFolder}>
+                                <input
+                                    autoFocus
+                                    value={editFolderName}
+                                    onChange={e => setEditFolderName(e.target.value)}
+                                    placeholder="Nombre de la carpeta..."
+                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4 dark:text-stone-100"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-full bg-stone-800 dark:bg-stone-900 text-white py-3 rounded-xl font-medium"
+                                >
+                                    Guardar Cambios
+                                </button>
+                            </form>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -149,6 +149,12 @@ export const createFolder = async (name: string, parentId?: string) => {
     return data;
 };
 
+export const updateFolder = async (id: string, name: string) => {
+    const { data, error } = await supabase.from('folders').update({ name }).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+};
+
 export const getFolders = async (parentId?: string) => {
     let query = supabase.from('folders').select('*').order('created_at', { ascending: true });
 

@@ -16,7 +16,7 @@ interface AppState {
     session: Session | null;
     anniversaryDate: string;
     milestones: Milestone[];
-    moods: { date: string; mood: 'happy' | 'sad' | 'neutral' | 'excited' | 'tired' }[];
+    moods: { id: string; date: string; mood: string; note?: string }[];
     bucketList: { id: string; text: string; completed: boolean }[];
     coupons: { id: string; title: string; redeemed: boolean }[];
 }
@@ -28,7 +28,7 @@ interface AppContextType extends AppState {
     signup: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     addMilestone: (milestone: Milestone) => void;
-    addMood: (mood: 'happy' | 'sad' | 'neutral' | 'excited' | 'tired') => void;
+    addMood: (mood: string) => Promise<void>;
     toggleBucketItem: (id: string) => void;
     addBucketItem: (text: string) => void;
     redeemCoupon: (id: string) => void;
@@ -38,7 +38,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, setState] = useState<AppState>({
-        user: null,
+        user: { id: 'mock-user-id', email: 'test@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() } as User, // Mock user
         session: null,
         anniversaryDate: '2023-01-01', // Default
         milestones: [],
@@ -55,14 +55,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('theme') as 'light' | 'dark' || 'light';
+        try {
+            if (typeof window !== 'undefined') {
+                const stored = localStorage.getItem('theme');
+                return (stored === 'dark' || stored === 'light') ? stored : 'light';
+            }
+        } catch (error) {
+            console.error('Error accessing localStorage:', error);
         }
         return 'light';
     });
 
     useEffect(() => {
         // Check active session
+        /*
         supabase.auth.getSession().then(({ data: { session } }) => {
             setState((prev) => ({ ...prev, session, user: session?.user ?? null }));
         });
@@ -73,15 +79,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setState((prev) => ({ ...prev, session, user: session?.user ?? null }));
         });
+        */
 
-        return () => subscription.unsubscribe();
-    }, []);
+        // Fetch initial data
+
+        // Fetch initial data
+        const fetchData = async () => {
+            if (!state.session?.user) return;
+
+            const { data: moodsData } = await supabase
+                .from('moods')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (moodsData) {
+                setState(prev => ({
+                    ...prev,
+                    moods: moodsData.map(m => ({
+                        id: m.id,
+                        date: m.created_at,
+                        mood: m.mood,
+                        note: m.note
+                    }))
+                }));
+            }
+        };
+
+        fetchData();
+
+        // return () => subscription.unsubscribe();
+    }, [state.session]);
 
     useEffect(() => {
-        const root = window.document.documentElement;
-        root.classList.remove('light', 'dark');
-        root.classList.add(theme);
-        localStorage.setItem('theme', theme);
+        try {
+            const root = window.document.documentElement;
+            root.classList.remove('light', 'dark');
+            root.classList.add(theme);
+            localStorage.setItem('theme', theme);
+        } catch (error) {
+            console.error('Error applying theme:', error);
+        }
     }, [theme]);
 
     const toggleTheme = () => {
@@ -105,11 +142,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setState((prev) => ({ ...prev, milestones: [...prev.milestones, milestone] }));
     };
 
-    const addMood = (mood: 'happy' | 'sad' | 'neutral' | 'excited' | 'tired') => {
-        setState((prev) => ({
-            ...prev,
-            moods: [...prev.moods, { date: new Date().toISOString(), mood }],
-        }));
+    const addMood = async (mood: string) => {
+        if (!state.user) return;
+
+        const { data, error } = await supabase
+            .from('moods')
+            .insert([{
+                mood,
+                user_id: state.user.id
+            }])
+            .select()
+            .single();
+
+        if (data && !error) {
+            setState((prev) => ({
+                ...prev,
+                moods: [{
+                    id: data.id,
+                    date: data.created_at,
+                    mood: data.mood,
+                    note: data.note
+                }, ...prev.moods],
+            }));
+        }
     };
 
     const toggleBucketItem = (id: string) => {
