@@ -785,13 +785,13 @@ export const Story: React.FC = () => {
                         </div>
 
                         {/* Title, Date, and Description - Moved to top for better visibility */}
-                        <div className="px-6 py-4 bg-black/60 backdrop-blur-sm">
+                        <div className="px-6 py-4 bg-black/80 backdrop-blur-sm">
                             <h2 className="text-2xl font-bold text-white mb-2">{selectedMemory.title}</h2>
-                            <p className="text-white/70 text-sm mb-3">
+                            <p className="text-white text-sm mb-3">
                                 {selectedMemory.date && format(parseISO(selectedMemory.date), "d 'de' MMMM, yyyy", { locale: es })}
                             </p>
                             {selectedMemory.description && (
-                                <p className="text-white/90 leading-relaxed">
+                                <p className="text-white leading-relaxed">
                                     {selectedMemory.description}
                                 </p>
                             )}
