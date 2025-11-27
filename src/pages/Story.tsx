@@ -119,11 +119,8 @@ export const Story: React.FC = () => {
     const [folderPath, setFolderPath] = useState<FolderType[]>([]);
     const currentFolder = folderPath[folderPath.length - 1] || null;
     const [memories, setMemories] = useState<MemoryType[]>([]);
-
-    // Pagination State
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Modals
     const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -155,58 +152,26 @@ export const Story: React.FC = () => {
 
     // Load data when current folder changes
     useEffect(() => {
-        loadFolders(currentFolder?.id);
-        if (currentFolder) {
-            setMemories([]); // Clear previous memories
-            setPage(0);
-            setHasMore(true);
-            loadMemories(currentFolder.id, 0);
-        } else {
-            setMemories([]);
-        }
+        loadData();
     }, [currentFolder]);
 
-    const loadFolders = async (parentId?: string) => {
-        try {
-            const data = await getFolders(parentId);
-            setFolders(data || []);
-        } catch (error) {
-            console.error('Error loading folders:', error);
-        }
-    };
-
-    const loadMemories = async (folderId: string, pageNum: number) => {
+    const loadData = async () => {
         setIsLoading(true);
+        setError(null);
         try {
-            const { data, count } = await getMemories(folderId, pageNum, 12);
-            if (data) {
-                if (pageNum === 0) {
-                    setMemories(data);
-                } else {
-                    setMemories(prev => [...prev, ...data]);
-                }
+            const [foldersData, memoriesData] = await Promise.all([
+                getFolders(currentFolder?.id),
+                getMemories(currentFolder?.id)
+            ]);
 
-                // Check if we have more
-                if (count !== null && (pageNum + 1) * 12 >= count) {
-                    setHasMore(false);
-                } else if (data.length < 12) {
-                    setHasMore(false);
-                } else {
-                    setHasMore(true);
-                }
-            }
-        } catch (error) {
-            console.error('Error loading memories:', error);
+            setFolders(foldersData || []);
+            setMemories(memoriesData || []);
+        } catch (err: any) {
+            console.error('Error Supabase:', err);
+            setError(err.message || 'Error al cargar los datos. Por favor revisa tu conexión.');
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const loadMoreMemories = () => {
-        if (!currentFolder || isLoading || !hasMore) return;
-        const nextPage = page + 1;
-        setPage(nextPage);
-        loadMemories(currentFolder.id, nextPage);
     };
 
     const handleCreateFolder = async (e: React.FormEvent) => {
@@ -412,62 +377,66 @@ export const Story: React.FC = () => {
                 )}
             </header>
 
-            {/* View: Folder Grid (Always visible for current level) */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-                {folders.map((folder) => (
-                    <motion.div
-                        key={folder.id}
-                        className="relative group select-none"
-                        onContextMenu={(e) => handleContextMenu(e, folder)}
-                        onTouchStart={(e) => handleTouchStart(e, folder)}
-                        onTouchEnd={handleTouchEnd}
-                        onTouchMove={handleTouchMove}
-                    >
-                        <motion.button
-                            onClick={() => setFolderPath([...folderPath, folder])}
-                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
-                            whileTap={{ scale: 0.95 }}
-                            className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
-                        >
-                            <div className="w-12 h-12 bg-stone-100 dark:bg-stone-700 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
-                                <Folder size={24} fill="currentColor" className="text-stone-300 dark:text-stone-500" />
-                            </div>
-                            <span className="font-bold text-stone-800 dark:text-stone-100 line-clamp-2 text-sm">{folder.name}</span>
-                        </motion.button>
-                    </motion.div>
-                ))}
-            </div>
-
-            {currentFolder && (
-                <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
-                    {memories.length === 0 && folders.length === 0 && !isLoading && (
-                        <div className="text-stone-400 dark:text-stone-500 italic text-sm pl-4 py-10">
-                            Esta carpeta está vacía. ¡Agrega sub-carpetas o recuerdos!
-                        </div>
-                    )}
-
-                    {memories.map((memory, index) => (
-                        <MemoryCard
-                            key={memory.id}
-                            memory={memory}
-                            index={index}
-                            onSelect={setSelectedMemory}
-                            onDelete={handleDeleteMemory}
-                        />
-                    ))}
-
-                    {hasMore && (
-                        <div className="flex justify-center pt-8 pb-4">
-                            <button
-                                onClick={() => loadMoreMemories()}
-                                disabled={isLoading}
-                                className="px-6 py-2 bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 rounded-full text-sm font-medium hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors disabled:opacity-50 flex items-center gap-2"
-                            >
-                                {isLoading ? <Loader2 className="animate-spin" size={16} /> : 'Cargar más recuerdos'}
-                            </button>
-                        </div>
-                    )}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
+                    <span className="font-bold">Error:</span> {error}
                 </div>
+            )}
+
+            {isLoading ? (
+                <div className="flex justify-center py-20">
+                    <Loader2 className="animate-spin text-rose-400" size={48} />
+                </div>
+            ) : (
+                <>
+                    {/* View: Folder Grid (Always visible for current level) */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        {folders.map((folder) => (
+                            <motion.div
+                                key={folder.id}
+                                className="relative group select-none"
+                                onContextMenu={(e) => handleContextMenu(e, folder)}
+                                onTouchStart={(e) => handleTouchStart(e, folder)}
+                                onTouchEnd={handleTouchEnd}
+                                onTouchMove={handleTouchMove}
+                            >
+                                <motion.button
+                                    onClick={() => setFolderPath([...folderPath, folder])}
+                                    whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
+                                >
+                                    <div className="w-12 h-12 bg-stone-100 dark:bg-stone-700 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
+                                        <Folder size={24} fill="currentColor" className="text-stone-300 dark:text-stone-500" />
+                                    </div>
+                                    <span className="font-bold text-stone-800 dark:text-stone-100 line-clamp-2 text-sm">{folder.name}</span>
+                                </motion.button>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {currentFolder && (
+                        <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
+                            {memories.length === 0 && folders.length === 0 && (
+                                <div className="text-center py-12">
+                                    <p className="text-stone-400 dark:text-stone-500 text-lg font-medium">
+                                        No hay carpetas aún. ¡Crea la primera!
+                                    </p>
+                                </div>
+                            )}
+
+                            {memories.map((memory, index) => (
+                                <MemoryCard
+                                    key={memory.id}
+                                    memory={memory}
+                                    index={index}
+                                    onSelect={setSelectedMemory}
+                                    onDelete={handleDeleteMemory}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Modal: Add Options Menu */}

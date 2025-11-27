@@ -169,8 +169,8 @@ export const getFolders = async (parentId?: string) => {
     return data;
 };
 
-export const getMemories = async (folderId?: string, page: number = 0, limit: number = 12) => {
-    let query = supabase.from('memories').select('*', { count: 'exact' }).order('date', { ascending: false });
+export const getMemories = async (folderId?: string) => {
+    let query = supabase.from('memories').select('*').order('date', { ascending: false });
 
     if (folderId) {
         query = query.eq('folder_id', folderId);
@@ -178,12 +178,9 @@ export const getMemories = async (folderId?: string, page: number = 0, limit: nu
         query = query.is('folder_id', null);
     }
 
-    const from = page * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await query.range(from, to);
+    const { data, error } = await query;
     if (error) throw error;
-    return { data, count };
+    return data;
 };
 
 export const deleteMemory = async (id: string) => {
