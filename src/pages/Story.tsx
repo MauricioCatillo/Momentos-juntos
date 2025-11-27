@@ -159,7 +159,7 @@ export const Story: React.FC = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const folderId = currentFolder?.id || null;
+            const folderId = currentFolder?.id || undefined;
 
             const [foldersData, memoriesData] = await Promise.all([
                 getFolders(folderId),
