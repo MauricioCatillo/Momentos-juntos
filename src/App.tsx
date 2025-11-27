@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Layout } from './components/Layout';
+import { RouteErrorBoundary } from './components/RouteErrorBoundary';
+
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Loader2 } from 'lucide-react';
 
@@ -22,22 +24,24 @@ function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Home />} />
-              <Route path="story" element={<Story />} />
-              <Route path="daily" element={<Daily />} />
-              <Route path="future" element={<Future />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <RouteErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Home />} />
+                <Route path="story" element={<Story />} />
+                <Route path="daily" element={<Daily />} />
+                <Route path="future" element={<Future />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </RouteErrorBoundary>
       </BrowserRouter>
     </AppProvider>
   );

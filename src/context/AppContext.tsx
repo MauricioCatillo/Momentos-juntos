@@ -14,6 +14,7 @@ interface Milestone {
 interface AppState {
     user: User | null;
     session: Session | null;
+    loading: boolean;
     anniversaryDate: string;
     milestones: Milestone[];
     moods: { id: string; date: string; mood: string; note?: string }[];
@@ -39,6 +40,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [state, setState] = useState<AppState>({
         user: null,
         session: null,
+        loading: true,
         anniversaryDate: '2023-01-01', // Default
         milestones: [],
         moods: [],
@@ -58,7 +60,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setState((prev) => ({ ...prev, session, user: session?.user ?? null }));
+            setState((prev) => ({ ...prev, session, user: session?.user ?? null, loading: false }));
         });
 
         // Listen for changes
