@@ -3,7 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://pdunaxuelvzzpzhvgvcm.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkdW5heHVlbHZ6enB6aHZndmNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzExOTgsImV4cCI6MjA3OTYwNzE5OH0.fDPcGFFmNGAY09xasV4jeitoK9AIs90bFKSleoM-QuM';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        persistSession: false // Force login on every visit as requested
+    }
+});
 
 export const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
