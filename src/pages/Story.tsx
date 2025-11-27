@@ -761,6 +761,7 @@ export const Story: React.FC = () => {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 bg-black/95 flex flex-col"
                     >
+
                         <div className="p-4 flex justify-between items-center text-white/80">
                             <button onClick={() => setSelectedMemory(null)} className="p-2 hover:bg-white/10 rounded-full">
                                 <X size={24} />
@@ -781,6 +782,19 @@ export const Story: React.FC = () => {
                                     <Trash2 size={24} />
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Title, Date, and Description - Moved to top for better visibility */}
+                        <div className="px-6 py-4 bg-black/60 backdrop-blur-sm">
+                            <h2 className="text-2xl font-bold text-white mb-2">{selectedMemory.title}</h2>
+                            <p className="text-white/70 text-sm mb-3">
+                                {selectedMemory.date && format(parseISO(selectedMemory.date), "d 'de' MMMM, yyyy", { locale: es })}
+                            </p>
+                            {selectedMemory.description && (
+                                <p className="text-white/90 leading-relaxed">
+                                    {selectedMemory.description}
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
@@ -805,18 +819,6 @@ export const Story: React.FC = () => {
                                     alt={selectedMemory.title}
                                     className="max-w-full max-h-full object-contain rounded-lg"
                                 />
-                            )}
-                        </div>
-
-                        <div className="p-6 bg-gradient-to-t from-black/80 to-transparent text-white space-y-2">
-                            <h2 className="text-2xl font-bold">{selectedMemory.title}</h2>
-                            <p className="text-white/60 text-sm">
-                                {selectedMemory.date && format(parseISO(selectedMemory.date), "d 'de' MMMM, yyyy", { locale: es })}
-                            </p>
-                            {selectedMemory.description && (
-                                <p className="text-white/80 leading-relaxed max-w-2xl">
-                                    {selectedMemory.description}
-                                </p>
                             )}
                         </div>
                     </motion.div>
