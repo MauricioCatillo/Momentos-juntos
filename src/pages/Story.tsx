@@ -414,7 +414,7 @@ export const Story: React.FC = () => {
                                     onClick={() => setFolderPath([...folderPath, folder])}
                                     whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
+                                    className="glass-card dark:bg-stone-800/60 p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
                                 >
                                     <div className="w-12 h-12 bg-stone-100 dark:bg-stone-700 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
                                         <Folder size={24} fill="currentColor" className="text-stone-300 dark:text-stone-500" />
