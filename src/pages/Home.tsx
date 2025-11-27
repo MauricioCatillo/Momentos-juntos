@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Smile, LogOut, Moon, Sun } from 'lucide-react';
+import { Calendar, Smile, LogOut } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -38,24 +38,24 @@ export const Home: React.FC = () => {
     const [daysTogether, setDaysTogether] = useState(0);
 
     useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const data = await getAppSettings();
+                // Only update if data exists, otherwise keep defaults
+                if (data && Object.keys(data).length > 0) {
+                    setSettings((prev: any) => ({ ...prev, ...data }));
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        };
+
         loadSettings();
         // Calculate days together
         const startDate = new Date('2022-12-21'); // Start date for 1071 days (as of 2025-11-26)
         const today = new Date();
         setDaysTogether(differenceInDays(today, startDate));
     }, []);
-
-    const loadSettings = async () => {
-        try {
-            const data = await getAppSettings();
-            // Only update if data exists, otherwise keep defaults
-            if (data && Object.keys(data).length > 0) {
-                setSettings((prev: any) => ({ ...prev, ...data }));
-            }
-        } catch (error) {
-            console.error('Error loading settings:', error);
-        }
-    };
 
     const moodEmoji = {
         happy: '😊',
@@ -77,9 +77,9 @@ export const Home: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* <ErrorBoundary fallback={<div className="w-8 h-8 bg-stone-100 rounded-full" />}> */}
-                    <StreaksWidget count={settings.streaks?.count || 0} />
-                    {/* </ErrorBoundary> */}
+                    <ErrorBoundary fallback={<div className="w-8 h-8 bg-stone-100 rounded-full" />}>
+                        <StreaksWidget count={settings.streaks?.count || 0} />
+                    </ErrorBoundary>
 
                     <button
                         onClick={logout}
@@ -94,12 +94,12 @@ export const Home: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
                 {/* Countdown Widget */}
                 <div className="col-span-2">
-                    {/* <ErrorBoundary> */}
-                    <CountdownWidget
-                        targetDate={settings.countdown?.date}
-                        title={settings.countdown?.title}
-                    />
-                    {/* </ErrorBoundary> */}
+                    <ErrorBoundary>
+                        <CountdownWidget
+                            targetDate={settings.countdown?.date}
+                            title={settings.countdown?.title}
+                        />
+                    </ErrorBoundary>
                 </div>
 
                 {/* Days Together Card */}
@@ -143,9 +143,9 @@ export const Home: React.FC = () => {
 
                 {/* Sticky Notes */}
                 <div className="col-span-2 mt-4">
-                    {/* <ErrorBoundary> */}
-                    <StickyNotes />
-                    {/* </ErrorBoundary> */}
+                    <ErrorBoundary>
+                        <StickyNotes />
+                    </ErrorBoundary>
                 </div>
             </div>
         </div>

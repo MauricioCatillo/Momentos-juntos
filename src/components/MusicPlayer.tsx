@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, X, Disc, Play, Pause, Volume2 } from 'lucide-react';
+import { Music, X, Disc, Play, Pause } from 'lucide-react';
 
 export const MusicPlayer: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -20,9 +20,11 @@ export const MusicPlayer: React.FC = () => {
 
     useEffect(() => {
         const audio = audioRef.current;
+        const handleEnded = () => setIsPlaying(false);
+
         if (audio) {
-            audio.addEventListener('ended', () => setIsPlaying(false));
-            return () => audio.removeEventListener('ended', () => setIsPlaying(false));
+            audio.addEventListener('ended', handleEnded);
+            return () => audio.removeEventListener('ended', handleEnded);
         }
     }, []);
 
@@ -44,7 +46,7 @@ export const MusicPlayer: React.FC = () => {
                     >
                         <motion.div
                             animate={{ rotate: isPlaying ? 360 : 0 }}
-                            transition={{ duration: 8, repeat: Infinity, ease: "linear", enabled: isPlaying }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                         >
                             <Disc size={24} />
                         </motion.div>

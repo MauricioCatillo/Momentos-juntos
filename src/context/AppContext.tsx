@@ -55,7 +55,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ],
     });
 
-    const [theme] = useState<'light'>('light');
+    const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
     useEffect(() => {
         // Check active session
@@ -67,12 +67,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
-            setState((prev) => ({ ...prev, session, user: session?.user ?? null }));
+            setState((prev) => {
+                // Only update if session actually changed to prevent loops
+                if (prev.session?.access_token === session?.access_token) return prev;
+                return { ...prev, session, user: session?.user ?? null };
+            });
         });
 
-        // Fetch initial data
-        const fetchData = async () => {
-            if (!state.session?.user) return;
+        return () => subscription.unsubscribe();
+    }, []);
+
+    // Load persisted data and theme on mount
+    useEffect(() => {
+        // Theme
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+        if (savedTheme) {
+            setTheme(savedTheme);
+            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+            document.documentElement.classList.add('dark');
+        }
+
+        // Local Data Persistence
+        try {
+            const savedBucket = localStorage.getItem('bucketList');
+            const savedCoupons = localStorage.getItem('coupons');
+            const savedMilestones = localStorage.getItem('milestones');
+
+            setState(prev => ({
+                ...prev,
+                bucketList: savedBucket ? JSON.parse(savedBucket) : prev.bucketList,
+                coupons: savedCoupons ? JSON.parse(savedCoupons) : prev.coupons,
+                milestones: savedMilestones ? JSON.parse(savedMilestones) : prev.milestones
+            }));
+        } catch (e) {
+            console.error('Error loading local data:', e);
+        }
+    }, []);
+
+    // Fetch Moods when user changes
+    useEffect(() => {
+        const fetchMoods = async () => {
+            if (!state.user) return;
 
             const { data: moodsData } = await supabase
                 .from('moods')
@@ -93,23 +130,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
         };
 
-        fetchData();
+        fetchMoods();
+    }, [state.user?.id]);
 
-        return () => subscription.unsubscribe();
-    }, [state.session]);
-
-    React.useLayoutEffect(() => {
-        try {
-            const root = window.document.documentElement;
-            root.classList.remove('dark');
-            root.classList.add('light');
-            localStorage.setItem('theme', 'light');
-        } catch (error) {
-            console.error('Error applying theme:', error);
-        }
-    }, []);
-
-
+    // Persist data changes
+    useEffect(() => {
+        localStorage.setItem('bucketList', JSON.stringify(state.bucketList));
+        localStorage.setItem('coupons', JSON.stringify(state.coupons));
+        localStorage.setItem('milestones', JSON.stringify(state.milestones));
+    }, [state.bucketList, state.coupons, state.milestones]);
 
     const login = async (email: string, password: string) => {
         await signInWithEmail(email, password);
