@@ -150,39 +150,7 @@ export const Story: React.FC = () => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Load data when current folder changes
-    useEffect(() => {
-        loadData();
-    }, [currentFolder]);
 
-    const loadData = async () => {
-        // Strict Validation: Prevent fetch if state is unstable during navigation
-        if (currentFolder === undefined) return;
-
-        setIsLoading(true);
-        setError(null);
-        try {
-            const folderId = currentFolder?.id;
-
-            const [foldersData, memoriesData] = await Promise.all([
-                getFolders(folderId),
-                getMemories(folderId)
-            ]);
-
-            setFolders(foldersData || []);
-            setMemories(memoriesData || []);
-        } catch (err: any) {
-            // Ignore "Failed to fetch" if it's just a cancellation/navigation artifact
-            if (err.message === 'TypeError: Failed to fetch') {
-                console.warn('Fetch aborted during navigation');
-                return;
-            }
-            console.error('Error Supabase:', err);
-            setError(err.message || 'Error al cargar los datos. Por favor revisa tu conexión.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleCreateFolder = async (e: React.FormEvent) => {
         e.preventDefault();
