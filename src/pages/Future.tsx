@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Plus, Ticket } from 'lucide-react';
+import { Check, Plus, Ticket, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 
 export const Future: React.FC = () => {
-    const { bucketList, coupons, toggleBucketItem, addBucketItem, redeemCoupon, addCoupon } = useApp();
+    const { bucketList, coupons, toggleBucketItem, addBucketItem, redeemCoupon, addCoupon, deleteBucketItem, deleteCoupon } = useApp();
     const [newItem, setNewItem] = useState('');
     const [newCoupon, setNewCoupon] = useState('');
     const [activeTab, setActiveTab] = useState<'bucket' | 'coupons'>('bucket');
@@ -81,7 +81,7 @@ export const Future: React.FC = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className={cn(
-                                    "flex items-center gap-3 p-4 rounded-xl transition-all",
+                                    "flex items-center gap-3 p-4 rounded-xl transition-all group relative",
                                     item.completed ? "bg-sage-green/20 dark:bg-sage-green/10" : "glass-card"
                                 )}
                             >
@@ -94,9 +94,15 @@ export const Future: React.FC = () => {
                                 >
                                     <Check size={14} strokeWidth={3} />
                                 </button>
-                                <span className={cn("flex-1 break-words", item.completed ? "text-stone-400 dark:text-stone-500 line-through" : "text-stone-800 dark:text-stone-100")}>
+                                <span className={cn("flex-1 break-words pr-8", item.completed ? "text-stone-400 dark:text-stone-500 line-through" : "text-stone-800 dark:text-stone-100")}>
                                     {item.text}
                                 </span>
+                                <button
+                                    onClick={() => deleteBucketItem(item.id)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </motion.div>
                         ))}
                     </div>
@@ -139,6 +145,13 @@ export const Future: React.FC = () => {
                                 {/* Ticket cutouts */}
                                 <div className="absolute top-1/2 -left-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
                                 <div className="absolute top-1/2 -right-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
+
+                                <button
+                                    onClick={() => deleteCoupon(coupon.id)}
+                                    className="absolute top-2 right-2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
 
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="p-2 bg-soft-blush/10 rounded-lg text-soft-blush">

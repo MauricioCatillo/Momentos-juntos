@@ -33,6 +33,8 @@ interface AppContextType extends AppState {
     addBucketItem: (text: string) => void;
     redeemCoupon: (id: string) => void;
     addCoupon: (title: string) => void;
+    deleteBucketItem: (id: string) => void;
+    deleteCoupon: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -243,6 +245,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }));
     };
 
+    const deleteBucketItem = (id: string) => {
+        setState((prev) => ({
+            ...prev,
+            bucketList: prev.bucketList.filter((item) => item.id !== id),
+        }));
+    };
+
+    const deleteCoupon = (id: string) => {
+        setState((prev) => ({
+            ...prev,
+            coupons: prev.coupons.filter((coupon) => coupon.id !== id),
+        }));
+    };
+
     return (
         <AppContext.Provider
             value={{
@@ -258,6 +274,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 addBucketItem,
                 redeemCoupon,
                 addCoupon,
+                deleteBucketItem,
+                deleteCoupon,
             }}
         >
             {children}
