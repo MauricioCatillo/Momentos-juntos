@@ -23,6 +23,38 @@ const MOODS = [
     { id: 'sad', label: 'Triste', icon: Frown, color: 'bg-indigo-100 text-indigo-600' },
 ] as const;
 
+const MoodButton = React.memo(({ mood, isSelected, onSelect }: { mood: typeof MOODS[number], isSelected: boolean, onSelect: (id: string) => void }) => {
+    return (
+        <button
+            onClick={() => onSelect(mood.id)}
+            className="group relative flex flex-col items-center gap-2"
+        >
+            <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                animate={{
+                    scale: isSelected ? 1.2 : 1,
+                    y: isSelected ? -5 : 0
+                }}
+                className={cn(
+                    "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm",
+                    isSelected
+                        ? "bg-white dark:bg-stone-800 text-rose-500 border-2 border-rose-400 shadow-lg shadow-rose-200 dark:shadow-none scale-110"
+                        : "bg-white dark:bg-stone-800 text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700"
+                )}
+            >
+                <mood.icon size={24} strokeWidth={isSelected ? 2.5 : 2} />
+            </motion.div>
+            <span className={cn(
+                "text-[10px] font-medium transition-colors duration-300",
+                isSelected ? "text-stone-800 dark:text-stone-100 font-bold" : "text-stone-400"
+            )}>
+                {mood.label}
+            </span>
+        </button>
+    );
+});
+
 export const Daily: React.FC = () => {
     const { addMood, moods, user } = useApp();
     const [answered, setAnswered] = useState(false);
@@ -52,8 +84,10 @@ export const Daily: React.FC = () => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
     const question = QUESTIONS[dayOfYear % QUESTIONS.length];
 
-    const handleMoodSelect = async (moodId: typeof MOODS[number]['id']) => {
-        await addMood(moodId);
+    const handleMoodSelect = (moodId: typeof MOODS[number]['id']) => {
+        // Fire and forget - NO await
+        addMood(moodId);
+
         const moodLabel = MOODS.find(m => m.id === moodId)?.label;
         setFeedback(
             moodId === 'happy' || moodId === 'excited' ? `¡Qué alegría que estés ${moodLabel}! 🌟` :
@@ -136,39 +170,14 @@ export const Daily: React.FC = () => {
                 <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-6">¿Cómo te sientes hoy?</h3>
 
                 <div className="flex justify-between items-center gap-2 mb-6">
-                    {MOODS.map((mood) => {
-                        const isSelected = todayMood?.mood === mood.id;
-                        return (
-                            <button
-                                key={mood.id}
-                                onClick={() => handleMoodSelect(mood.id)}
-                                className="group relative flex flex-col items-center gap-2"
-                            >
-                                <motion.div
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    animate={{
-                                        scale: isSelected ? 1.2 : 1,
-                                        y: isSelected ? -5 : 0
-                                    }}
-                                    className={cn(
-                                        "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm",
-                                        isSelected
-                                            ? "bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 shadow-lg ring-4 ring-stone-100 dark:ring-stone-800"
-                                            : "bg-white dark:bg-stone-800 text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700"
-                                    )}
-                                >
-                                    <mood.icon size={24} strokeWidth={isSelected ? 2.5 : 2} />
-                                </motion.div>
-                                <span className={cn(
-                                    "text-[10px] font-medium transition-colors duration-300",
-                                    isSelected ? "text-stone-800 dark:text-stone-100 font-bold" : "text-stone-400"
-                                )}>
-                                    {mood.label}
-                                </span>
-                            </button>
-                        );
-                    })}
+                    {MOODS.map((mood) => (
+                        <MoodButton
+                            key={mood.id}
+                            mood={mood}
+                            isSelected={todayMood?.mood === mood.id}
+                            onSelect={handleMoodSelect}
+                        />
+                    ))}
                 </div>
 
                 <AnimatePresence>

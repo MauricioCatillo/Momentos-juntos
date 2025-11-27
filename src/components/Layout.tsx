@@ -25,7 +25,7 @@ export const Layout: React.FC = () => {
             <div className="w-full max-w-md bg-stone-50 dark:bg-stone-900 min-h-screen lg:min-h-[850px] lg:h-[850px] lg:max-h-[90vh] lg:rounded-[3rem] lg:shadow-2xl lg:border-[8px] lg:border-white/30 dark:lg:border-stone-800/30 relative overflow-hidden flex flex-col transition-all duration-500">
 
                 {/* Content Area with Scroll */}
-                <div className="flex-1 overflow-y-auto scrollbar-hide pb-24">
+                <div className="flex-1 overflow-y-auto scrollbar-hide pb-32">
                     <Outlet />
                 </div>
 

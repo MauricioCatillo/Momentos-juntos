@@ -24,12 +24,106 @@ interface MemoryType {
     folder_id?: string;
 }
 
+
+const SafeImage = ({ src, alt, className }: { src?: string, alt: string, className?: string }) => {
+    const [error, setError] = useState(false);
+
+    if (error || !src) {
+        return (
+            <div className={`flex items-center justify-center bg-stone-100 dark:bg-stone-700 text-stone-400 ${className}`}>
+                <div className="text-center p-4">
+                    <span className="text-xs">Imagen no disponible</span>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            className={className}
+            onError={() => setError(true)}
+        />
+    );
+};
+
+const MemoryCard = React.memo(({ memory, index, onSelect, onDelete }: { memory: MemoryType, index: number, onSelect: (m: MemoryType) => void, onDelete: (id: string) => void }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }} // Reduced delay for faster feel
+            className="relative pl-6 group"
+        >
+            {/* Dot */}
+            <div className="absolute -left-[21px] top-2 w-4 h-4 bg-soft-blush rounded-full border-4 border-sand" />
+
+            <div
+                className="glass-card p-5 rounded-2xl cursor-pointer hover:shadow-md transition-shadow relative"
+                onClick={() => onSelect(memory)}
+            >
+                <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-medium text-soft-blush uppercase tracking-wider block">
+                        {format(parseISO(memory.date), "d 'de' MMMM, yyyy", { locale: es })}
+                    </span>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(memory.id);
+                        }}
+                        className="p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+
+                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-2">{memory.title}</h3>
+                {memory.description && (
+                    <p className="text-stone-600 dark:text-stone-400 text-sm mb-3 line-clamp-2 break-words">{memory.description}</p>
+                )}
+                {(memory.media_url || memory.image || memory.external_url) && (
+                    <div className="relative w-full h-48 rounded-xl overflow-hidden bg-stone-100">
+                        {memory.external_url ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-200 text-stone-500">
+                                <Video size={48} className="mb-2 text-soft-blush" />
+                                <span className="text-xs font-medium uppercase tracking-wider">Video de Drive</span>
+                            </div>
+                        ) : memory.media_type === 'video' ? (
+                            <video src={memory.media_url} className="w-full h-full object-cover" />
+                        ) : (
+                            <SafeImage
+                                src={memory.media_url || memory.image}
+                                alt={memory.title}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                        {(memory.media_type === 'video' || memory.external_url) && !memory.external_url && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <div className="bg-white/30 backdrop-blur-sm p-3 rounded-full">
+                                    <Video className="text-white" size={24} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+});
+
 export const Story: React.FC = () => {
     // State
     const [folders, setFolders] = useState<FolderType[]>([]);
     const [folderPath, setFolderPath] = useState<FolderType[]>([]);
     const currentFolder = folderPath[folderPath.length - 1] || null;
     const [memories, setMemories] = useState<MemoryType[]>([]);
+
+    // Pagination State
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Modals
     const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -63,7 +157,10 @@ export const Story: React.FC = () => {
     useEffect(() => {
         loadFolders(currentFolder?.id);
         if (currentFolder) {
-            loadMemories(currentFolder.id);
+            setMemories([]); // Clear previous memories
+            setPage(0);
+            setHasMore(true);
+            loadMemories(currentFolder.id, 0);
         } else {
             setMemories([]);
         }
@@ -78,13 +175,38 @@ export const Story: React.FC = () => {
         }
     };
 
-    const loadMemories = async (folderId: string) => {
+    const loadMemories = async (folderId: string, pageNum: number) => {
+        setIsLoading(true);
         try {
-            const data = await getMemories(folderId);
-            setMemories(data || []);
+            const { data, count } = await getMemories(folderId, pageNum, 12);
+            if (data) {
+                if (pageNum === 0) {
+                    setMemories(data);
+                } else {
+                    setMemories(prev => [...prev, ...data]);
+                }
+
+                // Check if we have more
+                if (count !== null && (pageNum + 1) * 12 >= count) {
+                    setHasMore(false);
+                } else if (data.length < 12) {
+                    setHasMore(false);
+                } else {
+                    setHasMore(true);
+                }
+            }
         } catch (error) {
             console.error('Error loading memories:', error);
+        } finally {
+            setIsLoading(false);
         }
+    };
+
+    const loadMoreMemories = () => {
+        if (!currentFolder || isLoading || !hasMore) return;
+        const nextPage = page + 1;
+        setPage(nextPage);
+        loadMemories(currentFolder.id, nextPage);
     };
 
     const handleCreateFolder = async (e: React.FormEvent) => {
@@ -318,75 +440,33 @@ export const Story: React.FC = () => {
 
             {currentFolder && (
                 <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
-                    {memories.length === 0 && folders.length === 0 && (
+                    {memories.length === 0 && folders.length === 0 && !isLoading && (
                         <div className="text-stone-400 dark:text-stone-500 italic text-sm pl-4 py-10">
                             Esta carpeta está vacía. ¡Agrega sub-carpetas o recuerdos!
                         </div>
                     )}
 
                     {memories.map((memory, index) => (
-                        <motion.div
+                        <MemoryCard
                             key={memory.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="relative pl-6 group"
-                        >
-                            {/* Dot */}
-                            <div className="absolute -left-[21px] top-2 w-4 h-4 bg-soft-blush rounded-full border-4 border-sand" />
-
-                            <div
-                                className="glass-card p-5 rounded-2xl cursor-pointer hover:shadow-md transition-shadow relative"
-                                onClick={() => setSelectedMemory(memory)}
-                            >
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="text-xs font-medium text-soft-blush uppercase tracking-wider block">
-                                        {format(parseISO(memory.date), "d 'de' MMMM, yyyy", { locale: es })}
-                                    </span>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteMemory(memory.id);
-                                        }}
-                                        className="p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-
-                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-2">{memory.title}</h3>
-                                {memory.description && (
-                                    <p className="text-stone-600 dark:text-stone-400 text-sm mb-3 line-clamp-2 break-words">{memory.description}</p>
-                                )}
-                                {(memory.media_url || memory.image || memory.external_url) && (
-                                    <div className="relative w-full h-48 rounded-xl overflow-hidden bg-stone-100">
-                                        {memory.external_url ? (
-                                            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-200 text-stone-500">
-                                                <Video size={48} className="mb-2 text-soft-blush" />
-                                                <span className="text-xs font-medium uppercase tracking-wider">Video de Drive</span>
-                                            </div>
-                                        ) : memory.media_type === 'video' ? (
-                                            <video src={memory.media_url} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <img
-                                                src={memory.media_url || memory.image}
-                                                alt={memory.title}
-                                                loading="lazy"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        )}
-                                        {(memory.media_type === 'video' || memory.external_url) && !memory.external_url && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                                <div className="bg-white/30 backdrop-blur-sm p-3 rounded-full">
-                                                    <Video className="text-white" size={24} />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
+                            memory={memory}
+                            index={index}
+                            onSelect={setSelectedMemory}
+                            onDelete={handleDeleteMemory}
+                        />
                     ))}
+
+                    {hasMore && (
+                        <div className="flex justify-center pt-8 pb-4">
+                            <button
+                                onClick={() => loadMoreMemories()}
+                                disabled={isLoading}
+                                className="px-6 py-2 bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 rounded-full text-sm font-medium hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isLoading ? <Loader2 className="animate-spin" size={16} /> : 'Cargar más recuerdos'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

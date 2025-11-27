@@ -14,38 +14,45 @@ const navItems = [
 export const BottomNav: React.FC = () => {
     return (
         <div
-            className="w-full px-6 pt-2 bg-gradient-to-t from-white/90 via-white/80 to-transparent dark:from-stone-900/90 dark:via-stone-900/80 backdrop-blur-sm"
-            style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+            className="w-full fixed bottom-0 left-0 z-50 pointer-events-none"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-            <div className="bg-white/80 dark:bg-stone-800/80 backdrop-blur-xl border border-white/50 dark:border-stone-700/50 rounded-full shadow-lg shadow-stone-200/50 dark:shadow-none py-2 px-6 flex justify-between items-center">
-                {navItems.map(({ path, icon: Icon, label }) => (
-                    <NavLink
-                        key={path}
-                        to={path}
-                        className={({ isActive }) =>
-                            cn(
-                                "flex flex-col items-center justify-center p-2 transition-all duration-300 relative group",
-                                isActive ? "text-soft-blush scale-110" : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:scale-105"
-                            )
-                        }
-                    >
-                        {({ isActive }) => (
-                            <>
-                                <div className="relative">
-                                    <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="nav-indicator"
-                                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-soft-blush rounded-full"
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                        />
-                                    )}
-                                </div>
-                                <span className={cn("text-[10px] font-medium mt-1 transition-opacity", isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>{label}</span>
-                            </>
-                        )}
-                    </NavLink>
-                ))}
+            <div className="w-full px-4 pb-4 pt-2 bg-gradient-to-t from-white/95 via-white/90 to-transparent dark:from-stone-900/95 dark:via-stone-900/90 pointer-events-auto">
+                <div className="bg-white/95 dark:bg-stone-800/95 backdrop-blur-xl border border-white/50 dark:border-stone-700/50 rounded-2xl shadow-2xl shadow-stone-300/50 dark:shadow-none py-3 px-2 flex justify-around items-center max-w-md mx-auto">
+                    {navItems.map(({ path, icon: Icon, label }) => (
+                        <NavLink
+                            key={path}
+                            to={path}
+                            className={({ isActive }) =>
+                                cn(
+                                    "flex flex-col items-center justify-center p-1 transition-all duration-300 relative group min-w-[4rem]",
+                                    isActive ? "text-rose-600 dark:text-rose-400 scale-105" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                                )
+                            }
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    <div className="relative">
+                                        <Icon size={28} strokeWidth={2} />
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="nav-indicator"
+                                                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-rose-600 rounded-full"
+                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            />
+                                        )}
+                                    </div>
+                                    <span className={cn(
+                                        "text-[10px] font-bold mt-1 transition-opacity tracking-wide",
+                                        isActive ? "opacity-100" : "opacity-100"
+                                    )}>
+                                        {label}
+                                    </span>
+                                </>
+                            )}
+                        </NavLink>
+                    ))}
+                </div>
             </div>
         </div>
     );

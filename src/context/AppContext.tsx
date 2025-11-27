@@ -23,7 +23,6 @@ interface AppState {
 
 interface AppContextType extends AppState {
     theme: 'light' | 'dark';
-    toggleTheme: () => void;
     login: (email: string, password: string) => Promise<void>;
     signup: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
@@ -54,17 +53,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ],
     });
 
-    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        try {
-            if (typeof window !== 'undefined') {
-                const stored = localStorage.getItem('theme');
-                return (stored === 'dark' || stored === 'light') ? stored : 'light';
-            }
-        } catch (error) {
-            console.error('Error accessing localStorage:', error);
-        }
-        return 'light';
-    });
+    const [theme] = useState<'light'>('light');
 
     useEffect(() => {
         // Check active session
@@ -86,7 +75,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const { data: moodsData } = await supabase
                 .from('moods')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(7);
 
             if (moodsData) {
                 setState(prev => ({
@@ -106,20 +96,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return () => subscription.unsubscribe();
     }, [state.session]);
 
-    useEffect(() => {
+    React.useLayoutEffect(() => {
         try {
             const root = window.document.documentElement;
-            root.classList.remove('light', 'dark');
-            root.classList.add(theme);
-            localStorage.setItem('theme', theme);
+            root.classList.remove('dark');
+            root.classList.add('light');
+            localStorage.setItem('theme', 'light');
         } catch (error) {
             console.error('Error applying theme:', error);
         }
-    }, [theme]);
+    }, []);
 
-    const toggleTheme = () => {
-        setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-    };
+
 
     const login = async (email: string, password: string) => {
         await signInWithEmail(email, password);
@@ -141,24 +129,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const addMood = async (mood: string) => {
         if (!state.user) return;
 
-        const { data, error } = await supabase
-            .from('moods')
-            .insert([{
-                mood,
-                user_id: state.user.id
-            }])
-            .select()
-            .single();
+        // Optimistic update
+        const tempId = 'temp-' + Date.now();
+        const tempMood = {
+            id: tempId,
+            date: new Date().toISOString(),
+            mood,
+            note: ''
+        };
 
-        if (data && !error) {
+        setState((prev) => ({
+            ...prev,
+            moods: [tempMood, ...prev.moods]
+        }));
+
+        try {
+            const { data, error } = await supabase
+                .from('moods')
+                .insert([{
+                    mood,
+                    user_id: state.user.id
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                // Replace temp mood with real one
+                setState((prev) => ({
+                    ...prev,
+                    moods: prev.moods.map(m => m.id === tempId ? {
+                        id: data.id,
+                        date: data.created_at,
+                        mood: data.mood,
+                        note: data.note
+                    } : m),
+                }));
+            }
+        } catch (error) {
+            console.error('Error adding mood:', error);
+            // Revert optimistic update
             setState((prev) => ({
                 ...prev,
-                moods: [{
-                    id: data.id,
-                    date: data.created_at,
-                    mood: data.mood,
-                    note: data.note
-                }, ...prev.moods],
+                moods: prev.moods.filter(m => m.id !== tempId)
             }));
         }
     };
@@ -194,7 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             value={{
                 ...state,
                 theme,
-                toggleTheme,
+
                 login,
                 signup,
                 logout,

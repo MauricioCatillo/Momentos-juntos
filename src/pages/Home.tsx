@@ -8,6 +8,7 @@ import { CountdownWidget } from '../components/CountdownWidget';
 import { StreaksWidget } from '../components/StreaksWidget';
 import { StickyNotes } from '../components/StickyNotes';
 import { getAppSettings } from '../supabaseClient';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const BentoCard: React.FC<{
     children: React.ReactNode;
@@ -27,7 +28,7 @@ const BentoCard: React.FC<{
 );
 
 export const Home: React.FC = () => {
-    const { moods, user, logout, theme, toggleTheme } = useApp();
+    const { moods, user, logout } = useApp();
     const lastMood = moods[moods.length - 1]?.mood || 'neutral';
     const [settings, setSettings] = useState<any>({
         countdown: { date: new Date().toISOString(), title: 'Cargando...' },
@@ -76,14 +77,10 @@ export const Home: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* <ErrorBoundary fallback={<div className="w-8 h-8 bg-stone-100 rounded-full" />}> */}
                     <StreaksWidget count={settings.streaks?.count || 0} />
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2 bg-white dark:bg-stone-800 rounded-full text-stone-400 dark:text-stone-300 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-stone-700 transition-colors shadow-sm"
-                        title={theme === 'light' ? 'Modo Oscuro' : 'Modo Claro'}
-                    >
-                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
+                    {/* </ErrorBoundary> */}
+
                     <button
                         onClick={logout}
                         className="p-2 bg-white dark:bg-stone-800 rounded-full text-stone-400 dark:text-stone-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-stone-700 transition-colors shadow-sm"
@@ -97,10 +94,12 @@ export const Home: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
                 {/* Countdown Widget */}
                 <div className="col-span-2">
+                    {/* <ErrorBoundary> */}
                     <CountdownWidget
                         targetDate={settings.countdown?.date}
                         title={settings.countdown?.title}
                     />
+                    {/* </ErrorBoundary> */}
                 </div>
 
                 {/* Days Together Card */}
@@ -144,7 +143,9 @@ export const Home: React.FC = () => {
 
                 {/* Sticky Notes */}
                 <div className="col-span-2 mt-4">
+                    {/* <ErrorBoundary> */}
                     <StickyNotes />
+                    {/* </ErrorBoundary> */}
                 </div>
             </div>
         </div>
