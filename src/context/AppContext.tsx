@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, signInWithEmail, signUpWithEmail, signOut } from '../supabaseClient';
+import { supabase, signInWithEmail, signUpWithEmail, signOut, getBucketList, getCoupons, getMilestones, addBucketItem as addBucketItemToDb, addCoupon as addCouponToDb, addMilestone as addMilestoneToDb, toggleBucketItem as toggleBucketItemInDb, redeemCoupon as redeemCouponInDb, deleteBucketItem as deleteBucketItemInDb, deleteCoupon as deleteCouponInDb } from '../supabaseClient';
 import type { Session, User } from '@supabase/supabase-js';
 
 interface Milestone {
@@ -91,57 +91,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setTheme('dark');
             document.documentElement.classList.add('dark');
         }
-
-        // Local Data Persistence
-        try {
-            const savedBucket = localStorage.getItem('bucketList');
-            const savedCoupons = localStorage.getItem('coupons');
-            const savedMilestones = localStorage.getItem('milestones');
-
-            setState(prev => ({
-                ...prev,
-                bucketList: savedBucket ? JSON.parse(savedBucket) : prev.bucketList,
-                coupons: savedCoupons ? JSON.parse(savedCoupons) : prev.coupons,
-                milestones: savedMilestones ? JSON.parse(savedMilestones) : prev.milestones
-            }));
-        } catch (e) {
-            console.error('Error loading local data:', e);
-        }
     }, []);
 
-    // Fetch Moods when user changes
+    // Fetch Data when user changes
     useEffect(() => {
-        const fetchMoods = async () => {
+        const fetchData = async () => {
             if (!state.user) return;
 
-            const { data: moodsData } = await supabase
-                .from('moods')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(7);
+            try {
+                const [moodsData, bucketData, couponsData, milestonesData] = await Promise.all([
+                    supabase.from('moods').select('*').order('created_at', { ascending: false }).limit(7),
+                    getBucketList(),
+                    getCoupons(),
+                    getMilestones()
+                ]);
 
-            if (moodsData) {
                 setState(prev => ({
                     ...prev,
-                    moods: moodsData.map(m => ({
+                    moods: moodsData.data ? moodsData.data.map(m => ({
                         id: m.id,
                         date: m.created_at,
                         mood: m.mood,
                         note: m.note
-                    }))
+                    })) : [],
+                    bucketList: bucketData || [],
+                    coupons: couponsData || [],
+                    milestones: milestonesData || []
                 }));
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
         };
 
-        fetchMoods();
+        fetchData();
     }, [state.user?.id]);
-
-    // Persist data changes
-    useEffect(() => {
-        localStorage.setItem('bucketList', JSON.stringify(state.bucketList));
-        localStorage.setItem('coupons', JSON.stringify(state.coupons));
-        localStorage.setItem('milestones', JSON.stringify(state.milestones));
-    }, [state.bucketList, state.coupons, state.milestones]);
 
     const login = async (email: string, password: string) => {
         await signInWithEmail(email, password);
@@ -153,11 +136,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const logout = async () => {
         await signOut();
-        setState((prev) => ({ ...prev, user: null, session: null }));
+        setState((prev) => ({ ...prev, user: null, session: null, bucketList: [], coupons: [], milestones: [], moods: [] }));
     };
 
-    const addMilestone = (milestone: Milestone) => {
-        setState((prev) => ({ ...prev, milestones: [...prev.milestones, milestone] }));
+    const addMilestone = async (milestone: Milestone) => {
+        try {
+            const newMilestone = await addMilestoneToDb({
+                title: milestone.title,
+                date: milestone.date,
+                description: milestone.description,
+                image: milestone.image,
+                location: milestone.location,
+                user_id: state.user?.id
+            });
+            if (newMilestone) {
+                setState((prev) => ({ ...prev, milestones: [...prev.milestones, newMilestone] }));
+            }
+        } catch (error) {
+            console.error('Error adding milestone:', error);
+        }
     };
 
     const addMood = async (mood: string) => {
@@ -211,52 +208,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
-    const toggleBucketItem = (id: string) => {
+    const toggleBucketItem = async (id: string) => {
+        const item = state.bucketList.find(i => i.id === id);
+        if (!item) return;
+
+        // Optimistic update
         setState((prev) => ({
             ...prev,
             bucketList: prev.bucketList.map((item) =>
                 item.id === id ? { ...item, completed: !item.completed } : item
             ),
         }));
+
+        try {
+            await toggleBucketItemInDb(id, !item.completed);
+        } catch (error) {
+            console.error('Error toggling bucket item:', error);
+            // Revert
+            setState((prev) => ({
+                ...prev,
+                bucketList: prev.bucketList.map((item) =>
+                    item.id === id ? { ...item, completed: !item.completed } : item
+                ),
+            }));
+        }
     };
 
-    const addBucketItem = (text: string) => {
-        const newItem = { id: Date.now().toString(), text, completed: false };
-        setState((prev) => ({
-            ...prev,
-            bucketList: [...prev.bucketList, newItem],
-        }));
+    const addBucketItem = async (text: string) => {
+        try {
+            const newItem = await addBucketItemToDb(text);
+            if (newItem) {
+                setState((prev) => ({
+                    ...prev,
+                    bucketList: [...prev.bucketList, newItem],
+                }));
+            }
+        } catch (error) {
+            console.error('Error adding bucket item:', error);
+        }
     };
 
-    const redeemCoupon = (id: string) => {
+    const redeemCoupon = async (id: string) => {
+        // Optimistic update
         setState((prev) => ({
             ...prev,
             coupons: prev.coupons.map((coupon) =>
                 coupon.id === id ? { ...coupon, redeemed: true } : coupon
             ),
         }));
+
+        try {
+            await redeemCouponInDb(id);
+        } catch (error) {
+            console.error('Error redeeming coupon:', error);
+            // Revert
+            setState((prev) => ({
+                ...prev,
+                coupons: prev.coupons.map((coupon) =>
+                    coupon.id === id ? { ...coupon, redeemed: false } : coupon
+                ),
+            }));
+        }
     };
 
-    const addCoupon = (title: string) => {
-        const newCoupon = { id: Date.now().toString(), title, redeemed: false };
-        setState((prev) => ({
-            ...prev,
-            coupons: [...prev.coupons, newCoupon],
-        }));
+    const addCoupon = async (title: string) => {
+        try {
+            const newCoupon = await addCouponToDb(title);
+            if (newCoupon) {
+                setState((prev) => ({
+                    ...prev,
+                    coupons: [...prev.coupons, newCoupon],
+                }));
+            }
+        } catch (error) {
+            console.error('Error adding coupon:', error);
+        }
     };
 
-    const deleteBucketItem = (id: string) => {
+    const deleteBucketItem = async (id: string) => {
+        const originalList = state.bucketList;
         setState((prev) => ({
             ...prev,
             bucketList: prev.bucketList.filter((item) => item.id !== id),
         }));
+
+        try {
+            await deleteBucketItemInDb(id);
+        } catch (error) {
+            console.error('Error deleting bucket item:', error);
+            setState(prev => ({ ...prev, bucketList: originalList }));
+        }
     };
 
-    const deleteCoupon = (id: string) => {
+    const deleteCoupon = async (id: string) => {
+        const originalList = state.coupons;
         setState((prev) => ({
             ...prev,
             coupons: prev.coupons.filter((coupon) => coupon.id !== id),
         }));
+
+        try {
+            await deleteCouponInDb(id);
+        } catch (error) {
+            console.error('Error deleting coupon:', error);
+            setState(prev => ({ ...prev, coupons: originalList }));
+        }
     };
 
     return (

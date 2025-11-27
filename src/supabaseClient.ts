@@ -196,3 +196,94 @@ export const deleteFolder = async (id: string) => {
     const { error } = await supabase.from('folders').delete().match({ id });
     if (error) throw error;
 };
+// Bucket List Helpers
+export const getBucketList = async () => {
+    const { data, error } = await supabase
+        .from('bucket_list')
+        .select('*')
+        .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data;
+};
+
+export const addBucketItem = async (text: string) => {
+    const { data, error } = await supabase
+        .from('bucket_list')
+        .insert([{ text }])
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const toggleBucketItem = async (id: string, completed: boolean) => {
+    const { error } = await supabase
+        .from('bucket_list')
+        .update({ completed })
+        .eq('id', id);
+    if (error) throw error;
+};
+
+export const deleteBucketItem = async (id: string) => {
+    const { error } = await supabase
+        .from('bucket_list')
+        .delete()
+        .eq('id', id);
+    if (error) throw error;
+};
+
+// Coupon Helpers
+export const getCoupons = async () => {
+    const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data;
+};
+
+export const addCoupon = async (title: string) => {
+    const { data, error } = await supabase
+        .from('coupons')
+        .insert([{ title }])
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const redeemCoupon = async (id: string) => {
+    const { error } = await supabase
+        .from('coupons')
+        .update({ redeemed: true })
+        .eq('id', id);
+    if (error) throw error;
+};
+
+export const deleteCoupon = async (id: string) => {
+    const { error } = await supabase
+        .from('coupons')
+        .delete()
+        .eq('id', id);
+    if (error) throw error;
+};
+
+// Milestone Helpers
+export const getMilestones = async () => {
+    const { data, error } = await supabase
+        .from('milestones')
+        .select('*')
+        .order('date', { ascending: true });
+    if (error) throw error;
+    return data;
+};
+
+export const addMilestone = async (milestone: any) => {
+    const { data, error } = await supabase
+        .from('milestones')
+        .insert([milestone])
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
