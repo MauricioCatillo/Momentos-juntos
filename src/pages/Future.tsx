@@ -5,8 +5,9 @@ import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 
 export const Future: React.FC = () => {
-    const { bucketList, coupons, toggleBucketItem, addBucketItem, redeemCoupon } = useApp();
+    const { bucketList, coupons, toggleBucketItem, addBucketItem, redeemCoupon, addCoupon } = useApp();
     const [newItem, setNewItem] = useState('');
+    const [newCoupon, setNewCoupon] = useState('');
     const [activeTab, setActiveTab] = useState<'bucket' | 'coupons'>('bucket');
 
     const handleAddItem = (e: React.FormEvent) => {
@@ -14,6 +15,13 @@ export const Future: React.FC = () => {
         if (!newItem.trim()) return;
         addBucketItem(newItem);
         setNewItem('');
+    };
+
+    const handleAddCoupon = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newCoupon.trim()) return;
+        addCoupon(newCoupon);
+        setNewCoupon('');
     };
 
     return (
@@ -98,51 +106,68 @@ export const Future: React.FC = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="grid grid-cols-1 gap-4"
+                    className="space-y-6"
                 >
-                    {coupons.map((coupon: { id: string; redeemed: boolean; title: string }) => (
-                        <motion.div
-                            key={coupon.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={cn(
-                                "relative p-6 rounded-2xl border-2 border-dashed transition-all overflow-hidden group",
-                                coupon.redeemed
-                                    ? "bg-stone-100 dark:bg-stone-800 border-stone-300 dark:border-stone-700 opacity-70"
-                                    : "glass-card border-soft-blush hover:border-soft-blush/70 hover:shadow-md"
-                            )}
+                    <form onSubmit={handleAddCoupon} className="relative">
+                        <input
+                            value={newCoupon}
+                            onChange={(e) => setNewCoupon(e.target.value)}
+                            placeholder="Nuevo cupón (ej: Vale por un abrazo)..."
+                            className="w-full px-4 py-3 pr-12 rounded-xl glass-input shadow-sm focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100 dark:placeholder:text-stone-400"
+                        />
+                        <button
+                            type="submit"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-stone-800 dark:bg-stone-700 text-white rounded-lg active:scale-95 transition-transform"
                         >
-                            {/* Ticket cutouts */}
-                            <div className="absolute top-1/2 -left-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
-                            <div className="absolute top-1/2 -right-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
+                            <Plus size={16} />
+                        </button>
+                    </form>
 
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-soft-blush/10 rounded-lg text-soft-blush">
-                                    <Ticket size={24} />
-                                </div>
-                                {coupon.redeemed ? (
-                                    <span className="px-3 py-1 bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 text-xs font-bold rounded-full uppercase">
-                                        Usado
-                                    </span>
-                                ) : (
-                                    <span className="px-3 py-1 bg-sage-green/10 text-sage-green text-xs font-bold rounded-full uppercase">
-                                        Disponible
-                                    </span>
+                    <div className="grid grid-cols-1 gap-4">
+                        {coupons.map((coupon: { id: string; redeemed: boolean; title: string }) => (
+                            <motion.div
+                                key={coupon.id}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className={cn(
+                                    "relative p-6 rounded-2xl border-2 border-dashed transition-all overflow-hidden group",
+                                    coupon.redeemed
+                                        ? "bg-stone-100 dark:bg-stone-800 border-stone-300 dark:border-stone-700 opacity-70"
+                                        : "glass-card border-soft-blush hover:border-soft-blush/70 hover:shadow-md"
                                 )}
-                            </div>
+                            >
+                                {/* Ticket cutouts */}
+                                <div className="absolute top-1/2 -left-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
+                                <div className="absolute top-1/2 -right-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
 
-                            <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4 break-words">{coupon.title}</h3>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 bg-soft-blush/10 rounded-lg text-soft-blush">
+                                        <Ticket size={24} />
+                                    </div>
+                                    {coupon.redeemed ? (
+                                        <span className="px-3 py-1 bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 text-xs font-bold rounded-full uppercase">
+                                            Usado
+                                        </span>
+                                    ) : (
+                                        <span className="px-3 py-1 bg-sage-green/10 text-sage-green text-xs font-bold rounded-full uppercase">
+                                            Disponible
+                                        </span>
+                                    )}
+                                </div>
 
-                            {!coupon.redeemed && (
-                                <button
-                                    onClick={() => redeemCoupon(coupon.id)}
-                                    className="w-full py-2 bg-stone-800 dark:bg-stone-700 text-white rounded-lg text-sm font-medium hover:bg-stone-900 dark:hover:bg-stone-600 active:scale-95 transition-all"
-                                >
-                                    Canjear Cupón
-                                </button>
-                            )}
-                        </motion.div>
-                    ))}
+                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4 break-words">{coupon.title}</h3>
+
+                                {!coupon.redeemed && (
+                                    <button
+                                        onClick={() => redeemCoupon(coupon.id)}
+                                        className="w-full py-2 bg-stone-800 dark:bg-stone-700 text-white rounded-lg text-sm font-medium hover:bg-stone-900 dark:hover:bg-stone-600 active:scale-95 transition-all"
+                                    >
+                                        Canjear Cupón
+                                    </button>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
                 </motion.div>
             )}
         </div>

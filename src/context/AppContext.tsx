@@ -32,6 +32,7 @@ interface AppContextType extends AppState {
     toggleBucketItem: (id: string) => void;
     addBucketItem: (text: string) => void;
     redeemCoupon: (id: string) => void;
+    addCoupon: (title: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -234,6 +235,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }));
     };
 
+    const addCoupon = (title: string) => {
+        const newCoupon = { id: Date.now().toString(), title, redeemed: false };
+        setState((prev) => ({
+            ...prev,
+            coupons: [...prev.coupons, newCoupon],
+        }));
+    };
+
     return (
         <AppContext.Provider
             value={{
@@ -248,6 +257,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 toggleBucketItem,
                 addBucketItem,
                 redeemCoupon,
+                addCoupon,
             }}
         >
             {children}
