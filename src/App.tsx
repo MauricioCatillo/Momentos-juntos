@@ -29,6 +29,8 @@ function App() {
         await OneSignal.init({
           appId: "b1cec79b-98e6-4881-ae74-8b626d302e15",
           allowLocalhostAsSecureOrigin: true,
+          serviceWorkerPath: '/sw.js',
+          serviceWorkerParam: { scope: '/' },
         });
 
         // Request permission immediately
