@@ -159,11 +159,41 @@ export const Daily: React.FC = () => {
         }
     };
 
+    // Debug State
+    const [debugInfo, setDebugInfo] = useState<any>({});
+    const [apiResponse, setApiResponse] = useState<string>('');
+
+    useEffect(() => {
+        const updateDebugInfo = async () => {
+            try {
+                const id = OneSignal.User.PushSubscription.id;
+                const optedIn = OneSignal.User.PushSubscription.optedIn;
+                const permission = Notification.permission;
+                setDebugInfo({ id, optedIn, permission });
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        updateDebugInfo();
+        const interval = setInterval(updateDebugInfo, 2000); // Poll every 2s
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleTestNotification = async () => {
+        try {
+            setApiResponse('Sending...');
+            const res = await sendPushNotification("Test de notificación 🧪");
+            setApiResponse(JSON.stringify(res, null, 2));
+        } catch (e: any) {
+            setApiResponse('Error: ' + e.message);
+        }
+    };
+
     return (
         <div className="p-6 pb-24 space-y-8">
             <header className="mb-8">
                 <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-2">Conexión Diaria ✨</h1>
-                <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
                 <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
                 <button
                     onClick={async () => {
@@ -327,6 +357,27 @@ export const Daily: React.FC = () => {
                         Guardar Nota
                     </button>
                 </div>
+            </div>
+
+            {/* DEBUG PANEL */}
+            <div className="p-4 bg-black/5 rounded-xl text-xs font-mono space-y-2 break-all">
+                <h4 className="font-bold">🛠️ Debug Panel</h4>
+                <p>ID: {debugInfo.id || 'No ID'}</p>
+                <p>OptedIn: {String(debugInfo.optedIn)}</p>
+                <p>Permission: {debugInfo.permission}</p>
+
+                <button
+                    onClick={handleTestNotification}
+                    className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+                >
+                    Test Notification
+                </button>
+
+                {apiResponse && (
+                    <pre className="bg-white p-2 rounded mt-2 overflow-auto max-h-40">
+                        {apiResponse}
+                    </pre>
+                )}
             </div>
         </div>
     );
