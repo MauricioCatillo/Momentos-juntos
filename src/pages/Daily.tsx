@@ -182,11 +182,14 @@ export const Daily: React.FC = () => {
                         Activar Notificaciones
                     </button>
                     {/* Connection Status Indicator */}
-                    <div className="text-[10px] text-stone-300 dark:text-stone-600 flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${OneSignal.User.PushSubscription.optedIn ? 'bg-green-400' : 'bg-red-400'}`} />
-                        <span>ID: {OneSignal.User.PushSubscription.id ? OneSignal.User.PushSubscription.id.slice(0, 8) + '...' : 'Sin conexión'}</span>
-                        <span>|</span>
-                        <span>{OneSignal.User.PushSubscription.optedIn ? 'Suscrito' : 'No suscrito'}</span>
+                    <div className="text-[10px] text-stone-300 dark:text-stone-600 flex flex-col items-start gap-1">
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${OneSignal.User.PushSubscription.optedIn ? 'bg-green-400' : 'bg-red-400'}`} />
+                            <span>{OneSignal.User.PushSubscription.optedIn ? 'Suscrito' : 'No suscrito'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 select-all bg-stone-100 dark:bg-stone-800 p-1 rounded">
+                            <span className="font-mono text-[9px]">ID: {OneSignal.User.PushSubscription.id || 'Sin ID'}</span>
+                        </div>
                     </div>
                 </div>
             </header>
