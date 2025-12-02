@@ -26,24 +26,9 @@ function App() {
   useEffect(() => {
     const runOneSignal = async () => {
       try {
-        console.log("Initializing OneSignal...");
         await OneSignal.init({
           appId: "b1cec79b-98e6-4881-ae74-8b626d302e15",
           allowLocalhostAsSecureOrigin: true,
-          // Add these for debugging
-          notifyButton: {
-            enable: true,
-          },
-        });
-        console.log("OneSignal Init Success");
-
-        // Log initial state
-        console.log("Initial ID:", OneSignal.User.PushSubscription.id);
-        console.log("Initial OptedIn:", OneSignal.User.PushSubscription.optedIn);
-
-        // Listen for changes
-        OneSignal.User.PushSubscription.addEventListener("change", (event) => {
-          console.log("OneSignal Subscription Changed:", event);
         });
 
         // Request permission immediately as requested
