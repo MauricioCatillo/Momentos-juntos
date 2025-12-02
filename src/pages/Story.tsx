@@ -150,12 +150,7 @@ export const Story: React.FC = () => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Load data when current folder changes
-    useEffect(() => {
-        loadData();
-    }, [currentFolder]);
-
-    const loadData = async () => {
+    const loadData = React.useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -168,18 +163,24 @@ export const Story: React.FC = () => {
 
             setFolders(foldersData || []);
             setMemories(memoriesData || []);
-        } catch (err: any) {
+        } catch (err: unknown) {
             // Ignore "Failed to fetch" if it's just a cancellation/navigation artifact
-            if (err.message === 'TypeError: Failed to fetch') {
+            const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+            if (errorMessage === 'TypeError: Failed to fetch') {
                 console.warn('Fetch aborted during navigation');
                 return;
             }
             console.error('Error Supabase:', err);
-            setError(err.message || 'Error al cargar los datos. Por favor revisa tu conexión.');
+            setError(errorMessage || 'Error al cargar los datos. Por favor revisa tu conexión.');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [currentFolder]);
+
+    // Load data when current folder changes
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
 
     const handleCreateFolder = async (e: React.FormEvent) => {
@@ -290,8 +291,9 @@ export const Story: React.FC = () => {
             setDriveLink('');
             setUploadMode('file');
             setIsAddingMemory(false);
-        } catch (error: any) {
-            alert(error.message || 'Error al subir el recuerdo. Intenta de nuevo.');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Error al subir el recuerdo. Intenta de nuevo.';
+            alert(errorMessage);
             console.error(error);
         } finally {
             setIsUploading(false);

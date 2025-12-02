@@ -82,7 +82,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Load persisted data and theme on mount
     useEffect(() => {
-        // Theme
+        // Theme initialization
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
         if (savedTheme) {
             setTheme(savedTheme);
@@ -91,6 +91,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setTheme('dark');
             document.documentElement.classList.add('dark');
         }
+
+        // Dynamic Theme Listener
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e: MediaQueryListEvent) => {
+            if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                setTheme(newTheme);
+                document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            }
+        };
+
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
 
     // Fetch Data when user changes
@@ -124,7 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
 
         fetchData();
-    }, [state.user?.id]);
+    }, [state.user]);
 
     const login = async (email: string, password: string) => {
         await signInWithEmail(email, password);

@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import { Toaster } from 'sonner';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Layout } from './components/Layout';
@@ -23,6 +24,7 @@ const LoadingSpinner = () => (
 function App() {
   return (
     <AppProvider>
+      <Toaster position="top-center" richColors />
       <BrowserRouter>
         <RouteErrorBoundary>
           <Suspense fallback={<LoadingSpinner />}>

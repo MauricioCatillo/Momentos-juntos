@@ -30,12 +30,20 @@ const BentoCard: React.FC<{
 export const Home: React.FC = () => {
     const { moods, user, logout } = useApp();
     const lastMood = moods[moods.length - 1]?.mood || 'neutral';
-    const [settings, setSettings] = useState<any>({
+    const [settings, setSettings] = useState<{
+        countdown: { date: string; title: string };
+        music: { url: string };
+        streaks: { count: number };
+    }>({
         countdown: { date: new Date().toISOString(), title: 'Cargando...' },
         music: { url: 'https://open.spotify.com/embed/track/2Lhdl74nwwVGOE2Gv35QuK?utm_source=generator' }, // Default song
         streaks: { count: 0 }
     });
-    const [daysTogether, setDaysTogether] = useState(0);
+    const [daysTogether] = useState(() => {
+        const startDate = new Date('2022-12-21');
+        const today = new Date();
+        return differenceInDays(today, startDate);
+    });
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -43,7 +51,7 @@ export const Home: React.FC = () => {
                 const data = await getAppSettings();
                 // Only update if data exists, otherwise keep defaults
                 if (data && Object.keys(data).length > 0) {
-                    setSettings((prev: any) => ({ ...prev, ...data }));
+                    setSettings((prev: typeof settings) => ({ ...prev, ...data }));
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
@@ -51,10 +59,6 @@ export const Home: React.FC = () => {
         };
 
         loadSettings();
-        // Calculate days together
-        const startDate = new Date('2022-12-21'); // Start date for 1071 days (as of 2025-11-26)
-        const today = new Date();
-        setDaysTogether(differenceInDays(today, startDate));
     }, []);
 
     const moodEmoji = {

@@ -19,17 +19,16 @@ export const StickyNotes: React.FC = () => {
     const [selectedColor, setSelectedColor] = useState(COLORS[0]);
 
     useEffect(() => {
+        const loadNotes = async () => {
+            try {
+                const data = await getNotes();
+                setNotes(data as Note[]);
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        };
         loadNotes();
     }, []);
-
-    const loadNotes = async () => {
-        try {
-            const data = await getNotes();
-            setNotes(data as Note[]);
-        } catch (error) {
-            console.error('Error loading notes:', error);
-        }
-    };
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 
 interface Props {
     children: ReactNode;
@@ -14,6 +15,7 @@ export class ErrorBoundary extends Component<Props, State> {
         hasError: false
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public static getDerivedStateFromError(_: Error): State {
         return { hasError: true };
     }

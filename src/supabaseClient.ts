@@ -123,7 +123,7 @@ export const getAppSettings = async () => {
     return data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
 };
 
-export const updateAppSetting = async (key: string, value: any) => {
+export const updateAppSetting = async (key: string, value: unknown) => {
     const { error } = await supabase.from('app_settings').upsert({ key, value });
     if (error) throw error;
 };
@@ -278,7 +278,7 @@ export const getMilestones = async () => {
     return data;
 };
 
-export const addMilestone = async (milestone: any) => {
+export const addMilestone = async (milestone: { title: string; date: string; description: string; image?: string; location?: { lat: number; lng: number; name: string }; user_id?: string }) => {
     const { data, error } = await supabase
         .from('milestones')
         .insert([milestone])

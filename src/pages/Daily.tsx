@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { supabase } from '../supabaseClient';
 import { MessageCircle, Smile, Frown, Meh, Zap, Moon, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -23,7 +24,7 @@ const MOODS = [
     { id: 'sad', label: 'Triste', icon: Frown, color: 'bg-indigo-100 text-indigo-600' },
 ] as const;
 
-const MoodButton = React.memo(({ mood, isSelected, onSelect }: { mood: typeof MOODS[number], isSelected: boolean, onSelect: (id: string) => void }) => {
+const MoodButton = React.memo(({ mood, isSelected, onSelect }: { mood: typeof MOODS[number], isSelected: boolean, onSelect: (id: typeof MOODS[number]['id']) => void }) => {
     return (
         <button
             onClick={() => onSelect(mood.id)}
@@ -78,11 +79,38 @@ export const Daily: React.FC = () => {
         };
 
         fetchNotes();
+
+        // Realtime subscription
+        const channel = supabase
+            .channel('notes_channel')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notes',
+                },
+                (payload) => {
+                    const newNote = payload.new as { id: string, content: string, color: string, created_at: string, author: string };
+                    setNotes((prev) => [newNote, ...prev]);
+
+                    if (newNote.author !== user.id) {
+                        toast.success('¡Nueva nota de tu amor! 💌');
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [user]);
 
     // Simple rotation based on day of year
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-    const question = QUESTIONS[dayOfYear % QUESTIONS.length];
+    const [question] = useState(() => {
+        const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
+        return QUESTIONS[dayOfYear % QUESTIONS.length];
+    });
 
     const handleMoodSelect = (moodId: typeof MOODS[number]['id']) => {
         // Fire and forget - NO await
@@ -115,6 +143,7 @@ export const Daily: React.FC = () => {
         if (data && !error) {
             setNotes([data, ...notes]);
             setNewNote('');
+            toast.success('Nota agregada correctamente ✨');
         }
     };
 

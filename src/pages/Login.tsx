@@ -30,9 +30,10 @@ export const Login: React.FC = () => {
                 return; // Don't navigate yet, let them login
             }
             navigate('/');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setError(err.message || 'Ocurrió un error. Verifica tus datos.');
+            const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error. Verifica tus datos.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
