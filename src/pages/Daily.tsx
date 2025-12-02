@@ -147,8 +147,15 @@ export const Daily: React.FC = () => {
             setNewNote('');
             toast.success('Nota agregada correctamente ✨');
 
-            // Send Push Notification
-            sendPushNotification("¡Hay una nueva nota en el diario! ✨");
+            // Send Push Notification and log result
+            try {
+                setApiResponse('Sending from Note...');
+                const res = await sendPushNotification("¡Hay una nueva nota en el diario! ✨");
+                setApiResponse('Note sent: ' + JSON.stringify(res, null, 2));
+            } catch (e: any) {
+                console.error(e);
+                setApiResponse('Note Error: ' + e.message);
+            }
         }
     };
 
