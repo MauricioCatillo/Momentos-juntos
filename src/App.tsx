@@ -31,8 +31,16 @@ function App() {
           allowLocalhostAsSecureOrigin: true,
         });
 
-        // Request permission immediately as requested
+        // Request permission immediately
         await OneSignal.Slidedown.promptPush();
+
+        // Debug: Listen for foreground notifications
+        OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+          console.log("OneSignal: Foreground notification received", event);
+          // Ensure it displays
+          event.notification.display();
+        });
+
       } catch (error) {
         console.error("OneSignal init error:", error);
       }
