@@ -22,7 +22,6 @@ serve(async (req) => {
             headings: { en: heading || "Mi Prometida 💌" },
             priority: priority || 10,
             // Android specific settings for high priority
-            android_channel_id: "e4f8d9a0-1c2b-4e5f-9a0b-1c2d3e4f5a6b", // Optional: OneSignal default
             android_priority: 10,
             android_visibility: 1, // Public (show on lock screen)
             // iOS settings
