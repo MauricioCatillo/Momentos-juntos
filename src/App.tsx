@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
+import OneSignal from 'react-onesignal';
 import { Toaster } from 'sonner';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
@@ -22,6 +23,24 @@ const LoadingSpinner = () => (
 );
 
 function App() {
+  useEffect(() => {
+    const runOneSignal = async () => {
+      try {
+        await OneSignal.init({
+          appId: "b1cec79b-98e6-4881-ae74-8b626d302e15",
+          allowLocalhostAsSecureOrigin: true,
+        });
+
+        // Request permission immediately as requested
+        await OneSignal.Slidedown.promptPush();
+      } catch (error) {
+        console.error("OneSignal init error:", error);
+      }
+    };
+
+    runOneSignal();
+  }, []);
+
   return (
     <AppProvider>
       <Toaster position="top-center" richColors />

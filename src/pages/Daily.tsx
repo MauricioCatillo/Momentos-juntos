@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import OneSignal from 'react-onesignal';
 import { supabase } from '../supabaseClient';
-import { MessageCircle, Smile, Frown, Meh, Zap, Moon, X } from 'lucide-react';
+import { MessageCircle, Smile, Frown, Meh, Zap, Moon, X, Bell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 
@@ -159,6 +160,20 @@ export const Daily: React.FC = () => {
             <header className="mb-8">
                 <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-2">Conexión Diaria ✨</h1>
                 <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
+                <button
+                    onClick={async () => {
+                        try {
+                            await OneSignal.Slidedown.promptPush();
+                        } catch (e) {
+                            console.error(e);
+                            toast.error('Error al activar notificaciones');
+                        }
+                    }}
+                    className="mt-2 text-xs flex items-center gap-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                >
+                    <Bell size={12} />
+                    Activar Notificaciones
+                </button>
             </header>
 
             {/* Question Card */}
