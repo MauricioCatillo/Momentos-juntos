@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient';
 import { MessageCircle, Smile, Frown, Meh, Zap, Moon, X, Bell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
+import { sendPushNotification } from '../utils/notifications';
 
 const QUESTIONS = [
     "¿Cuál es tu recuerdo favorito de este mes?",
@@ -188,6 +189,9 @@ export const Daily: React.FC = () => {
             setNotes([data, ...notes]);
             setNewNote('');
             toast.success('Nota agregada correctamente ✨');
+
+            // Send Push Notification
+            sendPushNotification("¡Hay una nueva nota en el diario! ✨");
         }
     };
 
