@@ -3,7 +3,11 @@ import { supabase } from '../supabaseClient';
 export const sendPushNotification = async (message: string) => {
     try {
         const { data, error } = await supabase.functions.invoke('push-notification', {
-            body: { message }
+            body: {
+                message,
+                heading: 'Mi Prometida 💌',
+                priority: 10
+            }
         });
 
         if (error) {
