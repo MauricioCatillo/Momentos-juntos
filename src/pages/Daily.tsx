@@ -62,49 +62,6 @@ export const Daily: React.FC = () => {
     const { addMood, moods, user } = useApp();
     const [answered, setAnswered] = useState(false);
     const [feedback, setFeedback] = useState('');
-    const [isPushEnabled, setIsPushEnabled] = useState(false);
-
-    useEffect(() => {
-        // Check initial subscription status
-        const checkStatus = async () => {
-            try {
-                const optedIn = OneSignal.User.PushSubscription.optedIn;
-                setIsPushEnabled(!!optedIn);
-            } catch (e) {
-                console.error("Error checking push status:", e);
-            }
-        };
-
-        checkStatus();
-
-        // Listen for subscription changes
-        const listener = (change: any) => {
-            setIsPushEnabled(!!change.current.optedIn);
-        };
-
-        OneSignal.User.PushSubscription.addEventListener("change", listener);
-        return () => {
-            OneSignal.User.PushSubscription.removeEventListener("change", listener);
-        };
-    }, []);
-
-    const toggleNotifications = async () => {
-        try {
-            if (isPushEnabled) {
-                await OneSignal.User.PushSubscription.optOut();
-                toast.info("Notificaciones desactivadas");
-            } else {
-                await OneSignal.User.PushSubscription.optIn();
-                // If optIn doesn't trigger prompt (e.g. first time), try promptPush
-                if (!OneSignal.User.PushSubscription.optedIn) {
-                    await OneSignal.Slidedown.promptPush();
-                }
-            }
-        } catch (e) {
-            console.error("Error toggling notifications:", e);
-            toast.error("No se pudo cambiar la configuración");
-        }
-    };
 
     // Notes state
     const [notes, setNotes] = useState<{ id: string, content: string, color: string, created_at: string }[]>([]);
@@ -207,17 +164,20 @@ export const Daily: React.FC = () => {
             <header className="mb-8">
                 <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-2">Conexión Diaria ✨</h1>
                 <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
+                <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
                 <button
-                    onClick={toggleNotifications}
-                    className={cn(
-                        "mt-2 text-xs flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-300 border",
-                        isPushEnabled
-                            ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                            : "bg-stone-100 text-stone-500 border-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-700"
-                    )}
+                    onClick={async () => {
+                        try {
+                            await OneSignal.Slidedown.promptPush();
+                        } catch (e) {
+                            console.error(e);
+                            toast.error('Error al activar notificaciones');
+                        }
+                    }}
+                    className="mt-2 text-xs flex items-center gap-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
                 >
-                    <Bell size={12} className={isPushEnabled ? "fill-current" : ""} />
-                    {isPushEnabled ? "Notificaciones Activas" : "Activar Notificaciones"}
+                    <Bell size={12} />
+                    Activar Notificaciones
                 </button>
             </header>
 

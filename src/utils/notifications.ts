@@ -20,9 +20,17 @@ export const sendPushNotification = async (message: string) => {
 
         const response = await fetch('https://onesignal.com/api/v1/notifications', options);
         const data = await response.json();
-        console.log('Notification sent:', data);
+
+        if (!response.ok) {
+            console.error('OneSignal API Error:', data);
+            throw new Error(`OneSignal API Error: ${JSON.stringify(data)}`);
+        }
+
+        console.log('Notification sent successfully:', data);
         return data;
     } catch (error) {
         console.error('Error sending notification:', error);
+        // Re-throw to handle in UI if needed
+        throw error;
     }
 };
