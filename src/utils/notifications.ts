@@ -4,19 +4,22 @@ import { supabase } from '../supabaseClient';
  * Get the partner's Player ID (the other user in the couple)
  */
 const getPartnerPlayerId = async (currentUserId: string): Promise<string | null> => {
+    console.log('[Notification] Looking for partner. Current user:', currentUserId);
+
     const { data, error } = await supabase
         .from('player_ids')
-        .select('player_id')
-        .neq('user_id', currentUserId)
-        .limit(1)
-        .single();
+        .select('player_id, user_id')
+        .neq('user_id', currentUserId);
 
-    if (error || !data) {
-        console.error('Could not find partner Player ID:', error);
+    console.log('[Notification] Partner query result:', { data, error });
+
+    if (error || !data || data.length === 0) {
+        console.error('[Notification] Could not find partner Player ID:', error);
         return null;
     }
 
-    return data.player_id;
+    console.log('[Notification] Found partner Player ID:', data[0].player_id);
+    return data[0].player_id;
 };
 
 /**
@@ -24,36 +27,43 @@ const getPartnerPlayerId = async (currentUserId: string): Promise<string | null>
  */
 export const sendPushNotification = async (message: string): Promise<void> => {
     try {
+        console.log('[Notification] Starting sendPushNotification...');
+
         // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            console.error('No authenticated user');
+            console.error('[Notification] No authenticated user');
             return;
         }
+        console.log('[Notification] Current user ID:', user.id);
 
         // Get partner's Player ID
         const partnerPlayerId = await getPartnerPlayerId(user.id);
         if (!partnerPlayerId) {
-            console.error('No partner Player ID found');
+            console.error('[Notification] No partner Player ID found - make sure partner has opened the app');
             return;
         }
 
+        console.log('[Notification] Sending to Edge Function with player_id:', partnerPlayerId);
+
         // Send notification via Edge Function
-        const { error } = await supabase.functions.invoke('push-notification', {
+        const { data, error } = await supabase.functions.invoke('push-notification', {
             body: {
                 message,
                 heading: 'Mi Prometida 💌',
-                player_id: partnerPlayerId // Target specific device
+                player_id: partnerPlayerId
             }
         });
 
+        console.log('[Notification] Edge Function response:', { data, error });
+
         if (error) {
-            console.error('Supabase Function Error:', error);
+            console.error('[Notification] Supabase Function Error:', error);
             throw error;
         }
 
     } catch (error) {
-        console.error('Error sending notification:', error);
+        console.error('[Notification] Error sending notification:', error);
         throw error;
     }
 };
