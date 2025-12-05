@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Layout } from './components/Layout';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
+import { supabase } from './supabaseClient';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Loader2 } from 'lucide-react';
@@ -39,6 +40,19 @@ function App() {
         OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
           event.notification.display();
         });
+
+        // Save Player ID to Supabase for targeted notifications
+        const playerId = OneSignal.User.PushSubscription.id;
+        if (playerId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('player_ids').upsert({
+              user_id: user.id,
+              player_id: playerId,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+          }
+        }
 
       } catch (error) {
         console.error("OneSignal init error:", error);
