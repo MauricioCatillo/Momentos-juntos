@@ -166,32 +166,20 @@ export const Daily: React.FC = () => {
             <header className="mb-8">
                 <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-2">Conexión Diaria ✨</h1>
                 <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
-                <div className="flex flex-col items-start gap-2 mt-2">
-                    <button
-                        onClick={async () => {
-                            try {
-                                await OneSignal.Slidedown.promptPush();
-                            } catch (e) {
-                                console.error(e);
-                                toast.error('Error al activar notificaciones');
-                            }
-                        }}
-                        className="text-xs flex items-center gap-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-                    >
-                        <Bell size={12} />
-                        Activar Notificaciones
-                    </button>
-                    {/* Connection Status Indicator */}
-                    <div className="text-[10px] text-stone-300 dark:text-stone-600 flex flex-col items-start gap-1">
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${OneSignal.User.PushSubscription.optedIn ? 'bg-green-400' : 'bg-red-400'}`} />
-                            <span>{OneSignal.User.PushSubscription.optedIn ? 'Suscrito' : 'No suscrito'}</span>
-                        </div>
-                        <div className="flex items-center gap-1 select-all bg-stone-100 dark:bg-stone-800 p-1 rounded">
-                            <span className="font-mono text-[9px]">ID: {OneSignal.User.PushSubscription.id || 'Sin ID'}</span>
-                        </div>
-                    </div>
-                </div>
+                <button
+                    onClick={async () => {
+                        try {
+                            await OneSignal.Slidedown.promptPush();
+                        } catch (e) {
+                            console.error(e);
+                            toast.error('Error al activar notificaciones');
+                        }
+                    }}
+                    className="mt-2 text-xs flex items-center gap-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                >
+                    <Bell size={12} />
+                    Activar Notificaciones
+                </button>
             </header>
 
             {/* Question Card */}

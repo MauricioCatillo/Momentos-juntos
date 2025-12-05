@@ -33,13 +33,10 @@ function App() {
           serviceWorkerParam: { scope: '/' },
         });
 
-        // Request permission immediately
         await OneSignal.Slidedown.promptPush();
 
-        // Debug: Listen for foreground notifications
+        // Ensure notifications display even when app is in foreground
         OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-          console.log("OneSignal: Foreground notification received", event);
-          // Ensure it displays
           event.notification.display();
         });
 

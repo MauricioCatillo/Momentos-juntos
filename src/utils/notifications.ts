@@ -15,7 +15,6 @@ export const sendPushNotification = async (message: string) => {
             throw error;
         }
 
-        console.log('Notification sent successfully. Response:', data);
         return data;
     } catch (error) {
         console.error('Error sending notification:', error);
