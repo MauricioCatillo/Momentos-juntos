@@ -148,7 +148,7 @@ export const Home: React.FC = () => {
                 {/* Sticky Notes */}
                 <div className="col-span-2 mt-4">
                     <ErrorBoundary>
-                        <StickyNotes />
+                        <StickyNotes showPushNotification={true} />
                     </ErrorBoundary>
                 </div>
             </div>

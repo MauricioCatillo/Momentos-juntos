@@ -7,6 +7,7 @@ import { supabase } from '../supabaseClient';
 import { useHaptic } from '../hooks/useHaptic';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { sendPushNotification } from '../utils/notifications';
 
 interface Message {
     id: string;
@@ -137,6 +138,9 @@ export const Chat: React.FC = () => {
 
             if (error) throw error;
             trigger('success');
+
+            // Send push notification to partner
+            sendPushNotification(`💬 ${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}`);
         } catch (error) {
             console.error('Error sending message:', error);
             setNewMessage(messageContent); // Restore message on error
@@ -239,8 +243,8 @@ export const Chat: React.FC = () => {
 
                                                     <div
                                                         className={`px-4 py-2 rounded-2xl ${isOwn
-                                                                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-br-sm'
-                                                                : 'bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 rounded-bl-sm shadow-sm border border-stone-100 dark:border-stone-700'
+                                                            ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-br-sm'
+                                                            : 'bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 rounded-bl-sm shadow-sm border border-stone-100 dark:border-stone-700'
                                                             }`}
                                                     >
                                                         <p className="text-sm whitespace-pre-wrap break-words">
