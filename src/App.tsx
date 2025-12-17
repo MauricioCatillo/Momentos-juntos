@@ -16,6 +16,7 @@ const Story = React.lazy(() => import('./pages/Story').then(module => ({ default
 const Daily = React.lazy(() => import('./pages/Daily').then(module => ({ default: module.Daily })));
 const Future = React.lazy(() => import('./pages/Future').then(module => ({ default: module.Future })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
+const Chat = React.lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
 
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-transparent">
@@ -89,6 +90,7 @@ function App() {
                 <Route path="story" element={<Story />} />
                 <Route path="daily" element={<Daily />} />
                 <Route path="future" element={<Future />} />
+                <Route path="chat" element={<Chat />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

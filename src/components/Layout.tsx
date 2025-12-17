@@ -3,6 +3,8 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { useApp } from '../context/AppContext';
 import { MusicPlayer } from './MusicPlayer';
+import { PWAInstallBanner } from './PWAInstallBanner';
+import { SwipeablePages } from './SwipeablePages';
 
 export const Layout: React.FC = () => {
     const { user } = useApp();
@@ -26,7 +28,9 @@ export const Layout: React.FC = () => {
 
                 {/* Content Area with Scroll */}
                 <div className="flex-1 overflow-y-auto scrollbar-hide pb-32">
-                    <Outlet />
+                    <SwipeablePages>
+                        <Outlet />
+                    </SwipeablePages>
                 </div>
 
                 {/* Fixed Bottom Elements inside the container */}
@@ -39,7 +43,11 @@ export const Layout: React.FC = () => {
                         <MusicPlayer />
                     </div>
                 </div>
+
+                {/* PWA Install Banner */}
+                <PWAInstallBanner />
             </div>
         </div>
     );
 };
+

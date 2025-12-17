@@ -1,17 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Heart, Calendar, Gamepad2 } from 'lucide-react';
+import { Home, Heart, Calendar, Gamepad2, MessageCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
+import { useHaptic } from '../hooks/useHaptic';
 
 const navItems = [
     { path: '/', icon: Home, label: 'Inicio' },
     { path: '/story', icon: Heart, label: 'Historia' },
+    { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/daily', icon: Calendar, label: 'Diario' },
     { path: '/future', icon: Gamepad2, label: 'Futuro' },
 ];
 
 export const BottomNav: React.FC = () => {
+    const { trigger } = useHaptic();
+
     return (
         <div
             className="w-full fixed bottom-0 left-0 z-50 pointer-events-none"
@@ -23,9 +27,10 @@ export const BottomNav: React.FC = () => {
                         <NavLink
                             key={path}
                             to={path}
+                            onClick={() => trigger('light')}
                             className={({ isActive }) =>
                                 cn(
-                                    "flex flex-col items-center justify-center p-1 transition-all duration-300 relative group min-w-[4rem]",
+                                    "flex flex-col items-center justify-center p-1 transition-all duration-300 relative group min-w-[3.5rem]",
                                     isActive ? "text-rose-600 dark:text-rose-400 scale-105" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                                 )
                             }
@@ -33,7 +38,7 @@ export const BottomNav: React.FC = () => {
                             {({ isActive }) => (
                                 <>
                                     <div className="relative">
-                                        <Icon size={28} strokeWidth={2} />
+                                        <Icon size={24} strokeWidth={2} />
                                         {isActive && (
                                             <motion.div
                                                 layoutId="nav-indicator"
@@ -43,7 +48,7 @@ export const BottomNav: React.FC = () => {
                                         )}
                                     </div>
                                     <span className={cn(
-                                        "text-[10px] font-bold mt-1 tracking-wide",
+                                        "text-[9px] font-bold mt-1 tracking-wide",
                                         isActive ? "opacity-100" : "opacity-70"
                                     )}>
                                         {label}
@@ -57,3 +62,4 @@ export const BottomNav: React.FC = () => {
         </div>
     );
 };
+
