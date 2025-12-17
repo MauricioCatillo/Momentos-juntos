@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
 
 export const Login: React.FC = () => {
@@ -24,7 +25,7 @@ export const Login: React.FC = () => {
                 await login(email, password);
             } else {
                 await signup(email, password);
-                alert('¡Cuenta creada! Por favor inicia sesión.');
+                toast.success('¡Cuenta creada! Por favor inicia sesión.');
                 setIsLogin(true);
                 setLoading(false);
                 return; // Don't navigate yet, let them login

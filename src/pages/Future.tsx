@@ -99,7 +99,7 @@ export const Future: React.FC = () => {
                                 </span>
                                 <button
                                     onClick={() => deleteBucketItem(item.id)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -148,7 +148,7 @@ export const Future: React.FC = () => {
 
                                 <button
                                     onClick={() => deleteCoupon(coupon.id)}
-                                    className="absolute top-2 right-2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10"
+                                    className="absolute top-2 right-2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all z-10 min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 >
                                     <Trash2 size={16} />
                                 </button>

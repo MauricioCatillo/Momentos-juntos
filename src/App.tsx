@@ -41,18 +41,28 @@ function App() {
           event.notification.display();
         });
 
-        // Save Player ID to Supabase for targeted notifications
-        const playerId = OneSignal.User.PushSubscription.id;
-        if (playerId) {
+        // function to save player id
+        const savePlayerId = async (id: string | undefined | null) => {
+          if (!id) return;
+          console.log("[OneSignal] Saving Player ID:", id);
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             await supabase.from('player_ids').upsert({
               user_id: user.id,
-              player_id: playerId,
+              player_id: id,
               updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' });
           }
-        }
+        };
+
+        // Save Player ID to Supabase for targeted notifications
+        // Check if we already have an ID
+        await savePlayerId(OneSignal.User.PushSubscription.id);
+
+        // Listen for future changes (e.g. after permission granted)
+        OneSignal.User.PushSubscription.addEventListener("change", (event) => {
+          savePlayerId(event.current.id);
+        });
 
       } catch (error) {
         console.error("OneSignal init error:", error);

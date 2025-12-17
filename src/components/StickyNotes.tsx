@@ -1,18 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, StickyNote } from 'lucide-react';
-import { getNotes, addNote, deleteNote } from '../supabaseClient';
+import { toast } from 'sonner';
+import { supabase, getNotes, addNote, deleteNote } from '../supabaseClient';
+import { useApp } from '../context/AppContext';
+import { sendPushNotification } from '../utils/notifications';
 
 interface Note {
     id: string;
     content: string;
     color: string;
     created_at: string;
+    author?: string;
 }
 
 const COLORS = ['bg-yellow-200', 'bg-rose-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200'];
 
-export const StickyNotes: React.FC = () => {
+// Text colors that provide good contrast for each background
+const NOTE_TEXT_COLORS: Record<string, string> = {
+    'bg-yellow-200': 'text-yellow-900',
+    'bg-rose-200': 'text-rose-900',
+    'bg-blue-200': 'text-blue-900',
+    'bg-green-200': 'text-green-900',
+    'bg-purple-200': 'text-purple-900',
+};
+
+interface StickyNotesProps {
+    title?: string;
+    showPushNotification?: boolean;
+}
+
+export const StickyNotes: React.FC<StickyNotesProps> = ({
+    title = 'Pizarrón de Notas',
+    showPushNotification = false
+}) => {
+    const { user } = useApp();
     const [notes, setNotes] = useState<Note[]>([]);
     const [isAdding, setIsAdding] = useState(false);
     const [newNote, setNewNote] = useState('');
@@ -28,7 +50,49 @@ export const StickyNotes: React.FC = () => {
             }
         };
         loadNotes();
-    }, []);
+
+        // Realtime subscription for live updates
+        const channel = supabase
+            .channel('notes_realtime')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notes',
+                },
+                (payload) => {
+                    const insertedNote = payload.new as Note;
+                    setNotes((prev) => {
+                        // Avoid duplicates
+                        if (prev.some(n => n.id === insertedNote.id)) return prev;
+                        return [insertedNote, ...prev];
+                    });
+
+                    // Show toast if note was added by partner
+                    if (user && insertedNote.author && insertedNote.author !== user.id) {
+                        toast.success('¡Nueva nota de tu amor! 💌');
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'notes',
+                },
+                (payload) => {
+                    const deletedId = payload.old.id;
+                    setNotes((prev) => prev.filter(n => n.id !== deletedId));
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,11 +100,22 @@ export const StickyNotes: React.FC = () => {
 
         try {
             const note = await addNote(newNote, selectedColor);
-            setNotes([note, ...notes]);
+            // Note: realtime subscription will add it to the list, but we add optimistically too
+            setNotes((prev) => {
+                if (prev.some(n => n.id === note.id)) return prev;
+                return [note, ...prev];
+            });
             setNewNote('');
             setIsAdding(false);
+            toast.success('Nota agregada ✨');
+
+            // Send push notification if enabled
+            if (showPushNotification) {
+                sendPushNotification('¡Hay una nueva nota! 💌');
+            }
         } catch (error) {
             console.error('Error adding note:', error);
+            toast.error('Error al agregar nota');
         }
     };
 
@@ -56,9 +131,9 @@ export const StickyNotes: React.FC = () => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-stone-600">
+                <div className="flex items-center gap-2 text-stone-600 dark:text-stone-400">
                     <StickyNote size={20} />
-                    <h3 className="font-bold text-lg">Pizarrón de Notas</h3>
+                    <h3 className="font-bold text-lg">{title}</h3>
                 </div>
                 <button
                     onClick={() => setIsAdding(true)}
@@ -79,14 +154,14 @@ export const StickyNotes: React.FC = () => {
                             exit={{ scale: 0.8, opacity: 0 }}
                             className={`${note.color} p-4 rounded-xl shadow-sm relative group min-h-[120px] flex flex-col justify-between transform rotate-1 hover:rotate-0 transition-transform duration-300`}
                         >
-                            <p className="font-handwriting text-stone-800 text-sm leading-relaxed break-words">{note.content}</p>
+                            <p className={`font-handwriting text-sm leading-relaxed break-words ${NOTE_TEXT_COLORS[note.color] || 'text-stone-800'}`}>{note.content}</p>
                             <button
                                 onClick={() => handleDelete(note.id)}
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-black/10 rounded-full"
+                                className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 hover:bg-black/10 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center"
                             >
                                 <X size={14} />
                             </button>
-                            <span className="text-[10px] text-black/40 self-end mt-2">
+                            <span className={`text-[10px] self-end mt-2 ${NOTE_TEXT_COLORS[note.color]?.replace('900', '600') || 'text-black/40'}`}>
                                 {new Date(note.created_at).toLocaleDateString()}
                             </span>
                         </motion.div>

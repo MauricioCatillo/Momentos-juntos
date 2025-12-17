@@ -43,8 +43,8 @@ export const BottomNav: React.FC = () => {
                                         )}
                                     </div>
                                     <span className={cn(
-                                        "text-[10px] font-bold mt-1 transition-opacity tracking-wide",
-                                        isActive ? "opacity-100" : "opacity-100"
+                                        "text-[10px] font-bold mt-1 tracking-wide",
+                                        isActive ? "opacity-100" : "opacity-70"
                                     )}>
                                         {label}
                                     </span>

@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Folder, ChevronLeft, Video, Upload, Trash2, Pencil, Loader2, Link as LinkIcon, ExternalLink, Edit2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { uploadMemory, createFolder, getFolders, getMemories, deleteMemory, deleteFolder, updateMemory, updateFolder } from '../supabaseClient';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface FolderType {
     id: string;
@@ -150,6 +152,9 @@ export const Story: React.FC = () => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Confirmation Modal State
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'folder' | 'memory'; id: string } | null>(null);
+
     const loadData = React.useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -198,15 +203,15 @@ export const Story: React.FC = () => {
     };
 
     const handleDeleteFolder = async (folderId: string) => {
-        if (window.confirm("¿Estás seguro? Se borrarán todas las fotos dentro de esta carpeta.")) {
-            try {
-                await deleteFolder(folderId);
-                setFolders(folders.filter(f => f.id !== folderId));
-                setContextMenu(null);
-            } catch (error) {
-                console.error('Error deleting folder:', error);
-                alert('No se pudo borrar la carpeta.');
-            }
+        try {
+            await deleteFolder(folderId);
+            setFolders(folders.filter(f => f.id !== folderId));
+            setContextMenu(null);
+            setDeleteConfirm(null);
+            toast.success('Carpeta eliminada correctamente');
+        } catch (error) {
+            console.error('Error deleting folder:', error);
+            toast.error('No se pudo borrar la carpeta.');
         }
     };
 
@@ -221,7 +226,7 @@ export const Story: React.FC = () => {
             setContextMenu(null);
         } catch (error) {
             console.error('Error renaming folder:', error);
-            alert('No se pudo renombrar la carpeta.');
+            toast.error('No se pudo renombrar la carpeta.');
         }
     };
 
@@ -293,7 +298,7 @@ export const Story: React.FC = () => {
             setIsAddingMemory(false);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Error al subir el recuerdo. Intenta de nuevo.';
-            alert(errorMessage);
+            toast.error(errorMessage);
             console.error(error);
         } finally {
             setIsUploading(false);
@@ -310,17 +315,17 @@ export const Story: React.FC = () => {
     };
 
     const handleDeleteMemory = async (memoryId: string) => {
-        if (window.confirm("¿Estás seguro de borrar este recuerdo?")) {
-            try {
-                await deleteMemory(memoryId);
-                setMemories(memories.filter(m => m.id !== memoryId));
-                if (selectedMemory?.id === memoryId) {
-                    setSelectedMemory(null);
-                }
-            } catch (error) {
-                console.error('Error deleting memory:', error);
-                alert('No se pudo borrar el recuerdo.');
+        try {
+            await deleteMemory(memoryId);
+            setMemories(memories.filter(m => m.id !== memoryId));
+            if (selectedMemory?.id === memoryId) {
+                setSelectedMemory(null);
             }
+            setDeleteConfirm(null);
+            toast.success('Recuerdo eliminado correctamente');
+        } catch (error) {
+            console.error('Error deleting memory:', error);
+            toast.error('No se pudo borrar el recuerdo.');
         }
     };
 
@@ -441,7 +446,7 @@ export const Story: React.FC = () => {
                                     memory={memory}
                                     index={index}
                                     onSelect={setSelectedMemory}
-                                    onDelete={handleDeleteMemory}
+                                    onDelete={(id) => setDeleteConfirm({ type: 'memory', id })}
                                 />
                             ))}
                         </div>
@@ -777,8 +782,8 @@ export const Story: React.FC = () => {
                                     <Pencil size={24} />
                                 </button>
                                 <button
-                                    onClick={() => handleDeleteMemory(selectedMemory.id)}
-                                    className="p-2 hover:bg-white/10 rounded-full text-red-400"
+                                    onClick={() => setDeleteConfirm({ type: 'memory', id: selectedMemory.id })}
+                                    className="p-2 hover:bg-white/10 rounded-full text-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center"
                                     title="Borrar"
                                 >
                                     <Trash2 size={24} />
@@ -853,8 +858,8 @@ export const Story: React.FC = () => {
                                 Cambiar nombre
                             </button>
                             <button
-                                onClick={() => handleDeleteFolder(contextMenu.folder.id)}
-                                className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm w-full text-left"
+                                onClick={() => setDeleteConfirm({ type: 'folder', id: contextMenu.folder.id })}
+                                className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm w-full text-left min-h-[44px]"
                             >
                                 <Trash2 size={16} />
                                 Borrar carpeta
@@ -904,6 +909,27 @@ export const Story: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={deleteConfirm !== null}
+                onClose={() => setDeleteConfirm(null)}
+                onConfirm={() => {
+                    if (deleteConfirm?.type === 'folder') {
+                        handleDeleteFolder(deleteConfirm.id);
+                    } else if (deleteConfirm?.type === 'memory') {
+                        handleDeleteMemory(deleteConfirm.id);
+                    }
+                }}
+                title={deleteConfirm?.type === 'folder' ? '¿Borrar carpeta?' : '¿Borrar recuerdo?'}
+                message={deleteConfirm?.type === 'folder'
+                    ? 'Se borrarán todas las fotos dentro de esta carpeta. Esta acción no se puede deshacer.'
+                    : 'Este recuerdo se eliminará permanentemente. Esta acción no se puede deshacer.'
+                }
+                confirmText="Sí, borrar"
+                cancelText="Cancelar"
+                variant="danger"
+            />
         </div>
     );
 };

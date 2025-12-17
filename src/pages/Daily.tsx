@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import OneSignal from 'react-onesignal';
-import { supabase } from '../supabaseClient';
-import { MessageCircle, Smile, Frown, Meh, Zap, Moon, X, Bell } from 'lucide-react';
+import { MessageCircle, Smile, Frown, Meh, Zap, Moon, Bell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
-import { sendPushNotification } from '../utils/notifications';
+import { StickyNotes } from '../components/StickyNotes';
 
 const QUESTIONS = [
     "¿Cuál es tu recuerdo favorito de este mes?",
@@ -59,54 +58,9 @@ const MoodButton = React.memo(({ mood, isSelected, onSelect }: { mood: typeof MO
 });
 
 export const Daily: React.FC = () => {
-    const { addMood, moods, user } = useApp();
+    const { addMood, moods } = useApp();
     const [answered, setAnswered] = useState(false);
     const [feedback, setFeedback] = useState('');
-
-    // Notes state
-    const [notes, setNotes] = useState<{ id: string, content: string, color: string, created_at: string }[]>([]);
-    const [newNote, setNewNote] = useState('');
-    const [color, setColor] = useState('yellow');
-
-    useEffect(() => {
-        if (!user) return;
-
-        const fetchNotes = async () => {
-            const { data } = await supabase
-                .from('notes')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (data) setNotes(data);
-        };
-
-        fetchNotes();
-
-        // Realtime subscription
-        const channel = supabase
-            .channel('notes_channel')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notes',
-                },
-                (payload) => {
-                    const newNote = payload.new as { id: string, content: string, color: string, created_at: string, author: string };
-                    setNotes((prev) => [newNote, ...prev]);
-
-                    if (newNote.author !== user.id) {
-                        toast.success('¡Nueva nota de tu amor! 💌');
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [user]);
 
     // Simple rotation based on day of year
     const [question] = useState(() => {
@@ -128,38 +82,6 @@ export const Daily: React.FC = () => {
     };
 
     const todayMood = moods.find((m: { date: string }) => new Date(m.date).toDateString() === new Date().toDateString());
-
-    const handleAddNote = async () => {
-        if (!newNote.trim() || !user) return;
-
-        const { data, error } = await supabase
-            .from('notes')
-            .insert([{
-                content: newNote,
-                color,
-                author: user.id
-            }])
-            .select()
-            .single();
-
-        if (data && !error) {
-            setNotes([data, ...notes]);
-            setNewNote('');
-            toast.success('Nota agregada correctamente ✨');
-
-            // Send Push Notification
-            sendPushNotification("¡Hay una nueva nota en el diario! ✨");
-        }
-    };
-
-    const handleDeleteNote = async (id: string) => {
-        const { error } = await supabase.from('notes').delete().eq('id', id);
-        if (!error) {
-            setNotes(notes.filter(n => n.id !== id));
-        }
-    };
-
-
 
     return (
         <div className="p-6 pb-24 space-y-8">
@@ -270,64 +192,9 @@ export const Daily: React.FC = () => {
                 )}
             </div>
 
-            {/* Daily Notes Section */}
-            <div>
-                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4">Notas Diarias 📝</h3>
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    {notes.map((note) => (
-                        <motion.div
-                            key={note.id}
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className={`p-4 rounded-2xl shadow-sm relative group ${note.color === 'yellow' ? 'bg-yellow-100 text-yellow-900' :
-                                note.color === 'pink' ? 'bg-pink-100 text-pink-900' :
-                                    note.color === 'blue' ? 'bg-blue-100 text-blue-900' :
-                                        'bg-green-100 text-green-900'
-                                }`}
-                        >
-                            <button
-                                onClick={() => handleDeleteNote(note.id)}
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-black/10 rounded-full"
-                            >
-                                <X size={14} />
-                            </button>
-                            <p className="font-medium text-sm break-words">{note.content}</p>
-                            <span className="text-[10px] opacity-60 mt-2 block">
-                                {new Date(note.created_at).toLocaleDateString()}
-                            </span>
-                        </motion.div>
-                    ))}
-                </div>
-
-                <div className="glass-card p-6 rounded-3xl">
-                    <h3 className="font-bold text-stone-800 dark:text-stone-100 mb-4">Nueva Nota</h3>
-                    <div className="flex gap-2 mb-4">
-                        {['yellow', 'pink', 'blue', 'green'].map((c) => (
-                            <button
-                                key={c}
-                                onClick={() => setColor(c)}
-                                className={`w-8 h-8 rounded-full border-2 transition-transform ${color === c ? 'border-stone-800 dark:border-stone-100 scale-110' : 'border-transparent'
-                                    } ${c === 'yellow' ? 'bg-yellow-200' :
-                                        c === 'pink' ? 'bg-pink-200' :
-                                            c === 'blue' ? 'bg-blue-200' : 'bg-green-200'
-                                    }`}
-                            />
-                        ))}
-                    </div>
-                    <textarea
-                        value={newNote}
-                        onChange={(e) => setNewNote(e.target.value)}
-                        placeholder="Escribe algo bonito..."
-                        className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-soft-blush/50 mb-4 h-24 resize-none dark:text-stone-100 dark:placeholder:text-stone-400"
-                    />
-                    <button
-                        onClick={handleAddNote}
-                        disabled={!newNote.trim()}
-                        className="w-full bg-stone-800 dark:bg-stone-900 text-white py-3 rounded-xl font-medium disabled:opacity-50"
-                    >
-                        Guardar Nota
-                    </button>
-                </div>
+            {/* Daily Notes Section - Using unified StickyNotes component */}
+            <div className="glass-card p-6 rounded-3xl">
+                <StickyNotes title="Notas Diarias 📝" showPushNotification={true} />
             </div>
 
 
