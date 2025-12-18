@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Heart } from 'lucide-react';
+import { Clock, Heart, Pencil } from 'lucide-react';
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
 
 interface CountdownProps {
     targetDate: string;
     title: string;
+    onEdit?: () => void;
 }
 
-export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title }) => {
+export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title, onEdit }) => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
     useEffect(() => {
@@ -29,12 +30,22 @@ export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title })
 
     return (
         <motion.div
-            className="glass-card rounded-3xl p-6 relative overflow-hidden"
+            className="glass-card rounded-3xl p-6 relative overflow-hidden cursor-pointer group"
             whileHover={{ scale: 1.02 }}
+            onClick={onEdit}
         >
             <div className="absolute top-0 right-0 p-4 opacity-10">
                 <Heart size={100} className="text-rose-500" />
             </div>
+
+            {/* Edit icon - appears on hover */}
+            {onEdit && (
+                <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="p-2 bg-white/80 dark:bg-stone-700/80 rounded-full backdrop-blur-sm shadow-sm">
+                        <Pencil size={16} className="text-stone-600 dark:text-stone-300" />
+                    </div>
+                </div>
+            )}
 
             <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4 text-stone-600">
@@ -74,3 +85,4 @@ export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title })
         </motion.div>
     );
 };
+

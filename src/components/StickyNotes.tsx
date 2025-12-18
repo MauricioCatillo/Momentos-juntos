@@ -181,14 +181,14 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl"
+                            className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-stone-800"
                         >
-                            <h3 className="font-bold text-lg mb-4">Nueva Nota</h3>
+                            <h3 className="font-bold text-lg mb-4 text-stone-900">Nueva Nota</h3>
                             <form onSubmit={handleAdd}>
                                 <textarea
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    className="w-full bg-stone-50 rounded-xl p-4 mb-4 resize-none focus:ring-2 focus:ring-rose-200 outline-none"
+                                    className="w-full bg-stone-50 rounded-xl p-4 mb-4 resize-none focus:ring-2 focus:ring-rose-200 outline-none text-stone-900 placeholder:text-stone-400"
                                     rows={3}
                                     placeholder="Escribe algo bonito..."
                                     autoFocus
@@ -209,7 +209,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setIsAdding(false)}
-                                        className="flex-1 py-3 rounded-xl bg-stone-100 font-medium"
+                                        className="flex-1 py-3 rounded-xl bg-stone-100 font-medium text-stone-700"
                                     >
                                         Cancelar
                                     </button>

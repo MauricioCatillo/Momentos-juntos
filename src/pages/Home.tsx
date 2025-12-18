@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, Smile, LogOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Smile, LogOut, X, Pencil } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CountdownWidget } from '../components/CountdownWidget';
 import { StreaksWidget } from '../components/StreaksWidget';
 import { StickyNotes } from '../components/StickyNotes';
-import { getAppSettings } from '../supabaseClient';
+import { getAppSettings, updateAppSetting } from '../supabaseClient';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const BentoCard: React.FC<{
@@ -27,6 +27,12 @@ const BentoCard: React.FC<{
     </motion.div>
 );
 
+interface NextDateData {
+    title: string;
+    description: string;
+    datetime: string;
+}
+
 export const Home: React.FC = () => {
     const { moods, user, logout } = useApp();
     const lastMood = moods[moods.length - 1]?.mood || 'neutral';
@@ -36,8 +42,13 @@ export const Home: React.FC = () => {
         streaks: { count: number };
     }>({
         countdown: { date: new Date().toISOString(), title: 'Cargando...' },
-        music: { url: 'https://open.spotify.com/embed/track/2Lhdl74nwwVGOE2Gv35QuK?utm_source=generator' }, // Default song
+        music: { url: 'https://open.spotify.com/embed/track/2Lhdl74nwwVGOE2Gv35QuK?utm_source=generator' },
         streaks: { count: 0 }
+    });
+    const [nextDate, setNextDate] = useState<NextDateData>({
+        title: 'Sin cita planificada',
+        description: '',
+        datetime: ''
     });
     const [daysTogether] = useState(() => {
         const startDate = new Date('2022-12-21');
@@ -45,13 +56,24 @@ export const Home: React.FC = () => {
         return differenceInDays(today, startDate);
     });
 
+    // Modal states
+    const [showCountdownModal, setShowCountdownModal] = useState(false);
+    const [showNextDateModal, setShowNextDateModal] = useState(false);
+    const [countdownForm, setCountdownForm] = useState({ title: '', date: '' });
+    const [nextDateForm, setNextDateForm] = useState({ title: '', description: '', datetime: '' });
+    const [saving, setSaving] = useState(false);
+
     useEffect(() => {
         const loadSettings = async () => {
             try {
                 const data = await getAppSettings();
-                // Only update if data exists, otherwise keep defaults
                 if (data && Object.keys(data).length > 0) {
                     setSettings((prev: typeof settings) => ({ ...prev, ...data }));
+
+                    // Load next_date if exists
+                    if (data.next_date) {
+                        setNextDate(data.next_date);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
@@ -60,6 +82,68 @@ export const Home: React.FC = () => {
 
         loadSettings();
     }, []);
+
+    const handleCountdownEdit = () => {
+        setCountdownForm({
+            title: settings.countdown?.title || '',
+            date: settings.countdown?.date ? settings.countdown.date.split('T')[0] : ''
+        });
+        setShowCountdownModal(true);
+    };
+
+    const handleCountdownSave = async () => {
+        setSaving(true);
+        try {
+            const newCountdown = {
+                title: countdownForm.title,
+                date: new Date(countdownForm.date).toISOString()
+            };
+            await updateAppSetting('countdown', newCountdown);
+            setSettings(prev => ({ ...prev, countdown: newCountdown }));
+            setShowCountdownModal(false);
+        } catch (error) {
+            console.error('Error saving countdown:', error);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleNextDateEdit = () => {
+        setNextDateForm({
+            title: nextDate.title || '',
+            description: nextDate.description || '',
+            datetime: nextDate.datetime || ''
+        });
+        setShowNextDateModal(true);
+    };
+
+    const handleNextDateSave = async () => {
+        setSaving(true);
+        try {
+            const newNextDate = {
+                title: nextDateForm.title,
+                description: nextDateForm.description,
+                datetime: nextDateForm.datetime
+            };
+            await updateAppSetting('next_date', newNextDate);
+            setNextDate(newNextDate);
+            setShowNextDateModal(false);
+        } catch (error) {
+            console.error('Error saving next date:', error);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const formatNextDateDisplay = () => {
+        if (!nextDate.datetime) return '';
+        try {
+            const date = new Date(nextDate.datetime);
+            return format(date, "EEEE, h:mm a", { locale: es });
+        } catch {
+            return nextDate.datetime;
+        }
+    };
 
     const moodEmoji = {
         happy: '😊',
@@ -102,6 +186,7 @@ export const Home: React.FC = () => {
                         <CountdownWidget
                             targetDate={settings.countdown?.date}
                             title={settings.countdown?.title}
+                            onEdit={handleCountdownEdit}
                         />
                     </ErrorBoundary>
                 </div>
@@ -133,15 +218,27 @@ export const Home: React.FC = () => {
                     </div>
                 </BentoCard>
 
-                {/* Next Date Card */}
-                <div className="glass-card p-6 rounded-3xl col-span-1 flex flex-col justify-between">
+                {/* Next Date Card - Now Dynamic and Editable */}
+                <div
+                    className="glass-card p-6 rounded-3xl col-span-1 flex flex-col justify-between cursor-pointer group relative"
+                    onClick={handleNextDateEdit}
+                >
+                    {/* Edit icon - appears on hover */}
+                    <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="p-1.5 bg-white/80 dark:bg-stone-700/80 rounded-full backdrop-blur-sm shadow-sm">
+                            <Pencil size={12} className="text-stone-600 dark:text-stone-300" />
+                        </div>
+                    </div>
+
                     <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
                         <Calendar size={20} />
                     </div>
                     <div>
                         <p className="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Próxima Cita</p>
-                        <p className="font-bold text-stone-800 dark:text-stone-100 leading-tight">Cena en la playa</p>
-                        <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">Viernes, 8:00 PM</p>
+                        <p className="font-bold text-stone-800 dark:text-stone-100 leading-tight">{nextDate.title || 'Sin planificar'}</p>
+                        {nextDate.datetime && (
+                            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 capitalize">{formatNextDateDisplay()}</p>
+                        )}
                     </div>
                 </div>
 
@@ -152,6 +249,163 @@ export const Home: React.FC = () => {
                     </ErrorBoundary>
                 </div>
             </div>
+
+            {/* Countdown Edit Modal */}
+            <AnimatePresence>
+                {showCountdownModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={(e) => e.target === e.currentTarget && setShowCountdownModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white dark:bg-stone-800 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100">Editar Nuestro Gran Día</h3>
+                                <button
+                                    onClick={() => setShowCountdownModal(false)}
+                                    className="p-1 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors"
+                                >
+                                    <X size={20} className="text-stone-500" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">
+                                        Título
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={countdownForm.title}
+                                        onChange={(e) => setCountdownForm(prev => ({ ...prev, title: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
+                                        placeholder="Ej: Nuestro Gran Día"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">
+                                        Fecha
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={countdownForm.date}
+                                        onChange={(e) => setCountdownForm(prev => ({ ...prev, date: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowCountdownModal(false)}
+                                    className="flex-1 px-4 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleCountdownSave}
+                                    disabled={saving || !countdownForm.title || !countdownForm.date}
+                                    className="flex-1 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {saving ? 'Guardando...' : 'Guardar'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Next Date Edit Modal */}
+            <AnimatePresence>
+                {showNextDateModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={(e) => e.target === e.currentTarget && setShowNextDateModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white dark:bg-stone-800 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100">Editar Próxima Cita</h3>
+                                <button
+                                    onClick={() => setShowNextDateModal(false)}
+                                    className="p-1 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors"
+                                >
+                                    <X size={20} className="text-stone-500" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">
+                                        Título
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={nextDateForm.title}
+                                        onChange={(e) => setNextDateForm(prev => ({ ...prev, title: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="Ej: Cena romántica"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">
+                                        Descripción (opcional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={nextDateForm.description}
+                                        onChange={(e) => setNextDateForm(prev => ({ ...prev, description: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="Ej: En la playa"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">
+                                        Fecha y Hora
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={nextDateForm.datetime}
+                                        onChange={(e) => setNextDateForm(prev => ({ ...prev, datetime: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowNextDateModal(false)}
+                                    className="flex-1 px-4 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleNextDateSave}
+                                    disabled={saving || !nextDateForm.title}
+                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {saving ? 'Guardando...' : 'Guardar'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
+

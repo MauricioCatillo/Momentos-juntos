@@ -170,9 +170,9 @@ export const Chat: React.FC = () => {
     }, {} as Record<string, Message[]>);
 
     return (
-        <div className="flex flex-col h-full bg-stone-50 dark:bg-stone-900">
+        <div className="flex flex-col bg-stone-50 dark:bg-stone-900 absolute inset-0">
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-white/80 dark:bg-stone-800/80 backdrop-blur-lg border-b border-stone-200 dark:border-stone-700 sticky top-0 z-10">
+            <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-white/80 dark:bg-stone-800/80 backdrop-blur-lg border-b border-stone-200 dark:border-stone-700 z-10">
                 <button
                     onClick={() => {
                         trigger('light');
@@ -194,7 +194,7 @@ export const Chat: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="flex-1 overflow-y-auto px-4 py-4 pb-40">
                 {loading ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="animate-pulse text-stone-400">Cargando mensajes...</div>
@@ -280,8 +280,7 @@ export const Chat: React.FC = () => {
             {/* Input */}
             <form
                 onSubmit={sendMessage}
-                className="p-4 bg-white/80 dark:bg-stone-800/80 backdrop-blur-lg border-t border-stone-200 dark:border-stone-700"
-                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+                className="fixed left-0 right-0 bottom-20 p-4 bg-white/95 dark:bg-stone-800/95 backdrop-blur-xl border-t border-stone-200 dark:border-stone-700 z-40 max-w-md mx-auto"
             >
                 <div className="flex items-center gap-2">
                     <input
