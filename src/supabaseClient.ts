@@ -201,15 +201,17 @@ export const getBucketList = async () => {
     const { data, error } = await supabase
         .from('bucket_list')
         .select('*')
-        .order('created_at', { ascending: true });
+        .select('*')
+        .order('completed', { ascending: true })
+        .order('created_at', { ascending: false });
     if (error) throw error;
     return data;
 };
 
-export const addBucketItem = async (text: string) => {
+export const addBucketItem = async (text: string, category: string = 'Otro', description: string = '') => {
     const { data, error } = await supabase
         .from('bucket_list')
-        .insert([{ text }])
+        .insert([{ text, category, description }])
         .select()
         .single();
     if (error) throw error;

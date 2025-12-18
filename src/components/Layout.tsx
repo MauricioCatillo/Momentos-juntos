@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { useApp } from '../context/AppContext';
-import { MusicPlayer } from './MusicPlayer';
 import { PWAInstallBanner } from './PWAInstallBanner';
 import { SwipeablePages } from './SwipeablePages';
 
@@ -38,11 +37,7 @@ export const Layout: React.FC = () => {
                     <BottomNav />
                 </div>
 
-                <div className="absolute bottom-24 left-0 right-0 z-40 px-4 pointer-events-none">
-                    <div className="pointer-events-auto">
-                        <MusicPlayer />
-                    </div>
-                </div>
+
 
                 {/* PWA Install Banner */}
                 <PWAInstallBanner />

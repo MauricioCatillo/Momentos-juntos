@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Smile, LogOut, X, Pencil } from 'lucide-react';
+import { Calendar, Smile, LogOut, X, Pencil, Sparkles, ChevronRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CountdownWidget } from '../components/CountdownWidget';
@@ -35,6 +36,7 @@ interface NextDateData {
 
 export const Home: React.FC = () => {
     const { moods, user, logout } = useApp();
+    const navigate = useNavigate();
     const lastMood = moods[moods.length - 1]?.mood || 'neutral';
     const [settings, setSettings] = useState<{
         countdown: { date: string; title: string };
@@ -242,6 +244,27 @@ export const Home: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Wishlist Widget */}
+                <BentoCard
+                    delay={0.2}
+                    className="col-span-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-between group"
+                >
+                    <div onClick={() => navigate('/wishlist')} className="w-full flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
+                                <Sparkles size={24} className="text-yellow-300" />
+                            </div>
+                            <div>
+                                <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-0.5">Nuestros Sueños</p>
+                                <h3 className="text-xl font-bold text-white">Lista de Deseos</h3>
+                            </div>
+                        </div>
+                        <div className="bg-white/20 p-2 rounded-full group-hover:bg-white/30 transition-colors">
+                            <ChevronRight size={24} />
+                        </div>
+                    </div>
+                </BentoCard>
+
                 {/* Sticky Notes */}
                 <div className="col-span-2 mt-4">
                     <ErrorBoundary>
@@ -405,7 +428,7 @@ export const Home: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

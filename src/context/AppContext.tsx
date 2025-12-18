@@ -24,6 +24,7 @@ interface AppState {
 
 interface AppContextType extends AppState {
     theme: 'light' | 'dark';
+    toggleTheme: () => void;
     login: (email: string, password: string) => Promise<void>;
     signup: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
@@ -82,7 +83,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Load persisted data and theme on mount
     useEffect(() => {
-        // Theme initialization
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
         if (savedTheme) {
             setTheme(savedTheme);
@@ -91,20 +91,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setTheme('dark');
             document.documentElement.classList.add('dark');
         }
-
-        // Dynamic Theme Listener
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e: MediaQueryListEvent) => {
-            if (!localStorage.getItem('theme')) {
-                const newTheme = e.matches ? 'dark' : 'light';
-                setTheme(newTheme);
-                document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            }
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
+
+    const toggleTheme = () => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    };
 
     // Fetch Data when user changes
     useEffect(() => {
@@ -333,6 +327,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             value={{
                 ...state,
                 theme,
+                toggleTheme,
+
 
                 login,
                 signup,
