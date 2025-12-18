@@ -187,6 +187,15 @@ export const getMemories = async (folderId?: string) => {
     return data;
 };
 
+export const getAllMemories = async () => {
+    const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+};
+
 export const deleteMemory = async (id: string) => {
     const { error } = await supabase.from('memories').delete().match({ id });
     if (error) throw error;

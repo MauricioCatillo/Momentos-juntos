@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Smile, LogOut, X, Pencil, Sparkles, ChevronRight } from 'lucide-react';
+import { Calendar, Smile, LogOut, X, Pencil, Sparkles, ChevronRight, Image } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
@@ -257,6 +257,27 @@ export const Home: React.FC = () => {
                             <div>
                                 <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-0.5">Nuestros Sueños</p>
                                 <h3 className="text-xl font-bold text-white">Lista de Deseos</h3>
+                            </div>
+                        </div>
+                        <div className="bg-white/20 p-2 rounded-full group-hover:bg-white/30 transition-colors">
+                            <ChevronRight size={24} />
+                        </div>
+                    </div>
+                </BentoCard>
+
+                {/* Gallery Widget */}
+                <BentoCard
+                    delay={0.3}
+                    className="col-span-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white flex items-center justify-between group"
+                >
+                    <div onClick={() => navigate('/gallery')} className="w-full flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
+                                <Image size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-0.5">Nuestra Historia</p>
+                                <h3 className="text-xl font-bold text-white">Galería de Fotos</h3>
                             </div>
                         </div>
                         <div className="bg-white/20 p-2 rounded-full group-hover:bg-white/30 transition-colors">
