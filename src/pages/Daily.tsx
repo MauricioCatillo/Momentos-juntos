@@ -2,27 +2,19 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import OneSignal from 'react-onesignal';
-import { MessageCircle, Smile, Frown, Meh, Zap, Moon, Bell } from 'lucide-react';
+import { Smile, Frown, Meh, Zap, Moon, Bell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 import { StickyNotes } from '../components/StickyNotes';
 
-const QUESTIONS = [
-    "¿Cuál es tu recuerdo favorito de este mes?",
-    "¿A dónde te gustaría viajar mañana si pudieras?",
-    "¿Qué es lo que más valoras de nuestra relación?",
-    "¿Cuál fue la primera impresión que tuviste de mí?",
-    "¿Qué canción te recuerda a nosotros?",
-    "¿Qué comida te gustaría que cocináramos juntos?",
-    "¿Cuál es tu sueño más grande en este momento?",
-];
+
 
 const MOODS = [
-    { id: 'happy', label: 'Feliz', icon: Smile, color: 'bg-yellow-100 text-yellow-600' },
-    { id: 'excited', label: 'Emocionado', icon: Zap, color: 'bg-orange-100 text-orange-600' },
-    { id: 'neutral', label: 'Normal', icon: Meh, color: 'bg-gray-100 text-gray-600' },
-    { id: 'tired', label: 'Cansado', icon: Moon, color: 'bg-blue-100 text-blue-600' },
-    { id: 'sad', label: 'Triste', icon: Frown, color: 'bg-indigo-100 text-indigo-600' },
+    { id: 'happy', label: 'Feliz', icon: Smile, color: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-300' },
+    { id: 'excited', label: 'Emocionado', icon: Zap, color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300' },
+    { id: 'neutral', label: 'Normal', icon: Meh, color: 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300' },
+    { id: 'tired', label: 'Cansado', icon: Moon, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300' },
+    { id: 'sad', label: 'Triste', icon: Frown, color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300' },
 ] as const;
 
 const MoodButton = React.memo(({ mood, isSelected, onSelect }: { mood: typeof MOODS[number], isSelected: boolean, onSelect: (id: typeof MOODS[number]['id']) => void }) => {
@@ -59,14 +51,11 @@ const MoodButton = React.memo(({ mood, isSelected, onSelect }: { mood: typeof MO
 
 export const Daily: React.FC = () => {
     const { addMood, moods } = useApp();
-    const [answered, setAnswered] = useState(false);
+
     const [feedback, setFeedback] = useState('');
 
     // Simple rotation based on day of year
-    const [question] = useState(() => {
-        const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-        return QUESTIONS[dayOfYear % QUESTIONS.length];
-    });
+
 
     const handleMoodSelect = (moodId: typeof MOODS[number]['id']) => {
         // Fire and forget - NO await
@@ -105,37 +94,7 @@ export const Daily: React.FC = () => {
             </header>
 
             {/* Question Card */}
-            <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="glass-card rounded-3xl p-8 mb-8 text-center relative overflow-hidden"
-            >
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-soft-blush to-sage-green" />
-                <div className="mb-6 flex justify-center">
-                    <div className="w-16 h-16 bg-soft-blush/10 rounded-full flex items-center justify-center">
-                        <MessageCircle size={32} className="text-soft-blush" />
-                    </div>
-                </div>
-                <h3 className="text-xl font-medium text-stone-800 dark:text-stone-100 mb-6 leading-relaxed">
-                    "{question}"
-                </h3>
-                {!answered ? (
-                    <button
-                        onClick={() => setAnswered(true)}
-                        className="text-sm font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-                    >
-                        Tocar para responder
-                    </button>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-stone-600 dark:text-stone-400 italic"
-                    >
-                        ¡Cuéntaselo en persona! ❤️
-                    </motion.div>
-                )}
-            </motion.div>
+
 
             {/* Mood Check */}
             <div className="glass-card rounded-3xl p-6 mb-8 relative overflow-hidden">

@@ -6,12 +6,12 @@ import { toast } from 'sonner';
 
 // Categories Configuration
 const CATEGORIES = [
-    { id: 'Viajes', label: 'Viajes', icon: Plane, color: 'bg-blue-100 text-blue-600' },
-    { id: 'Películas', label: 'Películas', icon: Clapperboard, color: 'bg-purple-100 text-purple-600' },
-    { id: 'Compras', label: 'Compras', icon: ShoppingBag, color: 'bg-pink-100 text-pink-600' },
-    { id: 'Aventura', label: 'Aventura', icon: Mountain, color: 'bg-green-100 text-green-600' },
-    { id: 'Comida', label: 'Comida', icon: Pizza, color: 'bg-orange-100 text-orange-600' },
-    { id: 'Otro', label: 'Otro', icon: Sparkles, color: 'bg-gray-100 text-gray-600' },
+    { id: 'Viajes', label: 'Viajes', icon: Plane, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300' },
+    { id: 'Películas', label: 'Películas', icon: Clapperboard, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' },
+    { id: 'Compras', label: 'Compras', icon: ShoppingBag, color: 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300' },
+    { id: 'Aventura', label: 'Aventura', icon: Mountain, color: 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-300' },
+    { id: 'Comida', label: 'Comida', icon: Pizza, color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300' },
+    { id: 'Otro', label: 'Otro', icon: Sparkles, color: 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300' },
 ] as const;
 
 interface WishItem {
@@ -125,8 +125,8 @@ export const BucketList: React.FC = () => {
                 <button
                     onClick={() => setSelectedCategory('Todos')}
                     className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === 'Todos'
-                            ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900'
-                            : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 shadow-sm'
+                        ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900'
+                        : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 shadow-sm'
                         }`}
                 >
                     Todos
@@ -136,8 +136,8 @@ export const BucketList: React.FC = () => {
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-colors ${selectedCategory === cat.id
-                                ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 shadow-md'
-                                : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 shadow-sm'
+                            ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 shadow-md'
+                            : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 shadow-sm'
                             }`}
                     >
                         <span>{cat.label}</span>
@@ -189,7 +189,7 @@ export const BucketList: React.FC = () => {
                                             </p>
                                         )}
                                         <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium flex items-center gap-1 ${CATEGORIES.find(c => c.id === wish.category)?.color || 'bg-gray-100 text-gray-600'
+                                            <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium flex items-center gap-1 ${CATEGORIES.find(c => c.id === wish.category)?.color || 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
                                                 }`}>
                                                 <CategoryIcon size={10} />
                                                 {(wish.category || 'Otro').toUpperCase()}
@@ -278,8 +278,8 @@ export const BucketList: React.FC = () => {
                                                     type="button"
                                                     onClick={() => setNewWish({ ...newWish, category: cat.id })}
                                                     className={`p-2 rounded-xl text-xs font-medium border-2 transition-all flex flex-col items-center gap-1 ${newWish.category === cat.id
-                                                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                                                            : 'border-transparent bg-stone-50 dark:bg-stone-700 text-stone-500 dark:text-stone-400'
+                                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                                        : 'border-transparent bg-stone-50 dark:bg-stone-700 text-stone-500 dark:text-stone-400'
                                                         }`}
                                                 >
                                                     <cat.icon size={16} />

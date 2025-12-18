@@ -48,37 +48,37 @@ export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title, o
             )}
 
             <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4 text-stone-600">
+                <div className="flex items-center gap-2 mb-4 text-stone-600 dark:text-stone-400">
                     <Clock size={18} />
                     <span className="text-sm font-medium uppercase tracking-wider break-words">{title}</span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="bg-white/40 rounded-xl p-2 backdrop-blur-sm">
-                        <span className="block text-2xl font-bold text-stone-800">{timeLeft.days}</span>
-                        <span className="text-xs text-stone-500">Días</span>
+                    <div className="bg-white/40 dark:bg-stone-900/40 rounded-xl p-2 backdrop-blur-sm">
+                        <span className="block text-2xl font-bold text-stone-800 dark:text-stone-100">{timeLeft.days}</span>
+                        <span className="text-xs text-stone-500 dark:text-stone-400">Días</span>
                     </div>
-                    <div className="bg-white/40 rounded-xl p-2 backdrop-blur-sm">
-                        <span className="block text-2xl font-bold text-stone-800">{timeLeft.hours}</span>
-                        <span className="text-xs text-stone-500">Hrs</span>
+                    <div className="bg-white/40 dark:bg-stone-900/40 rounded-xl p-2 backdrop-blur-sm">
+                        <span className="block text-2xl font-bold text-stone-800 dark:text-stone-100">{timeLeft.hours}</span>
+                        <span className="text-xs text-stone-500 dark:text-stone-400">Hrs</span>
                     </div>
-                    <div className="bg-white/40 rounded-xl p-2 backdrop-blur-sm">
-                        <span className="block text-2xl font-bold text-stone-800">{timeLeft.minutes}</span>
-                        <span className="text-xs text-stone-500">Min</span>
+                    <div className="bg-white/40 dark:bg-stone-900/40 rounded-xl p-2 backdrop-blur-sm">
+                        <span className="block text-2xl font-bold text-stone-800 dark:text-stone-100">{timeLeft.minutes}</span>
+                        <span className="text-xs text-stone-500 dark:text-stone-400">Min</span>
                     </div>
-                    <div className="bg-white/40 rounded-xl p-2 backdrop-blur-sm relative overflow-hidden">
+                    <div className="bg-white/40 dark:bg-stone-900/40 rounded-xl p-2 backdrop-blur-sm relative overflow-hidden">
                         <AnimatePresence mode='popLayout'>
                             <motion.span
                                 key={timeLeft.seconds}
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: -20, opacity: 0 }}
-                                className="block text-2xl font-bold text-stone-800"
+                                className="block text-2xl font-bold text-stone-800 dark:text-stone-100"
                             >
                                 {timeLeft.seconds}
                             </motion.span>
                         </AnimatePresence>
-                        <span className="text-xs text-stone-500">Seg</span>
+                        <span className="text-xs text-stone-500 dark:text-stone-400">Seg</span>
                     </div>
                 </div>
             </div>
