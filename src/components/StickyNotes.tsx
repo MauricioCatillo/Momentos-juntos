@@ -181,14 +181,14 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white dark:bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-stone-800 dark:text-stone-800"
+                            className="bg-white dark:bg-stone-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-stone-800 dark:text-stone-100"
                         >
-                            <h3 className="font-bold text-lg mb-4 text-rose-600">Nueva Nota</h3>
+                            <h3 className="font-bold text-lg mb-4 text-rose-500 dark:text-rose-400">Nueva Nota</h3>
                             <form onSubmit={handleAdd}>
                                 <textarea
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    className="w-full bg-stone-50 rounded-xl p-4 mb-4 resize-none focus:ring-2 focus:ring-rose-300 outline-none text-stone-900 placeholder:text-stone-400 border-2 border-rose-200"
+                                    className="w-full bg-stone-50 dark:bg-stone-700 rounded-xl p-4 mb-4 resize-none focus:ring-2 focus:ring-rose-300 dark:focus:ring-rose-500 outline-none text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 border-2 border-rose-200 dark:border-stone-600"
                                     rows={3}
                                     placeholder="Escribe algo bonito..."
                                     autoFocus
@@ -200,7 +200,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                             key={color}
                                             type="button"
                                             onClick={() => setSelectedColor(color)}
-                                            className={`w-8 h-8 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-400' : 'border-transparent'}`}
+                                            className={`w-8 h-8 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-400 dark:border-white' : 'border-transparent'}`}
                                         />
                                     ))}
                                 </div>
@@ -209,13 +209,13 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setIsAdding(false)}
-                                        className="flex-1 py-3 rounded-xl bg-stone-100 dark:bg-stone-100 font-medium text-stone-700 dark:text-stone-700"
+                                        className="flex-1 py-3 rounded-xl bg-stone-100 dark:bg-stone-700 font-medium text-stone-700 dark:text-stone-300"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-3 rounded-xl bg-stone-800 text-white font-medium"
+                                        className="flex-1 py-3 rounded-xl bg-stone-800 dark:bg-rose-600 text-white font-medium"
                                     >
                                         Pegar Nota
                                     </button>
