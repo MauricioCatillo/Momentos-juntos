@@ -16,15 +16,6 @@ interface Note {
 
 const COLORS = ['bg-yellow-200', 'bg-rose-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200'];
 
-// Text colors that provide good contrast for each background
-const NOTE_TEXT_COLORS: Record<string, string> = {
-    'bg-yellow-200': 'text-yellow-900',
-    'bg-rose-200': 'text-rose-900',
-    'bg-blue-200': 'text-blue-900',
-    'bg-green-200': 'text-green-900',
-    'bg-purple-200': 'text-purple-900',
-};
-
 interface StickyNotesProps {
     title?: string;
     showPushNotification?: boolean;
@@ -137,9 +128,9 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                 </div>
                 <button
                     onClick={() => setIsAdding(true)}
-                    className="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                    className="w-8 h-8 bg-white/50 dark:bg-stone-700 rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-stone-600 transition-colors"
                 >
-                    <Plus size={18} />
+                    <Plus size={18} className="text-stone-600 dark:text-stone-300" />
                 </button>
             </div>
 
@@ -153,15 +144,25 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
                             className={`${note.color} p-4 rounded-xl shadow-sm relative group min-h-[120px] flex flex-col justify-between transform rotate-1 hover:rotate-0 transition-transform duration-300`}
+                            style={{ colorScheme: 'light' }}
                         >
-                            <p className={`font-handwriting text-sm leading-relaxed break-words ${NOTE_TEXT_COLORS[note.color] || 'text-stone-800'}`}>{note.content}</p>
+                            <p
+                                className="font-handwriting text-sm leading-relaxed break-words"
+                                style={{ color: '#292524' }}
+                            >
+                                {note.content}
+                            </p>
                             <button
                                 onClick={() => handleDelete(note.id)}
                                 className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 hover:bg-black/10 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                style={{ color: '#57534e' }}
                             >
                                 <X size={14} />
                             </button>
-                            <span className={`text-[10px] self-end mt-2 ${NOTE_TEXT_COLORS[note.color]?.replace('900', '600') || 'text-black/40'}`}>
+                            <span
+                                className="text-[10px] self-end mt-2"
+                                style={{ color: '#57534e' }}
+                            >
                                 {new Date(note.created_at).toLocaleDateString()}
                             </span>
                         </motion.div>

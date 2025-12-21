@@ -105,3 +105,21 @@ div {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 140, 158, 0.8);
 }
+
+/* Prevent dark mode color inversion on light-background elements */
+.bg-yellow-200,
+.bg-rose-200,
+.bg-blue-200,
+.bg-green-200,
+.bg-purple-200,
+.bg-yellow-100,
+.bg-rose-100,
+.bg-blue-100,
+.bg-green-100,
+.bg-purple-100,
+.bg-orange-100,
+.bg-pink-100,
+.bg-indigo-100,
+.bg-stone-100 {
+  color-scheme: light;
+}
