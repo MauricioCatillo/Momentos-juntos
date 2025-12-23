@@ -75,9 +75,9 @@ const MemoryCard = React.memo(({ memory, index, onSelect, onDelete }: { memory: 
                             e.stopPropagation();
                             onDelete(memory.id);
                         }}
-                        className="p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
                     >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                     </button>
                 </div>
 
@@ -384,7 +384,7 @@ export const Story: React.FC = () => {
                     <div className="relative">
                         <button
                             onClick={() => setShowAddMenu(true)}
-                            className="w-10 h-10 bg-soft-blush text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                            className="w-11 h-11 bg-soft-blush text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
                         >
                             <Plus size={24} />
                         </button>

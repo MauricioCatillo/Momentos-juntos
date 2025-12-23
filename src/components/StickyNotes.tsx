@@ -128,9 +128,9 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                 </div>
                 <button
                     onClick={() => setIsAdding(true)}
-                    className="w-8 h-8 bg-white/50 dark:bg-stone-700 rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-stone-600 transition-colors"
+                    className="w-11 h-11 bg-white/50 dark:bg-stone-700 rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-stone-600 transition-colors active:scale-95"
                 >
-                    <Plus size={18} className="text-stone-600 dark:text-stone-300" />
+                    <Plus size={20} className="text-stone-600 dark:text-stone-300" />
                 </button>
             </div>
 

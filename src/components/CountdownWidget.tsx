@@ -40,7 +40,7 @@ export const CountdownWidget: React.FC<CountdownProps> = ({ targetDate, title, o
 
             {/* Edit icon - appears on hover */}
             {onEdit && (
-                <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-3 right-3 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <div className="p-2 bg-white/80 dark:bg-stone-700/80 rounded-full backdrop-blur-sm shadow-sm">
                         <Pencil size={16} className="text-stone-600 dark:text-stone-300" />
                     </div>

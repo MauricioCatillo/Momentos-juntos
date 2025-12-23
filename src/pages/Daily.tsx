@@ -5,7 +5,6 @@ import OneSignal from 'react-onesignal';
 import { Smile, Frown, Meh, Zap, Moon, Bell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
-import { StickyNotes } from '../components/StickyNotes';
 
 
 
@@ -149,11 +148,6 @@ export const Daily: React.FC = () => {
                         </div>
                     </div>
                 )}
-            </div>
-
-            {/* Daily Notes Section - Using unified StickyNotes component */}
-            <div className="glass-card p-6 rounded-3xl">
-                <StickyNotes title="Notas Diarias 📝" showPushNotification={true} />
             </div>
 
 
