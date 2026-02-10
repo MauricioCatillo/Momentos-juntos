@@ -78,7 +78,7 @@ export const PWAInstallBanner: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 100 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed bottom-24 left-4 right-4 z-[60] max-w-md mx-auto"
+                className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-4 right-4 z-[60] max-w-md mx-auto"
             >
                 <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-rose-100 dark:border-stone-700 p-4 relative overflow-hidden">
                     {/* Decorative gradient */}

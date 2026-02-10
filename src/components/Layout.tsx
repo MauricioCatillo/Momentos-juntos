@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { useApp } from '../context/AppContext';
 import { PWAInstallBanner } from './PWAInstallBanner';
@@ -8,6 +8,8 @@ import { SwipeablePages } from './SwipeablePages';
 export const Layout: React.FC = () => {
     const { user } = useApp();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isChatPage = location.pathname === '/chat';
 
     useEffect(() => {
         if (!user) {
@@ -21,26 +23,23 @@ export const Layout: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex justify-center lg:items-center lg:py-10">
+        <div className="min-h-screen min-h-[100dvh] flex justify-center lg:items-center lg:py-10">
             {/* Mobile: Full Screen | Desktop: Floating Phone */}
-            <div className="w-full max-w-md bg-stone-50 dark:bg-stone-900 min-h-screen lg:min-h-[850px] lg:h-[850px] lg:max-h-[90vh] lg:rounded-[3rem] lg:shadow-2xl lg:border-[8px] lg:border-white/30 dark:lg:border-stone-800/30 relative overflow-hidden flex flex-col transition-all duration-500">
+            <div className="w-full max-w-md bg-stone-50 dark:bg-stone-900 min-h-screen min-h-[100dvh] h-[100dvh] lg:min-h-[850px] lg:h-[850px] lg:max-h-[90vh] lg:rounded-[3rem] lg:shadow-2xl lg:border-[8px] lg:border-white/30 dark:lg:border-stone-800/30 relative overflow-hidden flex flex-col transition-all duration-500">
 
                 {/* Content Area with Scroll */}
-                <div className="flex-1 overflow-y-auto scrollbar-hide pb-32">
+                <div
+                    className={`flex-1 scrollbar-hide ${isChatPage ? 'overflow-hidden pb-0' : 'overflow-y-auto pb-32'}`}
+                >
                     <SwipeablePages>
                         <Outlet />
                     </SwipeablePages>
                 </div>
 
-                {/* Fixed Bottom Elements inside the container */}
-                <div className="absolute bottom-0 left-0 right-0 z-50">
-                    <BottomNav />
-                </div>
-
-
+                {!isChatPage && <BottomNav />}
 
                 {/* PWA Install Banner */}
-                <PWAInstallBanner />
+                {!isChatPage && <PWAInstallBanner />}
             </div>
         </div>
     );

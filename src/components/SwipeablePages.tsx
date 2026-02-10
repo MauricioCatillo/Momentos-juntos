@@ -8,8 +8,8 @@ interface SwipeablePagesProps {
     children: React.ReactNode;
 }
 
-// Order of pages for swipe navigation (chat is not swiped to, only via icon)
-const PAGE_ORDER = ['/', '/story', '/daily', '/future'];
+// Order of pages for swipe navigation (chat stays via icon to avoid accidental opens)
+const PAGE_ORDER = ['/', '/story', '/daily', '/wishlist', '/gallery'];
 
 export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
     const navigate = useNavigate();
@@ -50,10 +50,11 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
 
     return (
         <motion.div
-            style={{ x, opacity }}
+            style={{ x, opacity, touchAction: 'pan-y' }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
+            dragDirectionLock
             onDragEnd={handleDragEnd}
             className="h-full"
         >
