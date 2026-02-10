@@ -164,7 +164,7 @@ export const Home: React.FC = () => {
     }, [nextDate.datetime]);
 
     return (
-        <div className="p-5 pb-24 space-y-5">
+        <div className="page-shell space-y-5">
             <section className="soft-panel rounded-3xl p-5 relative overflow-hidden floating-card">
                 <div className="absolute top-0 right-0 w-36 h-36 bg-rose-200/40 rounded-full blur-3xl" />
                 <div className="relative z-10">

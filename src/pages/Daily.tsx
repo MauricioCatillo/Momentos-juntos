@@ -85,10 +85,10 @@ export const Daily: React.FC = () => {
     };
 
     return (
-        <div className="p-6 pb-24 space-y-8">
-            <header className="mb-8">
-                <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 mb-2">Conexion diaria</h1>
-                <p className="text-stone-600 dark:text-stone-400">Un momento para nosotros</p>
+        <div className="page-shell space-y-6">
+            <header className="page-header">
+                <h1 className="page-title mb-1">Conexion diaria</h1>
+                <p className="page-subtitle">Un momento para nosotros</p>
                 <button
                     onClick={async () => {
                         const granted = await requestPushPermission();

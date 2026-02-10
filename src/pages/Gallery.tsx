@@ -72,13 +72,13 @@ export const Gallery: React.FC = () => {
     const videoCount = memories.filter((m) => m.media_type === 'video').length;
 
     return (
-        <div className="p-4 pb-24 min-h-screen">
-            <header className="mb-4 px-1">
-                <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100 flex items-center gap-2">
+        <div className="page-shell">
+            <header className="page-header">
+                <h1 className="page-title flex items-center gap-2">
                     <ImageIcon className="text-rose-500" />
                     Galeria de recuerdos
                 </h1>
-                <p className="text-stone-600 dark:text-stone-400 text-sm mt-1">
+                <p className="page-subtitle">
                     Busca, filtra y vuelve rapido a tus momentos favoritos.
                 </p>
             </header>

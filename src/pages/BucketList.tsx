@@ -183,13 +183,13 @@ export const BucketList: React.FC = () => {
     const redeemedCoupons = coupons.filter(c => c.redeemed);
 
     return (
-        <div className="p-6 pb-24 min-h-screen">
-            <header className="flex justify-between items-center mb-4">
+        <div className="page-shell">
+            <header className="page-header flex justify-between items-center mb-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">
+                    <h1 className="page-title">
                         {activeTab === 'wishes' ? 'Lista de Deseos ✨' : 'Cuponera 🎟️'}
                     </h1>
-                    <p className="text-stone-600 dark:text-stone-400 text-sm">
+                    <p className="page-subtitle">
                         {activeTab === 'wishes' ? 'Nuestros sueños por cumplir' : 'Cupones especiales para canjear'}
                     </p>
                 </div>

@@ -29,7 +29,7 @@ export const Layout: React.FC = () => {
 
                 {/* Content Area with Scroll */}
                 <div
-                    className={`flex-1 scrollbar-hide ${isChatPage ? 'overflow-hidden pb-0' : 'overflow-y-auto pb-32'}`}
+                    className={`flex-1 scrollbar-hide ${isChatPage ? 'overflow-hidden pb-0' : 'overflow-y-auto'}`}
                 >
                     <SwipeablePages>
                         <Outlet />

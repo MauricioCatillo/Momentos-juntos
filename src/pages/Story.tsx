@@ -357,8 +357,8 @@ export const Story: React.FC = () => {
     };
 
     return (
-        <div className="p-6 pb-24 min-h-screen">
-            <header className="flex justify-between items-center mb-8">
+        <div className="page-shell">
+            <header className="page-header flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
                     {currentFolder && (
                         <button
@@ -368,7 +368,7 @@ export const Story: React.FC = () => {
                             <ChevronLeft size={24} className="text-stone-800 dark:text-stone-100" />
                         </button>
                     )}
-                    <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">
+                    <h1 className="page-title">
                         {currentFolder ? currentFolder.name : 'Nuestra Historia 📖'}
                     </h1>
                 </div>
