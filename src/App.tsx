@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import OneSignal from 'react-onesignal';
 import { Toaster } from 'sonner';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -26,9 +26,18 @@ const LoadingSpinner = () => (
 );
 
 function App() {
+  const oneSignalInitialized = useRef(false);
+
   useEffect(() => {
+    let foregroundListener: ((event: { notification: { display: () => void } }) => void) | null = null;
+    let subscriptionListener: ((event: { current: { id?: string | null } }) => void) | null = null;
+
     const runOneSignal = async () => {
+      if (oneSignalInitialized.current) return;
+
       try {
+        oneSignalInitialized.current = true;
+
         await OneSignal.init({
           appId: "b1cec79b-98e6-4881-ae74-8b626d302e15",
           allowLocalhostAsSecureOrigin: true,
@@ -36,17 +45,16 @@ function App() {
           serviceWorkerParam: { scope: '/' },
         });
 
-        await OneSignal.Slidedown.promptPush();
-
         // Ensure notifications display even when app is in foreground
-        OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        foregroundListener = (event) => {
           event.notification.display();
-        });
+        };
+        OneSignal.Notifications.addEventListener('foregroundWillDisplay', foregroundListener);
 
         // function to save player id
         const savePlayerId = async (id: string | undefined | null) => {
           if (!id) return;
-          console.log("[OneSignal] Saving Player ID:", id);
+
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             await supabase.from('player_ids').upsert({
@@ -62,16 +70,27 @@ function App() {
         await savePlayerId(OneSignal.User.PushSubscription.id);
 
         // Listen for future changes (e.g. after permission granted)
-        OneSignal.User.PushSubscription.addEventListener("change", (event) => {
+        subscriptionListener = (event) => {
           savePlayerId(event.current.id);
-        });
+        };
+        OneSignal.User.PushSubscription.addEventListener("change", subscriptionListener);
 
       } catch (error) {
+        oneSignalInitialized.current = false;
         console.error("OneSignal init error:", error);
       }
     };
 
     runOneSignal();
+
+    return () => {
+      if (foregroundListener) {
+        OneSignal.Notifications.removeEventListener?.('foregroundWillDisplay', foregroundListener);
+      }
+      if (subscriptionListener) {
+        OneSignal.User.PushSubscription.removeEventListener?.('change', subscriptionListener);
+      }
+    };
   }, []);
 
   return (

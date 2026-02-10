@@ -29,7 +29,7 @@ interface AppContextType extends AppState {
     signup: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     addMilestone: (milestone: Milestone) => void;
-    addMood: (mood: string) => Promise<void>;
+    addMood: (mood: string, note?: string) => Promise<void>;
     toggleBucketItem: (id: string) => void;
     addBucketItem: (text: string) => void;
     redeemCoupon: (id: string) => void;
@@ -164,16 +164,75 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
-    const addMood = async (mood: string) => {
+    const addMood = async (mood: string, note: string = '') => {
         if (!state.user) return;
 
-        // Optimistic update
+        const todayKey = new Date().toDateString();
+        const existingTodayMood = state.moods.find((m) => new Date(m.date).toDateString() === todayKey);
+        const normalizedNote = note.trim();
+
+        if (existingTodayMood) {
+            const previousMood = existingTodayMood;
+
+            // Optimistic update for today's mood
+            setState((prev) => ({
+                ...prev,
+                moods: prev.moods.map((m) =>
+                    m.id === existingTodayMood.id
+                        ? { ...m, mood, note: normalizedNote, date: new Date().toISOString() }
+                        : m
+                ),
+            }));
+
+            try {
+                const { data, error } = await supabase
+                    .from('moods')
+                    .update({
+                        mood,
+                        note: normalizedNote || null,
+                    })
+                    .eq('id', existingTodayMood.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    setState((prev) => ({
+                        ...prev,
+                        moods: prev.moods.map((m) =>
+                            m.id === existingTodayMood.id
+                                ? {
+                                    id: data.id,
+                                    date: data.created_at,
+                                    mood: data.mood,
+                                    note: data.note,
+                                }
+                                : m
+                        ),
+                    }));
+                }
+            } catch (error) {
+                console.error('Error updating today mood:', error);
+                // Revert optimistic update
+                setState((prev) => ({
+                    ...prev,
+                    moods: prev.moods.map((m) =>
+                        m.id === previousMood.id ? previousMood : m
+                    ),
+                }));
+            }
+
+            return;
+        }
+
+        // Optimistic insert for new day mood
         const tempId = 'temp-' + Date.now();
         const tempMood = {
             id: tempId,
             date: new Date().toISOString(),
             mood,
-            note: ''
+            note: normalizedNote
         };
 
         setState((prev) => ({
@@ -186,6 +245,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 .from('moods')
                 .insert([{
                     mood,
+                    note: normalizedNote || null,
                     user_id: state.user.id
                 }])
                 .select()

@@ -14,7 +14,7 @@ export default {
         'warm-gray': '#A9A9A9',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Outfit', 'system-ui', 'sans-serif'],
       },
     },
   },

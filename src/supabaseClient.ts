@@ -210,7 +210,6 @@ export const getBucketList = async () => {
     const { data, error } = await supabase
         .from('bucket_list')
         .select('*')
-        .select('*')
         .order('completed', { ascending: true })
         .order('created_at', { ascending: false });
     if (error) throw error;

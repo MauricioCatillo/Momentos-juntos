@@ -1,25 +1,25 @@
+import OneSignal from 'react-onesignal';
 import { supabase } from '../supabaseClient';
 
 /**
- * Get the partner's Player ID (the other user in the couple)
+ * Get the partner player ID (the most recently updated ID from another user)
  */
 const getPartnerPlayerId = async (currentUserId: string): Promise<string | null> => {
-    console.log('[Notification] Looking for partner. Current user:', currentUserId);
-
     const { data, error } = await supabase
         .from('player_ids')
-        .select('player_id, user_id')
-        .neq('user_id', currentUserId);
+        .select('player_id, user_id, updated_at')
+        .neq('user_id', currentUserId)
+        .not('player_id', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    console.log('[Notification] Partner query result:', { data, error });
-
-    if (error || !data || data.length === 0) {
+    if (error || !data?.player_id) {
         console.error('[Notification] Could not find partner Player ID:', error);
         return null;
     }
 
-    console.log('[Notification] Found partner Player ID:', data[0].player_id);
-    return data[0].player_id;
+    return data.player_id;
 };
 
 /**
@@ -27,43 +27,50 @@ const getPartnerPlayerId = async (currentUserId: string): Promise<string | null>
  */
 export const sendPushNotification = async (message: string): Promise<void> => {
     try {
-        console.log('[Notification] Starting sendPushNotification...');
+        const trimmedMessage = message.trim();
+        if (!trimmedMessage) return;
 
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
+        const safeMessage = trimmedMessage.slice(0, 140);
+
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
         if (!user) {
             console.error('[Notification] No authenticated user');
             return;
         }
-        console.log('[Notification] Current user ID:', user.id);
 
-        // Get partner's Player ID
         const partnerPlayerId = await getPartnerPlayerId(user.id);
         if (!partnerPlayerId) {
-            console.error('[Notification] No partner Player ID found - make sure partner has opened the app');
+            console.warn('[Notification] No partner Player ID found yet');
             return;
         }
 
-        console.log('[Notification] Sending to Edge Function with player_id:', partnerPlayerId);
-
-        // Send notification via Edge Function
-        const { data, error } = await supabase.functions.invoke('push-notification', {
+        const { error } = await supabase.functions.invoke('push-notification', {
             body: {
-                message,
-                heading: 'Mi Prometida 💌',
-                player_id: partnerPlayerId
-            }
+                message: safeMessage,
+                heading: 'Mi Prometida',
+                player_id: partnerPlayerId,
+            },
         });
-
-        console.log('[Notification] Edge Function response:', { data, error });
 
         if (error) {
             console.error('[Notification] Supabase Function Error:', error);
             throw error;
         }
-
     } catch (error) {
         console.error('[Notification] Error sending notification:', error);
         throw error;
+    }
+};
+
+export const requestPushPermission = async (): Promise<boolean> => {
+    try {
+        await OneSignal.Slidedown.promptPush();
+        return true;
+    } catch (error) {
+        console.error('[Notification] Error requesting push permission:', error);
+        return false;
     }
 };

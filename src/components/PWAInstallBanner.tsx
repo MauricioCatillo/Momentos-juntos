@@ -10,14 +10,14 @@ interface BeforeInstallPromptEvent extends Event {
 export const PWAInstallBanner: React.FC = () => {
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [showBanner, setShowBanner] = useState(false);
-    const [isInstalled, setIsInstalled] = useState(false);
+    const [isInstalled, setIsInstalled] = useState(() => {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const isIosStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+        return isStandalone || isIosStandalone;
+    });
 
     useEffect(() => {
-        // Check if already installed
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            setIsInstalled(true);
-            return;
-        }
+        if (isInstalled) return;
 
         // Check if user dismissed before
         const dismissed = localStorage.getItem('pwa-banner-dismissed');
@@ -29,19 +29,22 @@ export const PWAInstallBanner: React.FC = () => {
             }
         }
 
+        let bannerTimeout: ReturnType<typeof setTimeout> | null = null;
+
         const handleBeforeInstall = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e as BeforeInstallPromptEvent);
             // Small delay for better UX
-            setTimeout(() => setShowBanner(true), 2000);
+            bannerTimeout = setTimeout(() => setShowBanner(true), 2000);
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
         return () => {
+            if (bannerTimeout) clearTimeout(bannerTimeout);
             window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
         };
-    }, []);
+    }, [isInstalled]);
 
     const handleInstall = async () => {
         if (!deferredPrompt) return;
