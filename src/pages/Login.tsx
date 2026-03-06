@@ -69,13 +69,10 @@ export const Login: React.FC = () => {
                     transition={{ delay: 0.08, duration: 0.55 }}
                     className="section-card rounded-[1.9rem] p-4 sm:p-5"
                 >
-                    <div className="mb-4 grid w-full grid-cols-2 rounded-full border border-white/10 bg-white/5 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                    <div className="pill-toggle mb-4 grid w-full grid-cols-2">
                         <button
                             type="button"
-                            className={`min-h-[3rem] rounded-full px-4 text-sm font-semibold transition-all ${isLogin
-                                ? 'bg-white/14 text-white shadow-[0_8px_22px_rgba(0,0,0,0.18)]'
-                                : 'text-stone-300'
-                                }`}
+                            className={isLogin ? 'is-active' : ''}
                             onClick={() => {
                                 setIsLogin(true);
                                 setError(null);
@@ -85,10 +82,7 @@ export const Login: React.FC = () => {
                         </button>
                         <button
                             type="button"
-                            className={`min-h-[3rem] rounded-full px-4 text-sm font-semibold transition-all ${!isLogin
-                                ? 'bg-white/14 text-white shadow-[0_8px_22px_rgba(0,0,0,0.18)]'
-                                : 'text-stone-300'
-                                }`}
+                            className={!isLogin ? 'is-active' : ''}
                             onClick={() => {
                                 setIsLogin(false);
                                 setError(null);
