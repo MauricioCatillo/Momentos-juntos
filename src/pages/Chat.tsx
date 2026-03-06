@@ -9,6 +9,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { sendPushNotification } from '../utils/notifications';
 import { isPreviewModeEnabled } from '../lib/previewMode';
+import { PREVIEW_MESSAGES } from '../lib/previewData';
 
 interface Message {
     id: string;
@@ -29,6 +30,7 @@ export const Chat: React.FC = () => {
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const quickMessages = ['Ya llegue', 'Te llamo luego', 'Te extrano', 'Duerme bien'];
 
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,6 +38,7 @@ export const Chat: React.FC = () => {
 
     useEffect(() => {
         if (previewMode) {
+            setMessages(PREVIEW_MESSAGES);
             setLoading(false);
             return;
         }
@@ -126,7 +129,7 @@ export const Chat: React.FC = () => {
 
     const sendMessage = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!newMessage.trim() || !user || sending || previewMode) return;
+        if (!newMessage.trim() || !user || sending) return;
 
         setSending(true);
         trigger('light');
@@ -135,6 +138,20 @@ export const Chat: React.FC = () => {
         setNewMessage('');
 
         try {
+            if (previewMode) {
+                const localMessage: Message = {
+                    id: `preview-local-${Date.now()}`,
+                    content: messageContent,
+                    sender_id: user.id,
+                    created_at: new Date().toISOString(),
+                    read: true,
+                };
+
+                setMessages((prev) => [...prev, localMessage]);
+                trigger('success');
+                return;
+            }
+
             const { error } = await supabase.from('messages').insert([
                 {
                     content: messageContent,
@@ -290,6 +307,22 @@ export const Chat: React.FC = () => {
                 onSubmit={sendMessage}
                 className="border-t border-white/65 bg-white/70 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-2xl dark:border-white/8 dark:bg-white/5"
             >
+                <div className="scrollbar-hide mb-3 flex gap-2 overflow-x-auto pb-1">
+                    {quickMessages.map((message) => (
+                        <button
+                            key={message}
+                            type="button"
+                            onClick={() => {
+                                setNewMessage(message);
+                                inputRef.current?.focus();
+                            }}
+                            className="shrink-0 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-600 shadow-sm dark:border-white/10 dark:bg-white/8 dark:text-stone-200"
+                        >
+                            {message}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="flex items-end gap-2">
                     <div className="flex-1 rounded-[1.7rem] border border-white/70 bg-white/80 px-4 py-2.5 shadow-sm dark:border-white/10 dark:bg-white/8">
                         <input

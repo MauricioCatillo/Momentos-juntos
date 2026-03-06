@@ -1,7 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, signInWithEmail, signUpWithEmail, signOut, getBucketList, getCoupons, getMilestones, addBucketItem as addBucketItemToDb, addCoupon as addCouponToDb, addMilestone as addMilestoneToDb, toggleBucketItem as toggleBucketItemInDb, redeemCoupon as redeemCouponInDb, deleteBucketItem as deleteBucketItemInDb, deleteCoupon as deleteCouponInDb } from '../supabaseClient';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+import {
+    addBucketItem as addBucketItemToDb,
+    addCoupon as addCouponToDb,
+    addMilestone as addMilestoneToDb,
+    deleteBucketItem as deleteBucketItemInDb,
+    deleteCoupon as deleteCouponInDb,
+    getBucketList,
+    getCoupons,
+    getMilestones,
+    redeemCoupon as redeemCouponInDb,
+    signInWithEmail,
+    signOut,
+    signUpWithEmail,
+    supabase,
+    toggleBucketItem as toggleBucketItemInDb,
+} from '../supabaseClient';
 import { isPreviewModeEnabled } from '../lib/previewMode';
+import { PREVIEW_BUCKET_ITEMS, PREVIEW_COUPONS, PREVIEW_MILESTONES, PREVIEW_MOODS } from '../lib/previewData';
 
 interface Milestone {
     id: string;
@@ -58,18 +74,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user: null,
         session: null,
         loading: true,
-        anniversaryDate: '2023-01-01', // Default
+        anniversaryDate: '2023-01-01',
         milestones: [],
         moods: [],
-        bucketList: [
-            { id: '1', text: 'Ver una aurora boreal', completed: false },
-            { id: '2', text: 'Cocinar pasta casera juntos', completed: false },
-        ],
-        coupons: [
-            { id: '1', title: 'Vale por un masaje de 15 min', redeemed: false },
-            { id: '2', title: 'Vale por elegir la película', redeemed: false },
-            { id: '3', title: 'Vale por una cena romántica', redeemed: false },
-        ],
+        bucketList: [],
+        coupons: [],
     });
 
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
@@ -80,17 +89,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setState((prev) => ({ ...prev, session, user: session?.user ?? null, loading: false }));
         });
 
-        // Listen for changes
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setState((prev) => {
-                // Only update if session actually changed to prevent loops
                 if (prev.session?.access_token === session?.access_token) return prev;
                 return { ...prev, session, user: session?.user ?? null };
             });
@@ -99,7 +105,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return () => subscription.unsubscribe();
     }, [previewMode]);
 
-    // Load persisted data and theme on mount
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
         if (savedTheme) {
@@ -118,7 +123,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         document.documentElement.classList.toggle('dark', newTheme === 'dark');
     };
 
-    // Fetch Data when user changes
     useEffect(() => {
         const fetchData = async () => {
             if (!state.user) return;
@@ -126,10 +130,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (previewMode) {
                 setState((prev) => ({
                     ...prev,
-                    moods: [],
-                    bucketList: prev.bucketList,
-                    coupons: prev.coupons,
-                    milestones: [],
+                    moods: PREVIEW_MOODS,
+                    bucketList: PREVIEW_BUCKET_ITEMS,
+                    coupons: PREVIEW_COUPONS,
+                    milestones: PREVIEW_MILESTONES,
                 }));
                 return;
             }
@@ -139,27 +143,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     supabase.from('moods').select('*').order('created_at', { ascending: false }).limit(7),
                     getBucketList(),
                     getCoupons(),
-                    getMilestones()
+                    getMilestones(),
                 ]);
 
-                setState(prev => ({
+                setState((prev) => ({
                     ...prev,
-                    moods: moodsData.data ? moodsData.data.map(m => ({
-                        id: m.id,
-                        date: m.created_at,
-                        mood: m.mood,
-                        note: m.note
-                    })) : [],
+                    moods: moodsData.data
+                        ? moodsData.data.map((mood) => ({
+                            id: mood.id,
+                            date: mood.created_at,
+                            mood: mood.mood,
+                            note: mood.note,
+                        }))
+                        : [],
                     bucketList: bucketData || [],
                     coupons: couponsData || [],
-                    milestones: milestonesData || []
+                    milestones: milestonesData || [],
                 }));
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         };
 
-        fetchData();
+        void fetchData();
     }, [previewMode, state.user]);
 
     const login = async (email: string, password: string) => {
@@ -183,8 +189,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 description: milestone.description,
                 image: milestone.image,
                 location: milestone.location,
-                user_id: state.user?.id
+                user_id: state.user?.id,
             });
+
             if (newMilestone) {
                 setState((prev) => ({ ...prev, milestones: [...prev.milestones, newMilestone] }));
             }
@@ -197,19 +204,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!state.user) return;
 
         const todayKey = new Date().toDateString();
-        const existingTodayMood = state.moods.find((m) => new Date(m.date).toDateString() === todayKey);
+        const existingTodayMood = state.moods.find((item) => new Date(item.date).toDateString() === todayKey);
         const normalizedNote = note.trim();
+
+        if (previewMode) {
+            if (existingTodayMood) {
+                setState((prev) => ({
+                    ...prev,
+                    moods: prev.moods.map((entry) =>
+                        entry.id === existingTodayMood.id
+                            ? { ...entry, mood, note: normalizedNote, date: new Date().toISOString() }
+                            : entry
+                    ),
+                }));
+                return;
+            }
+
+            setState((prev) => ({
+                ...prev,
+                moods: [
+                    {
+                        id: `preview-mood-${Date.now()}`,
+                        date: new Date().toISOString(),
+                        mood,
+                        note: normalizedNote,
+                    },
+                    ...prev.moods,
+                ],
+            }));
+            return;
+        }
 
         if (existingTodayMood) {
             const previousMood = existingTodayMood;
 
-            // Optimistic update for today's mood
             setState((prev) => ({
                 ...prev,
-                moods: prev.moods.map((m) =>
-                    m.id === existingTodayMood.id
-                        ? { ...m, mood, note: normalizedNote, date: new Date().toISOString() }
-                        : m
+                moods: prev.moods.map((entry) =>
+                    entry.id === existingTodayMood.id
+                        ? { ...entry, mood, note: normalizedNote, date: new Date().toISOString() }
+                        : entry
                 ),
             }));
 
@@ -229,25 +263,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (data) {
                     setState((prev) => ({
                         ...prev,
-                        moods: prev.moods.map((m) =>
-                            m.id === existingTodayMood.id
+                        moods: prev.moods.map((entry) =>
+                            entry.id === existingTodayMood.id
                                 ? {
                                     id: data.id,
                                     date: data.created_at,
                                     mood: data.mood,
                                     note: data.note,
                                 }
-                                : m
+                                : entry
                         ),
                     }));
                 }
             } catch (error) {
                 console.error('Error updating today mood:', error);
-                // Revert optimistic update
                 setState((prev) => ({
                     ...prev,
-                    moods: prev.moods.map((m) =>
-                        m.id === previousMood.id ? previousMood : m
+                    moods: prev.moods.map((entry) =>
+                        entry.id === previousMood.id ? previousMood : entry
                     ),
                 }));
             }
@@ -255,64 +288,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        // Optimistic insert for new day mood
-        const tempId = 'temp-' + Date.now();
+        const tempId = `temp-${Date.now()}`;
         const tempMood = {
             id: tempId,
             date: new Date().toISOString(),
             mood,
-            note: normalizedNote
+            note: normalizedNote,
         };
 
         setState((prev) => ({
             ...prev,
-            moods: [tempMood, ...prev.moods]
+            moods: [tempMood, ...prev.moods],
         }));
 
         try {
             const { data, error } = await supabase
                 .from('moods')
-                .insert([{
-                    mood,
-                    note: normalizedNote || null,
-                    user_id: state.user.id
-                }])
+                .insert([
+                    {
+                        mood,
+                        note: normalizedNote || null,
+                        user_id: state.user.id,
+                    },
+                ])
                 .select()
                 .single();
 
             if (error) throw error;
 
             if (data) {
-                // Replace temp mood with real one
                 setState((prev) => ({
                     ...prev,
-                    moods: prev.moods.map(m => m.id === tempId ? {
-                        id: data.id,
-                        date: data.created_at,
-                        mood: data.mood,
-                        note: data.note
-                    } : m),
+                    moods: prev.moods.map((entry) =>
+                        entry.id === tempId
+                            ? {
+                                id: data.id,
+                                date: data.created_at,
+                                mood: data.mood,
+                                note: data.note,
+                            }
+                            : entry
+                    ),
                 }));
             }
         } catch (error) {
             console.error('Error adding mood:', error);
-            // Revert optimistic update
             setState((prev) => ({
                 ...prev,
-                moods: prev.moods.filter(m => m.id !== tempId)
+                moods: prev.moods.filter((entry) => entry.id !== tempId),
             }));
         }
     };
 
     const toggleBucketItem = async (id: string) => {
-        const item = state.bucketList.find(i => i.id === id);
+        const item = state.bucketList.find((entry) => entry.id === id);
         if (!item) return;
 
-        // Optimistic update
         setState((prev) => ({
             ...prev,
-            bucketList: prev.bucketList.map((item) =>
-                item.id === id ? { ...item, completed: !item.completed } : item
+            bucketList: prev.bucketList.map((entry) =>
+                entry.id === id ? { ...entry, completed: !entry.completed } : entry
             ),
         }));
 
@@ -320,11 +355,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await toggleBucketItemInDb(id, !item.completed);
         } catch (error) {
             console.error('Error toggling bucket item:', error);
-            // Revert
             setState((prev) => ({
                 ...prev,
-                bucketList: prev.bucketList.map((item) =>
-                    item.id === id ? { ...item, completed: !item.completed } : item
+                bucketList: prev.bucketList.map((entry) =>
+                    entry.id === id ? { ...entry, completed: !entry.completed } : entry
                 ),
             }));
         }
@@ -345,7 +379,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const redeemCoupon = async (id: string) => {
-        // Optimistic update
         setState((prev) => ({
             ...prev,
             coupons: prev.coupons.map((coupon) =>
@@ -357,7 +390,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await redeemCouponInDb(id);
         } catch (error) {
             console.error('Error redeeming coupon:', error);
-            // Revert
             setState((prev) => ({
                 ...prev,
                 coupons: prev.coupons.map((coupon) =>
@@ -385,14 +417,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const originalList = state.bucketList;
         setState((prev) => ({
             ...prev,
-            bucketList: prev.bucketList.filter((item) => item.id !== id),
+            bucketList: prev.bucketList.filter((entry) => entry.id !== id),
         }));
 
         try {
             await deleteBucketItemInDb(id);
         } catch (error) {
             console.error('Error deleting bucket item:', error);
-            setState(prev => ({ ...prev, bucketList: originalList }));
+            setState((prev) => ({ ...prev, bucketList: originalList }));
         }
     };
 
@@ -407,7 +439,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await deleteCouponInDb(id);
         } catch (error) {
             console.error('Error deleting coupon:', error);
-            setState(prev => ({ ...prev, coupons: originalList }));
+            setState((prev) => ({ ...prev, coupons: originalList }));
         }
     };
 
@@ -417,8 +449,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 ...state,
                 theme,
                 toggleTheme,
-
-
                 login,
                 signup,
                 logout,

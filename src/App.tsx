@@ -13,6 +13,8 @@ import { Loader2 } from 'lucide-react';
 
 // Lazy Load Pages
 const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
+const Memories = React.lazy(() => import('./pages/Memories').then(module => ({ default: module.Memories })));
+const More = React.lazy(() => import('./pages/More').then(module => ({ default: module.More })));
 const Story = React.lazy(() => import('./pages/Story').then(module => ({ default: module.Story })));
 const Daily = React.lazy(() => import('./pages/Daily').then(module => ({ default: module.Daily })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
@@ -112,6 +114,8 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<Home />} />
+                <Route path="memories" element={<Memories />} />
+                <Route path="more" element={<More />} />
                 <Route path="story" element={<Story />} />
                 <Route path="daily" element={<Daily />} />
                 <Route path="chat" element={<Chat />} />

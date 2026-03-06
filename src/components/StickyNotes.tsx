@@ -6,6 +6,7 @@ import { supabase, getNotes, addNote, deleteNote } from '../supabaseClient';
 import { useApp } from '../context/AppContext';
 import { sendPushNotification } from '../utils/notifications';
 import { EmptyState } from './ui/EmptyState';
+import { isPreviewModeEnabled } from '../lib/previewMode';
 
 interface Note {
     id: string;
@@ -27,6 +28,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     showPushNotification = false,
 }) => {
     const { user } = useApp();
+    const previewMode = isPreviewModeEnabled();
     const [notes, setNotes] = useState<Note[]>([]);
     const [isAdding, setIsAdding] = useState(false);
     const [newNote, setNewNote] = useState('');
@@ -49,6 +51,10 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         };
 
         void loadNotes();
+
+        if (previewMode) {
+            return;
+        }
 
         const channel = supabase
             .channel('notes_realtime')
@@ -80,11 +86,25 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]);
+    }, [previewMode, user]);
 
     const handleAdd = async (event: React.FormEvent) => {
         event.preventDefault();
         if (!newNote.trim()) return;
+
+        if (previewMode) {
+            const note = {
+                id: `preview-note-${Date.now()}`,
+                content: newNote.trim(),
+                color: selectedColor,
+                author: user?.id ?? 'anonymous',
+                created_at: new Date().toISOString(),
+            };
+            setNotes((prev) => [note, ...prev]);
+            closeAddModal();
+            toast.success('Nota agregada.');
+            return;
+        }
 
         try {
             const note = await addNote(newNote.trim(), selectedColor, user?.id ?? 'anonymous');
@@ -107,6 +127,11 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     };
 
     const handleDelete = async (id: string) => {
+        if (previewMode) {
+            setNotes((prev) => prev.filter((note) => note.id !== id));
+            return;
+        }
+
         try {
             await deleteNote(id);
             setNotes((prev) => prev.filter((note) => note.id !== id));

@@ -3,23 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     CalendarDays,
     ChevronRight,
-    Image as ImageIcon,
-    ListTodo,
+    Heart,
+    HeartHandshake,
     LogOut,
     MessageCircle,
     MoonStar,
+    PanelsTopLeft,
     SunMedium,
-    HeartHandshake,
     X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInCalendarDays, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CountdownWidget } from '../components/CountdownWidget';
 import { StreaksWidget } from '../components/StreaksWidget';
-import { StickyNotes } from '../components/StickyNotes';
-import { getAppSettings, updateAppSetting } from '../supabaseClient';
+import { getAppSettings, getLatestMessage, updateAppSetting } from '../supabaseClient';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 interface NextDateData {
@@ -31,32 +29,33 @@ interface NextDateData {
 interface HomeSettings {
     countdown: { date: string; title: string };
     streaks: { count: number };
+    next_date?: NextDateData;
+}
+
+interface LatestMessageData {
+    id: string;
+    content: string;
+    created_at: string;
 }
 
 const actionCards = [
     {
-        title: 'Chat privado',
+        title: 'Chat',
         path: '/chat',
         icon: MessageCircle,
         gradient: 'from-rose-500 to-pink-500',
     },
     {
-        title: 'Check-in diario',
-        path: '/daily',
-        icon: HeartHandshake,
-        gradient: 'from-sky-500 to-cyan-500',
-    },
-    {
-        title: 'Planes juntos',
-        path: '/wishlist',
-        icon: ListTodo,
-        gradient: 'from-violet-500 to-indigo-500',
-    },
-    {
-        title: 'Galeria',
-        path: '/gallery',
-        icon: ImageIcon,
+        title: 'Recuerdos',
+        path: '/memories',
+        icon: Heart,
         gradient: 'from-amber-500 to-orange-500',
+    },
+    {
+        title: 'Mas',
+        path: '/more',
+        icon: PanelsTopLeft,
+        gradient: 'from-violet-500 to-indigo-500',
     },
 ];
 
@@ -74,7 +73,7 @@ const QuickAction = ({
     <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative flex min-h-[10.75rem] overflow-hidden rounded-[1.65rem] bg-gradient-to-br ${gradient} p-4 text-left text-white shadow-[0_18px_36px_rgba(82,46,59,0.14)]`}
+        className={`relative flex min-h-[9rem] overflow-hidden rounded-[1.55rem] bg-gradient-to-br ${gradient} p-4 text-left text-white shadow-[0_18px_36px_rgba(82,46,59,0.14)]`}
     >
         <div className="absolute right-[-1.25rem] top-[-1rem] h-20 w-20 rounded-full bg-white/15 blur-2xl" />
         <div className="relative z-10 flex min-h-full flex-col justify-between space-y-4">
@@ -98,7 +97,7 @@ export const Home: React.FC = () => {
     const navigate = useNavigate();
 
     const [settings, setSettings] = useState<HomeSettings>({
-        countdown: { date: new Date().toISOString(), title: 'Cargando...' },
+        countdown: { date: '', title: '' },
         streaks: { count: 0 },
     });
 
@@ -113,6 +112,7 @@ export const Home: React.FC = () => {
     const [countdownForm, setCountdownForm] = useState({ title: '', date: '' });
     const [nextDateForm, setNextDateForm] = useState({ title: '', description: '', datetime: '' });
     const [saving, setSaving] = useState(false);
+    const [latestMessage, setLatestMessage] = useState<LatestMessageData | null>(null);
 
     const daysTogether = useMemo(() => {
         const startDate = new Date('2022-12-21');
@@ -120,7 +120,7 @@ export const Home: React.FC = () => {
     }, []);
 
     const todayMood = useMemo(
-        () => moods.find((m) => new Date(m.date).toDateString() === new Date().toDateString()),
+        () => moods.find((mood) => new Date(mood.date).toDateString() === new Date().toDateString()),
         [moods]
     );
 
@@ -151,6 +151,19 @@ export const Home: React.FC = () => {
         };
 
         void loadSettings();
+    }, []);
+
+    useEffect(() => {
+        const loadLatestMessage = async () => {
+            try {
+                const data = await getLatestMessage();
+                setLatestMessage(data);
+            } catch (error) {
+                console.error('Error loading latest message:', error);
+            }
+        };
+
+        void loadLatestMessage();
     }, []);
 
     const handleCountdownEdit = () => {
@@ -216,6 +229,23 @@ export const Home: React.FC = () => {
         }
     }, [nextDate.datetime]);
 
+    const countdownSummary = useMemo(() => {
+        if (!settings.countdown?.date) {
+            return { days: '--', subtitle: 'Sin fecha' };
+        }
+
+        const parsedDate = new Date(settings.countdown.date);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return { days: '--', subtitle: 'Fecha invalida' };
+        }
+
+        const days = differenceInCalendarDays(parsedDate, new Date());
+        return {
+            days: days >= 0 ? String(days) : '0',
+            subtitle: format(parsedDate, "d 'de' MMM", { locale: es }),
+        };
+    }, [settings.countdown?.date]);
+
     return (
         <div className="page-shell">
             <section className="section-card relative overflow-hidden rounded-[2rem] p-5">
@@ -261,10 +291,26 @@ export const Home: React.FC = () => {
                         <StatCard label="Juntos" value={String(daysTogether)} />
                         <StatCard label="Hoy" value={moodLabel} />
                     </div>
+                </div>
+            </section>
 
+            <section className="section-card rounded-[1.9rem] p-5">
+                <div className="mb-5 flex items-start justify-between gap-3">
+                    <div>
+                        <p className="section-label">Resumen de hoy</p>
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                            Solo lo importante
+                        </h2>
+                    </div>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
+                        <HeartHandshake size={18} />
+                    </div>
+                </div>
+
+                <div className="grid gap-3">
                     <button
                         onClick={handleNextDateEdit}
-                        className="flex w-full items-start justify-between gap-3 rounded-[1.55rem] border border-white/70 bg-white/60 p-4 text-left shadow-sm backdrop-blur-xl transition-colors hover:bg-white/75 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+                        className="flex items-start justify-between gap-3 rounded-[1.45rem] border border-white/70 bg-white/65 p-4 text-left shadow-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
                     >
                         <div className="min-w-0">
                             <p className="section-label">Proxima cita</p>
@@ -276,33 +322,60 @@ export const Home: React.FC = () => {
                                 <p className="mt-2 text-sm leading-5 text-stone-500 dark:text-stone-400">{nextDate.description}</p>
                             )}
                         </div>
-
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
                             <CalendarDays size={18} />
                         </div>
                     </button>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <motion.button
+                            whileTap={{ scale: 0.99 }}
+                            onClick={() => navigate('/daily')}
+                            className="rounded-[1.45rem] border border-white/70 bg-white/65 p-4 text-left shadow-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+                        >
+                            <p className="section-label">Check-in</p>
+                            <p className="mt-3 text-lg font-semibold text-stone-900 dark:text-stone-100">
+                                {todayMood ? 'Hecho hoy' : 'Pendiente'}
+                            </p>
+                            <p className="mt-2 text-sm leading-5 text-stone-500 dark:text-stone-400">
+                                {todayMood ? 'Pueden actualizarlo desde Mas.' : 'Registren como se sienten en un toque.'}
+                            </p>
+                        </motion.button>
+
+                        <button
+                            onClick={handleCountdownEdit}
+                            className="rounded-[1.45rem] border border-white/70 bg-white/65 p-4 text-left shadow-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+                        >
+                            <p className="section-label">Cuenta atras</p>
+                            <p className="mt-3 text-3xl font-black text-stone-900 dark:text-stone-100">{countdownSummary.days}</p>
+                            <p className="mt-2 text-sm leading-5 text-stone-500 dark:text-stone-400">
+                                {settings.countdown?.title || 'Sin titulo'} · {countdownSummary.subtitle}
+                            </p>
+                        </button>
+                    </div>
+
+                    <motion.button
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => navigate('/chat')}
+                        className="flex items-start justify-between gap-3 rounded-[1.45rem] border border-white/70 bg-white/65 p-4 text-left shadow-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+                    >
+                        <div className="min-w-0">
+                            <p className="section-label">Ultimo mensaje</p>
+                            <p className="mt-2 text-base font-semibold text-stone-900 dark:text-stone-100">
+                                {latestMessage?.content || 'Todavia no hay mensajes'}
+                            </p>
+                            <p className="mt-2 text-sm leading-5 text-stone-500 dark:text-stone-400">
+                                {latestMessage?.created_at
+                                    ? format(new Date(latestMessage.created_at), "HH:mm 'de' EEEE", { locale: es })
+                                    : 'Abre el chat para empezar la conversacion.'}
+                            </p>
+                        </div>
+                        <ChevronRight size={18} className="mt-1 shrink-0 text-stone-400" />
+                    </motion.button>
                 </div>
             </section>
 
-            {!todayMood && (
-                <motion.button
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => navigate('/daily')}
-                    className="section-card flex items-center justify-between gap-3 rounded-[1.75rem] p-4 text-left"
-                >
-                    <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
-                            <HeartHandshake size={18} />
-                        </div>
-                        <div className="min-w-0">
-                            <p className="font-semibold text-stone-900 dark:text-stone-100">Falta su check-in de hoy</p>
-                        </div>
-                    </div>
-                    <ChevronRight size={18} className="shrink-0 text-stone-400" />
-                </motion.button>
-            )}
-
-            <section className="grid grid-cols-2 gap-3">
+            <section className="grid grid-cols-3 gap-3">
                 {actionCards.map(({ title, path, icon, gradient }) => (
                     <QuickAction
                         key={path}
@@ -313,18 +386,6 @@ export const Home: React.FC = () => {
                     />
                 ))}
             </section>
-
-            <ErrorBoundary>
-                <CountdownWidget
-                    targetDate={settings.countdown?.date}
-                    title={settings.countdown?.title}
-                    onEdit={handleCountdownEdit}
-                />
-            </ErrorBoundary>
-
-            <ErrorBoundary>
-                <StickyNotes showPushNotification={true} title="Tablon de notas" />
-            </ErrorBoundary>
 
             <AnimatePresence>
                 {showCountdownModal && (

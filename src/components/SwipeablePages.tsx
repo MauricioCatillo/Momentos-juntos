@@ -8,8 +8,8 @@ interface SwipeablePagesProps {
     children: React.ReactNode;
 }
 
-// Order of pages for swipe navigation (chat stays via icon to avoid accidental opens)
-const PAGE_ORDER = ['/', '/story', '/daily', '/wishlist', '/gallery'];
+// Swipe only between the primary non-chat destinations.
+const PAGE_ORDER = ['/', '/memories', '/more'];
 
 export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
     const navigate = useNavigate();
@@ -65,8 +65,8 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
         animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
     }, [currentIndex, navigate, trigger, x]);
 
-    // Don't enable swipe on chat page
-    if (location.pathname === '/chat' || !isSwipeEnabled) {
+    // Keep child routes stable; only the main sections participate in swipe navigation.
+    if (location.pathname === '/chat' || currentIndex === -1 || !isSwipeEnabled) {
         return <>{children}</>;
     }
 

@@ -1,20 +1,20 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Heart, Calendar, Image, MessageCircle } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Heart, MessageCircle, PanelsTopLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
 import { useHaptic } from '../hooks/useHaptic';
 
 const navItems = [
-    { path: '/', icon: Home, label: 'Inicio' },
-    { path: '/story', icon: Heart, label: 'Historia' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/daily', icon: Calendar, label: 'Diario' },
-    { path: '/gallery', icon: Image, label: 'Galeria' },
+    { path: '/', icon: Home, label: 'Inicio', match: ['/'] },
+    { path: '/chat', icon: MessageCircle, label: 'Chat', match: ['/chat'] },
+    { path: '/memories', icon: Heart, label: 'Recuerdos', match: ['/memories', '/story', '/gallery'] },
+    { path: '/more', icon: PanelsTopLeft, label: 'Mas', match: ['/more', '/daily', '/wishlist'] },
 ];
 
 export const BottomNav: React.FC = () => {
     const { trigger } = useHaptic();
+    const location = useLocation();
 
     return (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
@@ -22,20 +22,20 @@ export const BottomNav: React.FC = () => {
 
             <div className="relative px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
                 <div className="pointer-events-auto rounded-[1.85rem] border border-white/70 bg-white/72 p-2 shadow-[0_22px_48px_rgba(83,43,57,0.18)] backdrop-blur-2xl dark:border-white/10 dark:bg-[rgba(28,23,30,0.9)]">
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {navItems.map(({ path, icon: Icon, label }) => (
-                            <NavLink
-                                key={path}
-                                to={path}
-                                onClick={() => trigger('light')}
-                                className={({ isActive }) =>
-                                    cn(
+                    <div className="grid grid-cols-4 gap-1.5">
+                        {navItems.map(({ path, icon: Icon, label, match }) => {
+                            const isActive = match.includes(location.pathname);
+
+                            return (
+                                <Link
+                                    key={path}
+                                    to={path}
+                                    onClick={() => trigger('light')}
+                                    className={cn(
                                         'relative flex min-h-[3.55rem] flex-col items-center justify-center rounded-2xl px-1 text-center transition-all duration-300',
                                         isActive ? 'text-rose-700 dark:text-rose-200' : 'text-stone-500 dark:text-stone-400'
-                                    )
-                                }
-                            >
-                                {({ isActive }) => (
+                                    )}
+                                >
                                     <>
                                         {isActive && (
                                             <motion.div
@@ -57,9 +57,9 @@ export const BottomNav: React.FC = () => {
                                             </span>
                                         </div>
                                     </>
-                                )}
-                            </NavLink>
-                        ))}
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
