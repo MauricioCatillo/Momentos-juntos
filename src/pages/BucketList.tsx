@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 const CATEGORIES = [
     { id: 'Viajes', label: 'Viajes', icon: Plane, color: 'bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-200' },
@@ -66,6 +67,7 @@ export const BucketList: React.FC = () => {
     const [couponsLoading, setCouponsLoading] = useState(true);
     const [isAddingCoupon, setIsAddingCoupon] = useState(false);
     const [newCouponTitle, setNewCouponTitle] = useState('');
+    const [deleteTarget, setDeleteTarget] = useState<{ type: 'wish' | 'coupon'; id: string } | null>(null);
 
     const [newWish, setNewWish] = useState({ text: '', category: 'Viajes', description: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -132,8 +134,6 @@ export const BucketList: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Se eliminara este deseo. Continuar?')) return;
-
         try {
             await deleteBucketItem(id);
             setWishes(wishes.filter((wish) => wish.id !== id));
@@ -176,7 +176,6 @@ export const BucketList: React.FC = () => {
     };
 
     const handleDeleteCoupon = async (id: string) => {
-        if (!confirm('Se eliminara este cupon. Continuar?')) return;
         try {
             await deleteCoupon(id);
             setCoupons(coupons.filter((coupon) => coupon.id !== id));
@@ -299,7 +298,7 @@ export const BucketList: React.FC = () => {
                                                             </div>
 
                                                             <button
-                                                                onClick={() => handleDelete(wish.id)}
+                                                                onClick={() => setDeleteTarget({ type: 'wish', id: wish.id })}
                                                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
                                                             >
                                                                 <Trash2 size={16} />
@@ -387,7 +386,7 @@ export const BucketList: React.FC = () => {
                                             </div>
 
                                             <button
-                                                onClick={() => handleDeleteCoupon(coupon.id)}
+                                                onClick={() => setDeleteTarget({ type: 'coupon', id: coupon.id })}
                                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
                                             >
                                                 <Trash2 size={16} />
@@ -585,6 +584,26 @@ export const BucketList: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <ConfirmModal
+                isOpen={deleteTarget !== null}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={() => {
+                    if (deleteTarget?.type === 'wish') {
+                        handleDelete(deleteTarget.id);
+                    } else if (deleteTarget?.type === 'coupon') {
+                        handleDeleteCoupon(deleteTarget.id);
+                    }
+                }}
+                title={deleteTarget?.type === 'wish' ? 'Borrar deseo?' : 'Borrar cupon?'}
+                message={deleteTarget?.type === 'wish'
+                    ? 'Este deseo se eliminara de la lista.'
+                    : 'Este cupon se eliminara permanentemente.'
+                }
+                confirmText="Si, borrar"
+                cancelText="Cancelar"
+                variant="danger"
+            />
         </div>
     );
 };

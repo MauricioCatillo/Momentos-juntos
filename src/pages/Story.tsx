@@ -349,7 +349,7 @@ export const Story: React.FC = () => {
             setIsEditingMemory(false);
         } catch (error) {
             console.error('Error updating memory:', error);
-            alert('No se pudo actualizar el recuerdo.');
+            toast.error('No se pudo actualizar el recuerdo.');
         } finally {
             setIsUploading(false);
         }
@@ -727,7 +727,7 @@ export const Story: React.FC = () => {
                                     type="text"
                                     value={editMemoryData.title}
                                     onChange={(e) => setEditMemoryData({ ...editMemoryData, title: e.target.value })}
-                                    placeholder="Título..."
+                                    placeholder="Titulo..."
                                     className="input-shell"
                                     required
                                 />
@@ -741,7 +741,7 @@ export const Story: React.FC = () => {
                                 <textarea
                                     value={editMemoryData.description}
                                     onChange={(e) => setEditMemoryData({ ...editMemoryData, description: e.target.value })}
-                                    placeholder="Descripción..."
+                                    placeholder="Descripcion..."
                                     className="textarea-shell h-24"
                                 />
 
@@ -930,12 +930,12 @@ export const Story: React.FC = () => {
                         handleDeleteMemory(deleteConfirm.id);
                     }
                 }}
-                title={deleteConfirm?.type === 'folder' ? '¿Borrar carpeta?' : '¿Borrar recuerdo?'}
+                title={deleteConfirm?.type === 'folder' ? 'Borrar carpeta?' : 'Borrar recuerdo?'}
                 message={deleteConfirm?.type === 'folder'
-                    ? 'Se borrarán todas las fotos dentro de esta carpeta. Esta acción no se puede deshacer.'
-                    : 'Este recuerdo se eliminará permanentemente. Esta acción no se puede deshacer.'
+                    ? 'Se borraran todas las fotos dentro de esta carpeta. Esta accion no se puede deshacer.'
+                    : 'Este recuerdo se eliminara permanentemente. Esta accion no se puede deshacer.'
                 }
-                confirmText="Sí, borrar"
+                confirmText="Si, borrar"
                 cancelText="Cancelar"
                 variant="danger"
             />

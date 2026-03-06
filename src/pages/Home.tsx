@@ -74,14 +74,14 @@ const QuickAction = ({
     <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative overflow-hidden rounded-[1.65rem] bg-gradient-to-br ${gradient} p-4 text-left text-white shadow-[0_18px_36px_rgba(82,46,59,0.14)]`}
+        className={`relative flex min-h-[10.75rem] overflow-hidden rounded-[1.65rem] bg-gradient-to-br ${gradient} p-4 text-left text-white shadow-[0_18px_36px_rgba(82,46,59,0.14)]`}
     >
         <div className="absolute right-[-1.25rem] top-[-1rem] h-20 w-20 rounded-full bg-white/15 blur-2xl" />
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 flex min-h-full flex-col justify-between space-y-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/18 backdrop-blur-md">
                 <Icon size={20} />
             </div>
-            <p className="text-base font-semibold">{title}</p>
+            <p className="text-base font-semibold leading-6">{title}</p>
         </div>
     </motion.button>
 );

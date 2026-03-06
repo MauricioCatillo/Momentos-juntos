@@ -189,7 +189,7 @@ export const Daily: React.FC = () => {
                         Historial rapido
                     </h2>
 
-                    <div className="mt-5 grid grid-cols-5 gap-2">
+                    <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
                         {moods.slice(0, 5).map((mood) => {
                             const moodConfig = MOODS.find((item) => item.id === mood.mood);
                             if (!moodConfig) return null;
