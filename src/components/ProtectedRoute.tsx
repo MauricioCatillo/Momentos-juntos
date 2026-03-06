@@ -1,12 +1,14 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { isPreviewModeEnabled } from '../lib/previewMode';
 
 import { Loader2 } from 'lucide-react';
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading } = useApp();
     const location = useLocation();
+    const previewMode = isPreviewModeEnabled();
 
     if (loading) {
         return (
@@ -16,7 +18,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
         );
     }
 
-    if (!user) {
+    if (!user && !previewMode) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 

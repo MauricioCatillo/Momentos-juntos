@@ -8,6 +8,7 @@ import { useHaptic } from '../hooks/useHaptic';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { sendPushNotification } from '../utils/notifications';
+import { isPreviewModeEnabled } from '../lib/previewMode';
 
 interface Message {
     id: string;
@@ -21,6 +22,7 @@ export const Chat: React.FC = () => {
     const { user } = useApp();
     const navigate = useNavigate();
     const { trigger } = useHaptic();
+    const previewMode = isPreviewModeEnabled();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
@@ -33,6 +35,11 @@ export const Chat: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        if (previewMode) {
+            setLoading(false);
+            return;
+        }
+
         const loadMessages = async () => {
             try {
                 const { data, error } = await supabase
@@ -51,9 +58,13 @@ export const Chat: React.FC = () => {
         };
 
         void loadMessages();
-    }, []);
+    }, [previewMode]);
 
     useEffect(() => {
+        if (previewMode) {
+            return;
+        }
+
         const markAsRead = async () => {
             if (!user) return;
 
@@ -71,9 +82,13 @@ export const Chat: React.FC = () => {
         };
 
         void markAsRead();
-    }, [messages, user]);
+    }, [messages, previewMode, user]);
 
     useEffect(() => {
+        if (previewMode) {
+            return;
+        }
+
         const channel = supabase
             .channel('messages')
             .on(
@@ -103,7 +118,7 @@ export const Chat: React.FC = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, trigger]);
+    }, [previewMode, user, trigger]);
 
     useEffect(() => {
         scrollToBottom();
@@ -111,7 +126,7 @@ export const Chat: React.FC = () => {
 
     const sendMessage = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!newMessage.trim() || !user || sending) return;
+        if (!newMessage.trim() || !user || sending || previewMode) return;
 
         setSending(true);
         trigger('light');
@@ -131,7 +146,9 @@ export const Chat: React.FC = () => {
             if (error) throw error;
             trigger('success');
 
-            sendPushNotification(`Nuevo mensaje: ${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}`);
+            void sendPushNotification(`Nuevo mensaje: ${messageContent.substring(0, 50)}${messageContent.length > 50 ? '...' : ''}`).catch((notificationError) => {
+                console.error('Error sending chat notification:', notificationError);
+            });
         } catch (error) {
             console.error('Error sending message:', error);
             setNewMessage(messageContent);

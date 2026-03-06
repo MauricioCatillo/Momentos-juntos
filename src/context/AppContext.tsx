@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, signInWithEmail, signUpWithEmail, signOut, getBucketList, getCoupons, getMilestones, addBucketItem as addBucketItemToDb, addCoupon as addCouponToDb, addMilestone as addMilestoneToDb, toggleBucketItem as toggleBucketItemInDb, redeemCoupon as redeemCouponInDb, deleteBucketItem as deleteBucketItemInDb, deleteCoupon as deleteCouponInDb } from '../supabaseClient';
 import type { Session, User } from '@supabase/supabase-js';
+import { isPreviewModeEnabled } from '../lib/previewMode';
 
 interface Milestone {
     id: string;
@@ -40,7 +41,19 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const PREVIEW_USER = {
+    id: 'preview-user',
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: 'preview@mi-prometida.local',
+    app_metadata: {},
+    user_metadata: {},
+    identities: [],
+    created_at: '2026-01-01T00:00:00.000Z',
+} as User;
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const previewMode = isPreviewModeEnabled();
     const [state, setState] = useState<AppState>({
         user: null,
         session: null,
@@ -62,6 +75,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
     useEffect(() => {
+        if (previewMode) {
+            setState((prev) => ({ ...prev, session: null, user: PREVIEW_USER, loading: false }));
+            return;
+        }
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setState((prev) => ({ ...prev, session, user: session?.user ?? null, loading: false }));
@@ -79,7 +97,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [previewMode]);
 
     // Load persisted data and theme on mount
     useEffect(() => {
@@ -104,6 +122,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     useEffect(() => {
         const fetchData = async () => {
             if (!state.user) return;
+
+            if (previewMode) {
+                setState((prev) => ({
+                    ...prev,
+                    moods: [],
+                    bucketList: prev.bucketList,
+                    coupons: prev.coupons,
+                    milestones: [],
+                }));
+                return;
+            }
 
             try {
                 const [moodsData, bucketData, couponsData, milestonesData] = await Promise.all([
@@ -131,7 +160,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
 
         fetchData();
-    }, [state.user]);
+    }, [previewMode, state.user]);
 
     const login = async (email: string, password: string) => {
         await signInWithEmail(email, password);

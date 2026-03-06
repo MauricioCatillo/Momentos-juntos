@@ -6,6 +6,7 @@ import { AppProvider } from './context/AppContext';
 import { Layout } from './components/Layout';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { supabase } from './supabaseClient';
+import { isPreviewModeEnabled } from './lib/previewMode';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Loader2 } from 'lucide-react';
@@ -26,11 +27,15 @@ const LoadingSpinner = () => (
 );
 
 function App() {
-  const oneSignalInitialized = useRef(false);
+    const oneSignalInitialized = useRef(false);
 
-  useEffect(() => {
-    let foregroundListener: ((event: { notification: { display: () => void } }) => void) | null = null;
-    let subscriptionListener: ((event: { current: { id?: string | null } }) => void) | null = null;
+    useEffect(() => {
+        if (isPreviewModeEnabled()) {
+            return;
+        }
+
+        let foregroundListener: ((event: { notification: { display: () => void } }) => void) | null = null;
+        let subscriptionListener: ((event: { current: { id?: string | null } }) => void) | null = null;
 
     const runOneSignal = async () => {
       if (oneSignalInitialized.current) return;

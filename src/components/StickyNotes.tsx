@@ -32,6 +32,12 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     const [newNote, setNewNote] = useState('');
     const [selectedColor, setSelectedColor] = useState(COLORS[0]);
 
+    const closeAddModal = () => {
+        setIsAdding(false);
+        setNewNote('');
+        setSelectedColor(COLORS[0]);
+    };
+
     useEffect(() => {
         const loadNotes = async () => {
             try {
@@ -81,17 +87,18 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         if (!newNote.trim()) return;
 
         try {
-            const note = await addNote(newNote, selectedColor);
+            const note = await addNote(newNote.trim(), selectedColor, user?.id ?? 'anonymous');
             setNotes((prev) => {
                 if (prev.some((item) => item.id === note.id)) return prev;
                 return [note, ...prev];
             });
-            setNewNote('');
-            setIsAdding(false);
+            closeAddModal();
             toast.success('Nota agregada.');
 
             if (showPushNotification) {
-                sendPushNotification('Hay una nueva nota.');
+                void sendPushNotification('Hay una nueva nota.').catch((error) => {
+                    console.error('Error sending note notification:', error);
+                });
             }
         } catch (error) {
             console.error('Error adding note:', error);
@@ -102,9 +109,10 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     const handleDelete = async (id: string) => {
         try {
             await deleteNote(id);
-            setNotes(notes.filter((note) => note.id !== id));
+            setNotes((prev) => prev.filter((note) => note.id !== id));
         } catch (error) {
             console.error('Error deleting note:', error);
+            toast.error('No se pudo eliminar la nota.');
         }
     };
 
@@ -173,7 +181,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="modal-backdrop"
-                        onClick={() => setIsAdding(false)}
+                        onClick={closeAddModal}
                     >
                         <motion.div
                             initial={{ y: 24, opacity: 0 }}
@@ -190,7 +198,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                     </h3>
                                 </div>
                                 <button
-                                    onClick={() => setIsAdding(false)}
+                                    onClick={closeAddModal}
                                     className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
                                 >
                                     <X size={18} />
@@ -219,7 +227,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                 </div>
 
                                 <div className="mt-6 grid grid-cols-2 gap-3">
-                                    <button type="button" onClick={() => setIsAdding(false)} className="secondary-button px-4">
+                                    <button type="button" onClick={closeAddModal} className="secondary-button px-4">
                                         Cancelar
                                     </button>
                                     <button type="submit" className="primary-button px-4">

@@ -26,6 +26,12 @@ interface MemoryType {
     folder_id?: string;
 }
 
+const createEmptyMemoryForm = () => ({
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+});
+
 
 const SafeImage = ({ src, alt, className }: { src?: string, alt: string, className?: string }) => {
     const [error, setError] = useState(false);
@@ -138,7 +144,7 @@ export const Story: React.FC = () => {
     // Form Data
     const [newFolderName, setNewFolderName] = useState('');
     const [editFolderName, setEditFolderName] = useState('');
-    const [newMemory, setNewMemory] = useState({ title: '', date: new Date().toISOString().split('T')[0], description: '' });
+    const [newMemory, setNewMemory] = useState(createEmptyMemoryForm);
     const [editMemoryData, setEditMemoryData] = useState({ title: '', date: '', description: '' });
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -153,6 +159,42 @@ export const Story: React.FC = () => {
 
     // Confirmation Modal State
     const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'folder' | 'memory'; id: string } | null>(null);
+
+    const clearSelectedFile = React.useCallback(() => {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
+        setPreviewUrl(null);
+        setSelectedFile(null);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }, [previewUrl]);
+
+    const resetMemoryForm = React.useCallback(() => {
+        setNewMemory(createEmptyMemoryForm());
+        setDriveLink('');
+        setUploadMode('file');
+        clearSelectedFile();
+    }, [clearSelectedFile]);
+
+    const closeAddMemoryModal = React.useCallback(() => {
+        setIsAddingMemory(false);
+        resetMemoryForm();
+    }, [resetMemoryForm]);
+
+    const setMemoryUploadMode = React.useCallback((mode: 'file' | 'drive') => {
+        setUploadMode(mode);
+
+        if (mode === 'drive') {
+            clearSelectedFile();
+            return;
+        }
+
+        setDriveLink('');
+    }, [clearSelectedFile]);
 
     const loadData = React.useCallback(async () => {
         setIsLoading(true);
@@ -183,17 +225,34 @@ export const Story: React.FC = () => {
 
     // Load data when current folder changes
     useEffect(() => {
-        loadData();
+        void loadData();
     }, [loadData]);
+
+    useEffect(() => {
+        return () => {
+            if (longPressTimer.current) {
+                clearTimeout(longPressTimer.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
 
 
     const handleCreateFolder = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newFolderName.trim()) return;
+        const folderName = newFolderName.trim();
+        if (!folderName) return;
 
         try {
-            const folder = await createFolder(newFolderName, currentFolder?.id);
-            setFolders([...folders, folder]);
+            const folder = await createFolder(folderName, currentFolder?.id);
+            setFolders((prev) => [...prev, folder]);
             setNewFolderName('');
             setIsAddingFolder(false);
         } catch (error) {
@@ -204,7 +263,7 @@ export const Story: React.FC = () => {
     const handleDeleteFolder = async (folderId: string) => {
         try {
             await deleteFolder(folderId);
-            setFolders(folders.filter(f => f.id !== folderId));
+            setFolders((prev) => prev.filter((folder) => folder.id !== folderId));
             setContextMenu(null);
             setDeleteConfirm(null);
             toast.success('Carpeta eliminada correctamente');
@@ -216,11 +275,12 @@ export const Story: React.FC = () => {
 
     const handleRenameFolder = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!contextMenu || !editFolderName.trim()) return;
+        const folderName = editFolderName.trim();
+        if (!contextMenu || !folderName) return;
 
         try {
-            const updated = await updateFolder(contextMenu.folder.id, editFolderName);
-            setFolders(folders.map(f => f.id === contextMenu.folder.id ? updated : f));
+            const updated = await updateFolder(contextMenu.folder.id, folderName);
+            setFolders((prev) => prev.map((folder) => folder.id === contextMenu.folder.id ? updated : folder));
             setIsEditingFolder(false);
             setContextMenu(null);
         } catch (error) {
@@ -262,6 +322,9 @@ export const Story: React.FC = () => {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
             setSelectedFile(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
@@ -269,32 +332,26 @@ export const Story: React.FC = () => {
 
     const handleCreateMemory = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMemory.title || !currentFolder) return;
+        const driveUrl = driveLink.trim();
+        if (!newMemory.title.trim() || !currentFolder) return;
         if (uploadMode === 'file' && !selectedFile) return;
-        if (uploadMode === 'drive' && !driveLink) return;
+        if (uploadMode === 'drive' && !driveUrl) return;
 
         setIsUploading(true);
         try {
             const memory = await uploadMemory(
                 uploadMode === 'file' ? selectedFile : null,
-                newMemory.title,
-                newMemory.description,
+                newMemory.title.trim(),
+                newMemory.description.trim(),
                 newMemory.date,
                 currentFolder.id,
-                uploadMode === 'drive' ? driveLink : undefined
+                uploadMode === 'drive' ? driveUrl : undefined
             );
 
-            const updatedMemories = [memory, ...memories].sort((a, b) =>
+            setMemories((prev) => [memory, ...prev].sort((a, b) =>
                 new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-            setMemories(updatedMemories);
-
-            setNewMemory({ title: '', date: new Date().toISOString().split('T')[0], description: '' });
-            setSelectedFile(null);
-            setPreviewUrl(null);
-            setDriveLink('');
-            setUploadMode('file');
-            setIsAddingMemory(false);
+            ));
+            closeAddMemoryModal();
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Error al subir el recuerdo. Intenta de nuevo.';
             toast.error(errorMessage);
@@ -316,7 +373,7 @@ export const Story: React.FC = () => {
     const handleDeleteMemory = async (memoryId: string) => {
         try {
             await deleteMemory(memoryId);
-            setMemories(memories.filter(m => m.id !== memoryId));
+            setMemories((prev) => prev.filter((memory) => memory.id !== memoryId));
             if (selectedMemory?.id === memoryId) {
                 setSelectedMemory(null);
             }
@@ -344,7 +401,7 @@ export const Story: React.FC = () => {
         setIsUploading(true);
         try {
             const updated = await updateMemory(selectedMemory.id, editMemoryData);
-            setMemories(memories.map(m => m.id === selectedMemory.id ? updated : m));
+            setMemories((prev) => prev.map((memory) => memory.id === selectedMemory.id ? updated : memory));
             setSelectedMemory(updated); // Update lightbox view
             setIsEditingMemory(false);
         } catch (error) {
@@ -354,6 +411,10 @@ export const Story: React.FC = () => {
             setIsUploading(false);
         }
     };
+
+    const isMemorySubmitDisabled = isUploading
+        || !newMemory.title.trim()
+        || (uploadMode === 'file' ? !selectedFile : !driveLink.trim());
 
     return (
         <div className="page-shell">
@@ -407,8 +468,8 @@ export const Story: React.FC = () => {
             ) : (
                 <>
                     {!currentFolder && folders.length === 0 && (
-                        <div className="section-card mb-6 rounded-[1.8rem] px-5 py-10 text-center">
-                            <p className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        <div className="section-card mb-6 rounded-[1.8rem] px-5 py-10 text-center dark:border-white/10 dark:bg-stone-800">
+                            <p className="display-font text-[2rem] font-semibold leading-none text-stone-900 dark:text-stone-100">
                                 Sin carpetas todavia
                             </p>
                         </div>
@@ -442,8 +503,8 @@ export const Story: React.FC = () => {
                     {currentFolder && (
                         <div className="relative space-y-8 border-l-2 border-stone-200 pl-4 dark:border-white/10">
                             {memories.length === 0 && folders.length === 0 && (
-                                <div className="section-card rounded-[1.7rem] px-5 py-10 text-center">
-                                    <p className="text-lg font-medium text-stone-500 dark:text-stone-400">
+                                <div className="section-card rounded-[1.7rem] px-5 py-10 text-center dark:border-white/10 dark:bg-stone-800">
+                                    <p className="text-lg font-medium text-stone-500 dark:text-stone-300">
                                         Aun no hay recuerdos aqui. Agrega el primero.
                                     </p>
                                 </div>
@@ -570,7 +631,7 @@ export const Story: React.FC = () => {
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">Nuevo recuerdo</h2>
-                                <button onClick={() => setIsAddingMemory(false)} className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200">
+                                <button onClick={closeAddMemoryModal} className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -613,7 +674,7 @@ export const Story: React.FC = () => {
                                 <div className="pill-toggle grid w-full grid-cols-2">
                                     <button
                                         type="button"
-                                        onClick={() => setUploadMode('file')}
+                                        onClick={() => setMemoryUploadMode('file')}
                                         className={`${uploadMode === 'file'
                                             ? 'is-active'
                                             : ''
@@ -623,7 +684,7 @@ export const Story: React.FC = () => {
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setUploadMode('drive')}
+                                        onClick={() => setMemoryUploadMode('drive')}
                                         className={`${uploadMode === 'drive'
                                             ? 'is-active'
                                             : ''
@@ -700,7 +761,7 @@ export const Story: React.FC = () => {
 
                                 <button
                                     type="submit"
-                                    disabled={(!selectedFile && !driveLink) || !newMemory.title || isUploading}
+                                    disabled={isMemorySubmitDisabled}
                                     className="primary-button w-full disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {isUploading ? 'Guardando...' : 'Guardar recuerdo'}

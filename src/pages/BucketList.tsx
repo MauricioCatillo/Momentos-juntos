@@ -108,7 +108,7 @@ export const BucketList: React.FC = () => {
         setIsSubmitting(true);
         try {
             const added = await addBucketItem(newWish.text, newWish.category, newWish.description);
-            setWishes([added, ...wishes]);
+            setWishes((prev) => [added, ...prev]);
             setNewWish({ text: '', category: 'Viajes', description: '' });
             setIsAdding(false);
             toast.success('Deseo agregado.');
@@ -136,7 +136,7 @@ export const BucketList: React.FC = () => {
     const handleDelete = async (id: string) => {
         try {
             await deleteBucketItem(id);
-            setWishes(wishes.filter((wish) => wish.id !== id));
+            setWishes((prev) => prev.filter((wish) => wish.id !== id));
             toast.success('Deseo eliminado.');
         } catch (error) {
             console.error(error);
@@ -151,7 +151,7 @@ export const BucketList: React.FC = () => {
         setIsSubmitting(true);
         try {
             const added = await addCoupon(newCouponTitle);
-            setCoupons([added, ...coupons]);
+            setCoupons((prev) => [added, ...prev]);
             setNewCouponTitle('');
             setIsAddingCoupon(false);
             toast.success('Cupon creado.');
@@ -178,7 +178,7 @@ export const BucketList: React.FC = () => {
     const handleDeleteCoupon = async (id: string) => {
         try {
             await deleteCoupon(id);
-            setCoupons(coupons.filter((coupon) => coupon.id !== id));
+            setCoupons((prev) => prev.filter((coupon) => coupon.id !== id));
             toast.success('Cupon eliminado.');
         } catch (error) {
             console.error(error);

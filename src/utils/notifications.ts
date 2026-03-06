@@ -1,5 +1,6 @@
 import OneSignal from 'react-onesignal';
 import { supabase } from '../supabaseClient';
+import { isPreviewModeEnabled } from '../lib/previewMode';
 
 /**
  * Get the partner player ID (the most recently updated ID from another user)
@@ -26,6 +27,10 @@ const getPartnerPlayerId = async (currentUserId: string): Promise<string | null>
  * Send a push notification to the partner
  */
 export const sendPushNotification = async (message: string): Promise<void> => {
+    if (isPreviewModeEnabled()) {
+        return;
+    }
+
     try {
         const trimmedMessage = message.trim();
         if (!trimmedMessage) return;
@@ -66,6 +71,10 @@ export const sendPushNotification = async (message: string): Promise<void> => {
 };
 
 export const requestPushPermission = async (): Promise<boolean> => {
+    if (isPreviewModeEnabled()) {
+        return false;
+    }
+
     try {
         await OneSignal.Slidedown.promptPush();
         return true;

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { isPreviewModeEnabled } from './lib/previewMode';
 
 const supabaseUrl = 'https://pdunaxuelvzzpzhvgvcm.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkdW5heHVlbHZ6enB6aHZndmNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzExOTgsImV4cCI6MjA3OTYwNzE5OH0.fDPcGFFmNGAY09xasV4jeitoK9AIs90bFKSleoM-QuM';
@@ -8,6 +9,17 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
         persistSession: false // Force login on every visit as requested
     }
 });
+
+const toIsoDate = (value?: string) => {
+    if (!value) return value;
+
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return value;
+    }
+
+    return parsedDate.toISOString();
+};
 
 export const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -84,7 +96,7 @@ export const uploadMemory = async (
                 {
                     title,
                     description,
-                    date: new Date(date).toISOString(),
+                    date: toIsoDate(date),
                     media_url: publicUrl,
                     external_url: externalUrl || null,
                     media_type: mediaType,
@@ -104,9 +116,14 @@ export const uploadMemory = async (
 };
 
 export const updateMemory = async (id: string, updates: { title?: string; description?: string; date?: string }) => {
+    const normalizedUpdates = {
+        ...updates,
+        ...(updates.date ? { date: toIsoDate(updates.date) } : {}),
+    };
+
     const { data, error } = await supabase
         .from('memories')
-        .update(updates)
+        .update(normalizedUpdates)
         .eq('id', id)
         .select()
         .single();
@@ -118,9 +135,11 @@ export const updateMemory = async (id: string, updates: { title?: string; descri
 // --- New Features Helpers ---
 
 export const getAppSettings = async () => {
+    if (isPreviewModeEnabled()) return {};
+
     const { data, error } = await supabase.from('app_settings').select('*');
     if (error) throw error;
-    return data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
+    return (data ?? []).reduce<Record<string, unknown>>((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
 };
 
 export const updateAppSetting = async (key: string, value: unknown) => {
@@ -129,12 +148,14 @@ export const updateAppSetting = async (key: string, value: unknown) => {
 };
 
 export const getNotes = async () => {
+    if (isPreviewModeEnabled()) return [];
+
     const { data, error } = await supabase.from('notes').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return data;
 };
 
-export const addNote = async (content: string, color: string = 'yellow', author: string = 'user') => {
+export const addNote = async (content: string, color: string = 'yellow', author: string = 'anonymous') => {
     const { data, error } = await supabase.from('notes').insert([{ content, color, author }]).select().single();
     if (error) throw error;
     return data;
@@ -160,6 +181,8 @@ export const updateFolder = async (id: string, name: string) => {
 };
 
 export const getFolders = async (parentId?: string) => {
+    if (isPreviewModeEnabled()) return [];
+
     let query = supabase.from('folders').select('*').order('created_at', { ascending: true });
 
     if (parentId) {
@@ -174,6 +197,8 @@ export const getFolders = async (parentId?: string) => {
 };
 
 export const getMemories = async (folderId?: string) => {
+    if (isPreviewModeEnabled()) return [];
+
     let query = supabase.from('memories').select('*').order('date', { ascending: false });
 
     if (folderId) {
@@ -188,6 +213,8 @@ export const getMemories = async (folderId?: string) => {
 };
 
 export const getAllMemories = async () => {
+    if (isPreviewModeEnabled()) return [];
+
     const { data, error } = await supabase
         .from('memories')
         .select('*')
@@ -207,6 +234,8 @@ export const deleteFolder = async (id: string) => {
 };
 // Bucket List Helpers
 export const getBucketList = async () => {
+    if (isPreviewModeEnabled()) return [];
+
     const { data, error } = await supabase
         .from('bucket_list')
         .select('*')
@@ -244,6 +273,8 @@ export const deleteBucketItem = async (id: string) => {
 
 // Coupon Helpers
 export const getCoupons = async () => {
+    if (isPreviewModeEnabled()) return [];
+
     const { data, error } = await supabase
         .from('coupons')
         .select('*')
@@ -280,6 +311,8 @@ export const deleteCoupon = async (id: string) => {
 
 // Milestone Helpers
 export const getMilestones = async () => {
+    if (isPreviewModeEnabled()) return [];
+
     const { data, error } = await supabase
         .from('milestones')
         .select('*')

@@ -27,15 +27,20 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
             return;
         }
 
-        const mediaQuery = window.matchMedia('(pointer: fine)');
+        const mediaQuery = window.matchMedia('(any-pointer: coarse)');
         const updateSwipeAvailability = () => {
             setIsSwipeEnabled(mediaQuery.matches);
         };
 
         updateSwipeAvailability();
-        mediaQuery.addEventListener('change', updateSwipeAvailability);
 
-        return () => mediaQuery.removeEventListener('change', updateSwipeAvailability);
+        if (typeof mediaQuery.addEventListener === 'function') {
+            mediaQuery.addEventListener('change', updateSwipeAvailability);
+            return () => mediaQuery.removeEventListener('change', updateSwipeAvailability);
+        }
+
+        mediaQuery.addListener(updateSwipeAvailability);
+        return () => mediaQuery.removeListener(updateSwipeAvailability);
     }, []);
 
     const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
