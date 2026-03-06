@@ -73,7 +73,7 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
             dragElastic={0.2}
             dragDirectionLock
             onDragEnd={handleDragEnd}
-            className="h-full"
+            className="min-h-full"
         >
             {children}
         </motion.div>
