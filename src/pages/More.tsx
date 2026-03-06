@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CalendarCheck2, ListTodo, MessageSquareText, StickyNote } from 'lucide-react';
+import { Bell, BellRing, CalendarCheck2, ListTodo, MessageSquareText, StickyNote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { StickyNotes } from '../components/StickyNotes';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useApp } from '../context/AppContext';
 import { requestPushPermission } from '../utils/notifications';
+import { isPreviewModeEnabled } from '../lib/previewMode';
 
 const MoreCard = ({
     title,
@@ -49,12 +50,40 @@ export const More: React.FC = () => {
     const navigate = useNavigate();
     const { moods, bucketList, coupons } = useApp();
     const [isEnablingNotifications, setIsEnablingNotifications] = useState(false);
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
     const todayMood = moods.find((mood) => new Date(mood.date).toDateString() === new Date().toDateString());
     const pendingPlans = bucketList.filter((item) => !item.completed).length;
     const activeCoupons = coupons.filter((coupon) => !coupon.redeemed).length;
+    const previewMode = isPreviewModeEnabled();
+
+    useEffect(() => {
+        const syncPermission = () => {
+            if (previewMode) {
+                setNotificationPermission('default');
+                return;
+            }
+
+            if (typeof window === 'undefined' || !('Notification' in window)) {
+                setNotificationPermission('unsupported');
+                return;
+            }
+
+            setNotificationPermission(window.Notification.permission);
+        };
+
+        syncPermission();
+
+        window.addEventListener('focus', syncPermission);
+        document.addEventListener('visibilitychange', syncPermission);
+
+        return () => {
+            window.removeEventListener('focus', syncPermission);
+            document.removeEventListener('visibilitychange', syncPermission);
+        };
+    }, [previewMode]);
 
     const handleEnableNotifications = async () => {
-        if (isEnablingNotifications) return;
+        if (isEnablingNotifications || notificationPermission === 'granted') return;
 
         setIsEnablingNotifications(true);
 
@@ -63,14 +92,60 @@ export const More: React.FC = () => {
 
             if (!granted) {
                 toast.error('No se pudieron activar las notificaciones.');
+                if (typeof window !== 'undefined' && 'Notification' in window) {
+                    setNotificationPermission(window.Notification.permission);
+                }
                 return;
             }
 
+            setNotificationPermission('granted');
             toast.success('Notificaciones activadas.');
         } finally {
             setIsEnablingNotifications(false);
         }
     };
+
+    const notificationUi = useMemo(() => {
+        if (notificationPermission === 'granted') {
+            return {
+                title: 'Ya estan activadas',
+                description: 'Tu celular ya puede recibir avisos del chat y de las notas.',
+                buttonText: 'Notificaciones activadas',
+                disabled: true,
+                icon: BellRing,
+            };
+        }
+
+        if (notificationPermission === 'denied') {
+            return {
+                title: 'Permiso bloqueado',
+                description: 'Necesitas volver a habilitarlas desde la configuracion del navegador.',
+                buttonText: 'Permiso bloqueado',
+                disabled: true,
+                icon: Bell,
+            };
+        }
+
+        if (notificationPermission === 'unsupported') {
+            return {
+                title: 'No disponibles aqui',
+                description: 'Este navegador no expone permisos de notificacion para la app.',
+                buttonText: 'No disponible',
+                disabled: true,
+                icon: Bell,
+            };
+        }
+
+        return {
+            title: 'Activalas una vez',
+            description: 'Permite avisos del chat y de las notas en tu celular.',
+            buttonText: isEnablingNotifications ? 'Activando...' : 'Activar notificaciones',
+            disabled: false,
+            icon: Bell,
+        };
+    }, [isEnablingNotifications, notificationPermission]);
+
+    const NotificationIcon = notificationUi.icon;
 
     return (
         <div className="page-shell">
@@ -116,24 +191,24 @@ export const More: React.FC = () => {
                     <div>
                         <p className="section-label">Notificaciones</p>
                         <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
-                            Activalas una vez
+                            {notificationUi.title}
                         </h2>
                         <p className="mt-3 text-sm leading-6 text-stone-500 dark:text-stone-400">
-                            Permite avisos del chat y de las notas en tu celular.
+                            {notificationUi.description}
                         </p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-200">
-                        <Bell size={20} />
+                        <NotificationIcon size={20} />
                     </div>
                 </div>
 
                 <button
                     onClick={() => void handleEnableNotifications()}
-                    disabled={isEnablingNotifications}
+                    disabled={isEnablingNotifications || notificationUi.disabled}
                     className="primary-button mt-5 flex w-full items-center justify-center gap-2 disabled:opacity-60"
                 >
-                    <Bell size={16} />
-                    {isEnablingNotifications ? 'Activando...' : 'Activar notificaciones'}
+                    <NotificationIcon size={16} />
+                    {notificationUi.buttonText}
                 </button>
             </section>
 
