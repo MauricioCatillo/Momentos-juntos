@@ -1,6 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, ListTodo, Image as ImageIcon, LogOut, X, Clock3, Smile, HeartHandshake, ChevronRight } from 'lucide-react';
+import {
+    CalendarDays,
+    ChevronRight,
+    Image as ImageIcon,
+    ListTodo,
+    LogOut,
+    MessageCircle,
+    MoonStar,
+    SunMedium,
+    HeartHandshake,
+    X,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays } from 'date-fns';
@@ -22,26 +33,68 @@ interface HomeSettings {
     streaks: { count: number };
 }
 
-const ActionCard = ({ title, subtitle, onClick, icon: Icon, gradient }: { title: string; subtitle: string; onClick: () => void; icon: React.ComponentType<{ size?: number }>; gradient: string; }) => (
+const actionCards = [
+    {
+        title: 'Chat privado',
+        path: '/chat',
+        icon: MessageCircle,
+        gradient: 'from-rose-500 to-pink-500',
+    },
+    {
+        title: 'Check-in diario',
+        path: '/daily',
+        icon: HeartHandshake,
+        gradient: 'from-sky-500 to-cyan-500',
+    },
+    {
+        title: 'Planes juntos',
+        path: '/wishlist',
+        icon: ListTodo,
+        gradient: 'from-violet-500 to-indigo-500',
+    },
+    {
+        title: 'Galeria',
+        path: '/gallery',
+        icon: ImageIcon,
+        gradient: 'from-amber-500 to-orange-500',
+    },
+];
+
+const QuickAction = ({
+    title,
+    icon: Icon,
+    gradient,
+    onClick,
+}: {
+    title: string;
+    icon: React.ComponentType<{ size?: number }>;
+    gradient: string;
+    onClick: () => void;
+}) => (
     <motion.button
-        whileHover={{ y: -3 }}
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative overflow-hidden rounded-2xl p-4 text-left text-white ${gradient}`}
+        className={`relative overflow-hidden rounded-[1.65rem] bg-gradient-to-br ${gradient} p-4 text-left text-white shadow-[0_18px_36px_rgba(82,46,59,0.14)]`}
     >
-        <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/15 blur-xl" />
-        <div className="relative z-10">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center mb-3">
+        <div className="absolute right-[-1.25rem] top-[-1rem] h-20 w-20 rounded-full bg-white/15 blur-2xl" />
+        <div className="relative z-10 space-y-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/18 backdrop-blur-md">
                 <Icon size={20} />
             </div>
-            <p className="text-sm font-bold">{title}</p>
-            <p className="text-xs text-white/80 mt-0.5">{subtitle}</p>
+            <p className="text-base font-semibold">{title}</p>
         </div>
     </motion.button>
 );
 
+const StatCard = ({ label, value }: { label: string; value: string }) => (
+    <div className="rounded-[1.45rem] border border-white/70 bg-white/62 p-4 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">{label}</p>
+        <p className="mt-3 text-2xl font-black text-stone-900 dark:text-stone-100">{value}</p>
+    </div>
+);
+
 export const Home: React.FC = () => {
-    const { moods, user, logout } = useApp();
+    const { moods, user, logout, theme, toggleTheme } = useApp();
     const navigate = useNavigate();
 
     const [settings, setSettings] = useState<HomeSettings>({
@@ -74,14 +127,14 @@ export const Home: React.FC = () => {
     const moodLabel = useMemo(() => {
         const map: Record<string, string> = {
             happy: 'Feliz',
-            excited: 'Emocionado',
-            neutral: 'Normal',
+            excited: 'Con energia',
+            neutral: 'Tranquilo',
             tired: 'Cansado',
-            sad: 'Triste',
+            sad: 'Necesita abrazo',
         };
 
-        if (!todayMood) return 'Sin check-in';
-        return map[todayMood.mood] || 'Sin check-in';
+        if (!todayMood) return 'Sin registro';
+        return map[todayMood.mood] || 'Sin registro';
     }, [todayMood]);
 
     useEffect(() => {
@@ -155,7 +208,7 @@ export const Home: React.FC = () => {
     };
 
     const formattedNextDate = useMemo(() => {
-        if (!nextDate.datetime) return 'Aun sin fecha definida';
+        if (!nextDate.datetime) return 'Aun no esta definido';
         try {
             return format(new Date(nextDate.datetime), "EEEE d 'de' MMMM, HH:mm", { locale: es });
         } catch {
@@ -164,28 +217,39 @@ export const Home: React.FC = () => {
     }, [nextDate.datetime]);
 
     return (
-        <div className="page-shell space-y-5">
-            <section className="soft-panel rounded-3xl p-5 relative overflow-hidden floating-card">
-                <div className="absolute top-0 right-0 w-36 h-36 bg-rose-200/40 rounded-full blur-3xl" />
-                <div className="relative z-10">
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <p className="text-xs uppercase tracking-[0.22em] text-rose-500 font-semibold">Mi Prometida</p>
-                            <h1 className="text-3xl font-black text-stone-900 dark:text-stone-100 mt-1 leading-tight">
+        <div className="page-shell">
+            <section className="section-card relative overflow-hidden rounded-[2rem] p-5">
+                <div className="absolute left-[-2rem] top-[-2rem] h-24 w-24 rounded-full bg-rose-300/35 blur-2xl" />
+                <div className="absolute bottom-[-2.5rem] right-[-2rem] h-28 w-28 rounded-full bg-sky-300/25 blur-3xl" />
+
+                <div className="relative z-10 space-y-5">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <p className="page-kicker">Mi Prometida</p>
+                            <h1 className="page-title mt-2">
                                 Hola, {user?.email?.split('@')[0] || 'amor'}
                             </h1>
-                            <p className="text-sm text-stone-600 dark:text-stone-300 mt-1">
+                            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
                                 {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
                             </p>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <ErrorBoundary fallback={<div className="w-9 h-9 rounded-full bg-stone-100" />}>
+                            <button
+                                onClick={toggleTheme}
+                                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-stone-600 shadow-sm backdrop-blur-xl transition-colors hover:text-rose-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-300"
+                                title={theme === 'dark' ? 'Cambiar a claro' : 'Cambiar a oscuro'}
+                            >
+                                {theme === 'dark' ? <SunMedium size={18} /> : <MoonStar size={18} />}
+                            </button>
+
+                            <ErrorBoundary fallback={<div className="h-11 w-11 rounded-2xl bg-white/60" />}>
                                 <StreaksWidget count={settings.streaks?.count || 0} />
                             </ErrorBoundary>
+
                             <button
                                 onClick={logout}
-                                className="p-2.5 rounded-full bg-white/70 dark:bg-stone-800 text-stone-500 hover:text-red-500 transition-colors"
+                                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-stone-600 shadow-sm backdrop-blur-xl transition-colors hover:text-red-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-300"
                                 title="Cerrar sesion"
                             >
                                 <LogOut size={18} />
@@ -193,112 +257,74 @@ export const Home: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-3 gap-2.5">
-                        <div className="rounded-2xl bg-white/70 dark:bg-stone-800/70 p-3">
-                            <p className="text-[10px] uppercase tracking-wider text-stone-500">Juntos</p>
-                            <p className="text-xl font-black text-stone-800 dark:text-stone-100">{daysTogether}</p>
-                            <p className="text-[11px] text-stone-500">dias</p>
-                        </div>
-                        <div className="rounded-2xl bg-white/70 dark:bg-stone-800/70 p-3">
-                            <p className="text-[10px] uppercase tracking-wider text-stone-500">Mood hoy</p>
-                            <p className="text-sm font-bold text-stone-800 dark:text-stone-100 mt-1">{moodLabel}</p>
-                        </div>
-                        <button
-                            onClick={handleNextDateEdit}
-                            className="rounded-2xl bg-white/70 dark:bg-stone-800/70 p-3 text-left hover:bg-white/85 dark:hover:bg-stone-800 transition-colors"
-                        >
-                            <p className="text-[10px] uppercase tracking-wider text-stone-500">Proxima cita</p>
-                            <p className="text-sm font-bold text-stone-800 dark:text-stone-100 mt-1 line-clamp-2">{nextDate.title}</p>
-                        </button>
+                    <div className="grid grid-cols-2 gap-3">
+                        <StatCard label="Juntos" value={String(daysTogether)} />
+                        <StatCard label="Hoy" value={moodLabel} />
                     </div>
+
+                    <button
+                        onClick={handleNextDateEdit}
+                        className="flex w-full items-start justify-between gap-3 rounded-[1.55rem] border border-white/70 bg-white/60 p-4 text-left shadow-sm backdrop-blur-xl transition-colors hover:bg-white/75 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+                    >
+                        <div className="min-w-0">
+                            <p className="section-label">Proxima cita</p>
+                            <p className="mt-2 text-lg font-semibold text-stone-900 dark:text-stone-100">
+                                {nextDate.title || 'Sin plan todavia'}
+                            </p>
+                            <p className="mt-1 text-sm capitalize text-stone-500 dark:text-stone-400">{formattedNextDate}</p>
+                            {nextDate.description && (
+                                <p className="mt-2 text-sm leading-5 text-stone-500 dark:text-stone-400">{nextDate.description}</p>
+                            )}
+                        </div>
+
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
+                            <CalendarDays size={18} />
+                        </div>
+                    </button>
                 </div>
             </section>
 
             {!todayMood && (
                 <motion.button
-                    whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => navigate('/daily')}
-                    className="w-full soft-panel rounded-2xl p-4 flex items-center justify-between"
+                    className="section-card flex items-center justify-between gap-3 rounded-[1.75rem] p-4 text-left"
                 >
-                    <div className="flex items-center gap-3 text-left">
-                        <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
                             <HeartHandshake size={18} />
                         </div>
-                        <div>
-                            <p className="text-sm font-bold text-stone-800 dark:text-stone-100">Falta tu check-in de hoy</p>
-                            <p className="text-xs text-stone-500 dark:text-stone-400">Toma 10 segundos y mantiene su conexion diaria.</p>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-stone-900 dark:text-stone-100">Falta su check-in de hoy</p>
                         </div>
                     </div>
-                    <ChevronRight size={18} className="text-stone-400" />
+                    <ChevronRight size={18} className="shrink-0 text-stone-400" />
                 </motion.button>
             )}
 
             <section className="grid grid-cols-2 gap-3">
-                <ActionCard
-                    title="Chat"
-                    subtitle="Hablen en tiempo real"
-                    icon={MessageCircle}
-                    onClick={() => navigate('/chat')}
-                    gradient="bg-gradient-to-br from-rose-500 to-pink-600"
-                />
-                <ActionCard
-                    title="Diario"
-                    subtitle="Mood y nota de hoy"
-                    icon={Smile}
-                    onClick={() => navigate('/daily')}
-                    gradient="bg-gradient-to-br from-blue-500 to-cyan-600"
-                />
-                <ActionCard
-                    title="Wishlist"
-                    subtitle="Planes y cupones"
-                    icon={ListTodo}
-                    onClick={() => navigate('/wishlist')}
-                    gradient="bg-gradient-to-br from-indigo-500 to-violet-600"
-                />
-                <ActionCard
-                    title="Galeria"
-                    subtitle="Recuerdos y videos"
-                    icon={ImageIcon}
-                    onClick={() => navigate('/gallery')}
-                    gradient="bg-gradient-to-br from-amber-500 to-orange-500"
-                />
-            </section>
-
-            <section className="space-y-4">
-                <ErrorBoundary>
-                    <CountdownWidget
-                        targetDate={settings.countdown?.date}
-                        title={settings.countdown?.title}
-                        onEdit={handleCountdownEdit}
+                {actionCards.map(({ title, path, icon, gradient }) => (
+                    <QuickAction
+                        key={path}
+                        title={title}
+                        icon={icon}
+                        gradient={gradient}
+                        onClick={() => navigate(path)}
                     />
-                </ErrorBoundary>
-
-                <button
-                    onClick={handleNextDateEdit}
-                    className="w-full glass-card rounded-2xl p-4 text-left hover:bg-white/70 dark:hover:bg-stone-800/70 transition-colors"
-                >
-                    <div className="flex items-start justify-between gap-3">
-                        <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-stone-500 mb-1">Proxima cita</p>
-                            <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100">{nextDate.title || 'Sin planificar'}</h3>
-                            <p className="text-sm text-stone-500 dark:text-stone-400 capitalize mt-1">{formattedNextDate}</p>
-                            {nextDate.description && (
-                                <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">{nextDate.description}</p>
-                            )}
-                        </div>
-                        <div className="p-2 rounded-full bg-stone-100 dark:bg-stone-700 text-stone-500">
-                            <Clock3 size={16} />
-                        </div>
-                    </div>
-                </button>
+                ))}
             </section>
 
-            <section className="pt-1">
-                <ErrorBoundary>
-                    <StickyNotes showPushNotification={true} title="Tablon de notas" />
-                </ErrorBoundary>
-            </section>
+            <ErrorBoundary>
+                <CountdownWidget
+                    targetDate={settings.countdown?.date}
+                    title={settings.countdown?.title}
+                    onEdit={handleCountdownEdit}
+                />
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+                <StickyNotes showPushNotification={true} title="Tablon de notas" />
+            </ErrorBoundary>
 
             <AnimatePresence>
                 {showCountdownModal && (
@@ -306,55 +332,64 @@ export const Home: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={(e) => e.target === e.currentTarget && setShowCountdownModal(false)}
+                        className="modal-backdrop"
+                        onClick={(event) => event.target === event.currentTarget && setShowCountdownModal(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.94, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.94, opacity: 0 }}
-                            className="bg-white dark:bg-stone-800 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card"
                         >
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100">Editar cuenta regresiva</h3>
-                                <button onClick={() => setShowCountdownModal(false)} className="p-1 rounded-full hover:bg-stone-100 dark:hover:bg-stone-700">
-                                    <X size={18} className="text-stone-500" />
+                            <div className="mb-5 flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="section-label">Cuenta regresiva</p>
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                        Editar fecha
+                                    </h3>
+                                </div>
+                                <button
+                                    onClick={() => setShowCountdownModal(false)}
+                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                >
+                                    <X size={18} />
                                 </button>
                             </div>
 
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Titulo</label>
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Titulo</span>
                                     <input
                                         type="text"
                                         value={countdownForm.title}
-                                        onChange={(e) => setCountdownForm((prev) => ({ ...prev, title: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700"
-                                        placeholder="Ej: Nuestro gran dia"
+                                        onChange={(event) => setCountdownForm((prev) => ({ ...prev, title: event.target.value }))}
+                                        className="input-shell"
+                                        placeholder="Ej. Nuestro gran dia"
                                     />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Fecha</label>
+                                </label>
+
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Fecha</span>
                                     <input
                                         type="date"
                                         value={countdownForm.date}
-                                        onChange={(e) => setCountdownForm((prev) => ({ ...prev, date: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700"
+                                        onChange={(event) => setCountdownForm((prev) => ({ ...prev, date: event.target.value }))}
+                                        className="input-shell"
                                     />
-                                </div>
+                                </label>
                             </div>
 
-                            <div className="flex gap-3 mt-6">
+                            <div className="mt-6 grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => setShowCountdownModal(false)}
-                                    className="flex-1 px-4 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-600 dark:text-stone-400"
+                                    className="secondary-button px-4"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleCountdownSave}
                                     disabled={saving || !countdownForm.title || !countdownForm.date}
-                                    className="flex-1 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 disabled:opacity-50"
+                                    className="primary-button px-4 disabled:opacity-60"
                                 >
                                     {saving ? 'Guardando...' : 'Guardar'}
                                 </button>
@@ -370,67 +405,75 @@ export const Home: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={(e) => e.target === e.currentTarget && setShowNextDateModal(false)}
+                        className="modal-backdrop"
+                        onClick={(event) => event.target === event.currentTarget && setShowNextDateModal(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.94, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.94, opacity: 0 }}
-                            className="bg-white dark:bg-stone-800 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card"
                         >
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100">Editar proxima cita</h3>
-                                <button onClick={() => setShowNextDateModal(false)} className="p-1 rounded-full hover:bg-stone-100 dark:hover:bg-stone-700">
-                                    <X size={18} className="text-stone-500" />
+                            <div className="mb-5 flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="section-label">Proxima cita</p>
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                        Ajustar plan
+                                    </h3>
+                                </div>
+                                <button
+                                    onClick={() => setShowNextDateModal(false)}
+                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                >
+                                    <X size={18} />
                                 </button>
                             </div>
 
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Titulo</label>
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Titulo</span>
                                     <input
                                         type="text"
                                         value={nextDateForm.title}
-                                        onChange={(e) => setNextDateForm((prev) => ({ ...prev, title: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700"
-                                        placeholder="Ej: Cena romantica"
+                                        onChange={(event) => setNextDateForm((prev) => ({ ...prev, title: event.target.value }))}
+                                        className="input-shell"
+                                        placeholder="Ej. Cena en nuestro lugar"
                                     />
-                                </div>
+                                </label>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Descripcion (opcional)</label>
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Descripcion</span>
                                     <input
                                         type="text"
                                         value={nextDateForm.description}
-                                        onChange={(e) => setNextDateForm((prev) => ({ ...prev, description: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700"
-                                        placeholder="Ej: en la playa"
+                                        onChange={(event) => setNextDateForm((prev) => ({ ...prev, description: event.target.value }))}
+                                        className="input-shell"
+                                        placeholder="Algo corto y facil de recordar"
                                     />
-                                </div>
+                                </label>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Fecha y hora</label>
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Fecha y hora</span>
                                     <input
                                         type="datetime-local"
                                         value={nextDateForm.datetime}
-                                        onChange={(e) => setNextDateForm((prev) => ({ ...prev, datetime: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700"
+                                        onChange={(event) => setNextDateForm((prev) => ({ ...prev, datetime: event.target.value }))}
+                                        className="input-shell"
                                     />
-                                </div>
+                                </label>
                             </div>
 
-                            <div className="flex gap-3 mt-6">
+                            <div className="mt-6 grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => setShowNextDateModal(false)}
-                                    className="flex-1 px-4 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-600 dark:text-stone-400"
+                                    className="secondary-button px-4"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleNextDateSave}
                                     disabled={saving || !nextDateForm.title}
-                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                    className="primary-button px-4 disabled:opacity-60"
                                 >
                                     {saving ? 'Guardando...' : 'Guardar'}
                                 </button>

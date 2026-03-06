@@ -19,11 +19,9 @@ export const PWAInstallBanner: React.FC = () => {
     useEffect(() => {
         if (isInstalled) return;
 
-        // Check if user dismissed before
         const dismissed = localStorage.getItem('pwa-banner-dismissed');
         if (dismissed) {
             const dismissedTime = parseInt(dismissed, 10);
-            // Show again after 7 days
             if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
                 return;
             }
@@ -31,11 +29,10 @@ export const PWAInstallBanner: React.FC = () => {
 
         let bannerTimeout: ReturnType<typeof setTimeout> | null = null;
 
-        const handleBeforeInstall = (e: Event) => {
-            e.preventDefault();
-            setDeferredPrompt(e as BeforeInstallPromptEvent);
-            // Small delay for better UX
-            bannerTimeout = setTimeout(() => setShowBanner(true), 2000);
+        const handleBeforeInstall = (event: Event) => {
+            event.preventDefault();
+            setDeferredPrompt(event as BeforeInstallPromptEvent);
+            bannerTimeout = setTimeout(() => setShowBanner(true), 1800);
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -74,49 +71,46 @@ export const PWAInstallBanner: React.FC = () => {
     return (
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, y: 100 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 100 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-4 right-4 z-[60] max-w-md mx-auto"
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                className="absolute inset-x-4 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-30"
             >
-                <div className="bg-white/90 dark:bg-stone-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-rose-100 dark:border-stone-700 p-4 relative overflow-hidden">
-                    {/* Decorative gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-rose-50/50 via-transparent to-purple-50/50 dark:from-rose-900/20 dark:to-purple-900/20 pointer-events-none" />
-
-                    <div className="relative flex items-center gap-4">
-                        {/* App Icon */}
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-lg flex-shrink-0">
-                            <Heart className="w-7 h-7 text-white fill-white" />
+                <div className="rounded-[1.6rem] border border-white/70 bg-[rgba(255,252,250,0.88)] p-4 shadow-[0_22px_46px_rgba(84,43,58,0.22)] backdrop-blur-2xl dark:border-white/10 dark:bg-[rgba(26,22,32,0.92)]">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-400 text-white shadow-lg shadow-rose-500/25">
+                            <Heart className="h-6 w-6 fill-white" />
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-stone-800 dark:text-stone-100 text-sm">
-                                Añade Mi Prometida 💕
-                            </h3>
-                            <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                                Instala la app en tu pantalla de inicio
-                            </p>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-stone-900 dark:text-stone-100">Instala la app</p>
+
+                            <div className="mt-3 flex items-center gap-2">
+                                <button
+                                    onClick={handleInstall}
+                                    className="inline-flex min-h-[2.75rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-4 text-sm font-semibold text-white shadow-lg shadow-rose-500/25"
+                                >
+                                    <Download size={16} />
+                                    Instalar
+                                </button>
+
+                                <button
+                                    onClick={handleDismiss}
+                                    className="inline-flex min-h-[2.75rem] items-center justify-center rounded-full border border-stone-200/80 px-4 text-sm font-medium text-stone-500 dark:border-white/10 dark:text-stone-300"
+                                >
+                                    Luego
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <button
-                                onClick={handleInstall}
-                                className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all active:scale-95 flex items-center gap-1.5"
-                            >
-                                <Download size={16} />
-                                Instalar
-                            </button>
-                            <button
-                                onClick={handleDismiss}
-                                className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-                                aria-label="Cerrar"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
+                        <button
+                            onClick={handleDismiss}
+                            className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-600 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                            aria-label="Cerrar"
+                        >
+                            <X size={18} />
+                        </button>
                     </div>
                 </div>
             </motion.div>

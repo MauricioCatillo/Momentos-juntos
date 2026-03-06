@@ -1,18 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane, Clapperboard, ShoppingBag, Mountain, Pizza, Sparkles, Plus, CheckCircle2, Trash2, Circle, X, Loader2, Ticket } from 'lucide-react';
-import { getBucketList, addBucketItem, toggleBucketItem, deleteBucketItem, getCoupons, addCoupon, redeemCoupon, deleteCoupon } from '../supabaseClient';
+import {
+    Plane,
+    Clapperboard,
+    ShoppingBag,
+    Mountain,
+    Pizza,
+    Sparkles,
+    Plus,
+    CheckCircle2,
+    Trash2,
+    Circle,
+    X,
+    Loader2,
+    Ticket,
+} from 'lucide-react';
+import {
+    getBucketList,
+    addBucketItem,
+    toggleBucketItem,
+    deleteBucketItem,
+    getCoupons,
+    addCoupon,
+    redeemCoupon,
+    deleteCoupon,
+} from '../supabaseClient';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
+import { PageHeader } from '../components/ui/PageHeader';
+import { EmptyState } from '../components/ui/EmptyState';
 
-// Categories Configuration
 const CATEGORIES = [
-    { id: 'Viajes', label: 'Viajes', icon: Plane, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300' },
-    { id: 'Películas', label: 'Películas', icon: Clapperboard, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' },
-    { id: 'Compras', label: 'Compras', icon: ShoppingBag, color: 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300' },
-    { id: 'Aventura', label: 'Aventura', icon: Mountain, color: 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-300' },
-    { id: 'Comida', label: 'Comida', icon: Pizza, color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300' },
-    { id: 'Otro', label: 'Otro', icon: Sparkles, color: 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300' },
+    { id: 'Viajes', label: 'Viajes', icon: Plane, color: 'bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-200' },
+    { id: 'Peliculas', label: 'Peliculas', icon: Clapperboard, color: 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-200' },
+    { id: 'Compras', label: 'Compras', icon: ShoppingBag, color: 'bg-pink-100 text-pink-600 dark:bg-pink-500/15 dark:text-pink-200' },
+    { id: 'Aventura', label: 'Aventura', icon: Mountain, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-200' },
+    { id: 'Comida', label: 'Comida', icon: Pizza, color: 'bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-200' },
+    { id: 'Otro', label: 'Otro', icon: Sparkles, color: 'bg-stone-100 text-stone-600 dark:bg-white/10 dark:text-stone-200' },
 ] as const;
 
 interface WishItem {
@@ -32,28 +56,23 @@ interface Coupon {
 }
 
 export const BucketList: React.FC = () => {
-    // Main tab state
     const [activeTab, setActiveTab] = useState<'wishes' | 'coupons'>('wishes');
-
-    // Wishes state
     const [wishes, setWishes] = useState<WishItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
     const [isAdding, setIsAdding] = useState(false);
 
-    // Coupons state
     const [coupons, setCoupons] = useState<Coupon[]>([]);
     const [couponsLoading, setCouponsLoading] = useState(true);
     const [isAddingCoupon, setIsAddingCoupon] = useState(false);
     const [newCouponTitle, setNewCouponTitle] = useState('');
 
-    // Form State
     const [newWish, setNewWish] = useState({ text: '', category: 'Viajes', description: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        loadWishes();
-        loadCoupons();
+        void loadWishes();
+        void loadCoupons();
     }, []);
 
     const loadWishes = async () => {
@@ -62,7 +81,7 @@ export const BucketList: React.FC = () => {
             setWishes(data || []);
         } catch (error) {
             console.error(error);
-            toast.error('Error al cargar la lista de deseos');
+            toast.error('No se pudo cargar la lista.');
         } finally {
             setIsLoading(false);
         }
@@ -74,14 +93,14 @@ export const BucketList: React.FC = () => {
             setCoupons(data || []);
         } catch (error) {
             console.error(error);
-            toast.error('Error al cargar los cupones');
+            toast.error('No se pudieron cargar los cupones.');
         } finally {
             setCouponsLoading(false);
         }
     };
 
-    const handleAddWish = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddWish = async (event: React.FormEvent) => {
+        event.preventDefault();
         if (!newWish.text.trim()) return;
 
         setIsSubmitting(true);
@@ -90,48 +109,43 @@ export const BucketList: React.FC = () => {
             setWishes([added, ...wishes]);
             setNewWish({ text: '', category: 'Viajes', description: '' });
             setIsAdding(false);
-            toast.success('¡Deseo agregado! ✨');
+            toast.success('Deseo agregado.');
         } catch (error) {
             console.error(error);
-            toast.error('No se pudo guardar el deseo');
+            toast.error('No se pudo guardar el deseo.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleToggle = async (id: string, currentStatus: boolean) => {
-        // Optimistic update
-        setWishes(wishes.map(w => w.id === id ? { ...w, completed: !currentStatus } : w));
+        setWishes(wishes.map((wish) => (wish.id === id ? { ...wish, completed: !currentStatus } : wish)));
 
         try {
             await toggleBucketItem(id, !currentStatus);
-            if (!currentStatus) {
-                toast.success('¡Deseo cumplido! 🎉');
-            }
+            if (!currentStatus) toast.success('Deseo marcado como cumplido.');
         } catch (error) {
             console.error(error);
-            // Revert on error
-            setWishes(wishes.map(w => w.id === id ? { ...w, completed: currentStatus } : w));
-            toast.error('Error al actualizar');
+            setWishes(wishes.map((wish) => (wish.id === id ? { ...wish, completed: currentStatus } : wish)));
+            toast.error('No se pudo actualizar.');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este deseo?')) return;
+        if (!confirm('Se eliminara este deseo. Continuar?')) return;
 
         try {
             await deleteBucketItem(id);
-            setWishes(wishes.filter(w => w.id !== id));
-            toast.success('Deseo eliminado');
+            setWishes(wishes.filter((wish) => wish.id !== id));
+            toast.success('Deseo eliminado.');
         } catch (error) {
             console.error(error);
-            toast.error('No se pudo eliminar');
+            toast.error('No se pudo eliminar.');
         }
     };
 
-    // Coupon handlers
-    const handleAddCoupon = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddCoupon = async (event: React.FormEvent) => {
+        event.preventDefault();
         if (!newCouponTitle.trim()) return;
 
         setIsSubmitting(true);
@@ -140,429 +154,435 @@ export const BucketList: React.FC = () => {
             setCoupons([added, ...coupons]);
             setNewCouponTitle('');
             setIsAddingCoupon(false);
-            toast.success('¡Cupón creado! 🎟️');
+            toast.success('Cupon creado.');
         } catch (error) {
             console.error(error);
-            toast.error('No se pudo crear el cupón');
+            toast.error('No se pudo crear el cupon.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleRedeemCoupon = async (id: string) => {
-        setCoupons(coupons.map(c => c.id === id ? { ...c, redeemed: true } : c));
+        setCoupons(coupons.map((coupon) => (coupon.id === id ? { ...coupon, redeemed: true } : coupon)));
         try {
             await redeemCoupon(id);
-            toast.success('¡Cupón canjeado! 🎉');
+            toast.success('Cupon canjeado.');
         } catch (error) {
             console.error(error);
-            setCoupons(coupons.map(c => c.id === id ? { ...c, redeemed: false } : c));
-            toast.error('Error al canjear');
+            setCoupons(coupons.map((coupon) => (coupon.id === id ? { ...coupon, redeemed: false } : coupon)));
+            toast.error('No se pudo canjear.');
         }
     };
 
     const handleDeleteCoupon = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este cupón?')) return;
+        if (!confirm('Se eliminara este cupon. Continuar?')) return;
         try {
             await deleteCoupon(id);
-            setCoupons(coupons.filter(c => c.id !== id));
-            toast.success('Cupón eliminado');
+            setCoupons(coupons.filter((coupon) => coupon.id !== id));
+            toast.success('Cupon eliminado.');
         } catch (error) {
             console.error(error);
-            toast.error('No se pudo eliminar');
+            toast.error('No se pudo eliminar.');
         }
     };
 
     const filteredWishes = selectedCategory === 'Todos'
         ? wishes
-        : wishes.filter(w => (w.category || 'Otro') === selectedCategory);
+        : wishes.filter((wish) => (wish.category || 'Otro') === selectedCategory);
 
-    const activeWishes = filteredWishes.filter(w => !w.completed);
-    const completedWishes = filteredWishes.filter(w => w.completed);
-    const activeCoupons = coupons.filter(c => !c.redeemed);
-    const redeemedCoupons = coupons.filter(c => c.redeemed);
+    const activeWishes = filteredWishes.filter((wish) => !wish.completed);
+    const completedWishes = filteredWishes.filter((wish) => wish.completed);
+    const activeCoupons = coupons.filter((coupon) => !coupon.redeemed);
+    const redeemedCoupons = coupons.filter((coupon) => coupon.redeemed);
 
     return (
         <div className="page-shell">
-            <header className="page-header flex justify-between items-center mb-4">
-                <div>
-                    <h1 className="page-title">
-                        {activeTab === 'wishes' ? 'Lista de Deseos ✨' : 'Cuponera 🎟️'}
-                    </h1>
-                    <p className="page-subtitle">
-                        {activeTab === 'wishes' ? 'Nuestros sueños por cumplir' : 'Cupones especiales para canjear'}
-                    </p>
+            <PageHeader
+                kicker={activeTab === 'wishes' ? 'Planes' : 'Cupones'}
+                title={activeTab === 'wishes' ? 'Lista de deseos' : 'Cuponera'}
+                action={(
+                    <button
+                        onClick={() => (activeTab === 'wishes' ? setIsAdding(true) : setIsAddingCoupon(true))}
+                        className={cn(
+                            'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg',
+                            activeTab === 'wishes' ? 'bg-gradient-to-br from-violet-500 to-indigo-500' : 'bg-gradient-to-br from-rose-500 to-pink-500'
+                        )}
+                    >
+                        <Plus size={20} />
+                    </button>
+                )}
+            />
+
+            <section className="section-card rounded-[1.9rem] p-3">
+                <div className="pill-toggle grid w-full grid-cols-2">
+                    <button onClick={() => setActiveTab('wishes')} className={activeTab === 'wishes' ? 'is-active' : ''}>
+                        Deseos
+                    </button>
+                    <button onClick={() => setActiveTab('coupons')} className={activeTab === 'coupons' ? 'is-active' : ''}>
+                        Cupones
+                    </button>
                 </div>
-                <button
-                    onClick={() => activeTab === 'wishes' ? setIsAdding(true) : setIsAddingCoupon(true)}
-                    className={cn(
-                        "w-10 h-10 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform",
-                        activeTab === 'wishes' ? 'bg-indigo-600' : 'bg-rose-500'
-                    )}
-                >
-                    <Plus size={24} />
-                </button>
-            </header>
+            </section>
 
-            {/* Main Tabs */}
-            <div className="flex p-1 bg-stone-200/50 dark:bg-stone-800/50 rounded-xl mb-4">
-                <button
-                    onClick={() => setActiveTab('wishes')}
-                    className={cn(
-                        "flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2",
-                        activeTab === 'wishes'
-                            ? "bg-white dark:bg-stone-700 shadow-sm text-stone-800 dark:text-stone-100"
-                            : "text-stone-500 dark:text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
-                    )}
-                >
-                    <Sparkles size={16} />
-                    Deseos
-                </button>
-                <button
-                    onClick={() => setActiveTab('coupons')}
-                    className={cn(
-                        "flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2",
-                        activeTab === 'coupons'
-                            ? "bg-white dark:bg-stone-700 shadow-sm text-stone-800 dark:text-stone-100"
-                            : "text-stone-500 dark:text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
-                    )}
-                >
-                    <Ticket size={16} />
-                    Cupones
-                </button>
-            </div>
-
-            {/* Wishes Tab Content */}
             {activeTab === 'wishes' && (
                 <>
-                    {/* Category Filter */}
-                    <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide -mx-6 px-6">
+                    <section className="chip-scroll scrollbar-hide flex gap-2 overflow-x-auto pb-1">
                         <button
                             onClick={() => setSelectedCategory('Todos')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === 'Todos'
-                                ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900'
-                                : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 shadow-sm'
-                                }`}
+                            className={cn(
+                                'rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap',
+                                selectedCategory === 'Todos'
+                                    ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900'
+                                    : 'section-card'
+                            )}
                         >
                             Todos
                         </button>
-                        {CATEGORIES.map(cat => (
+
+                        {CATEGORIES.map((category) => (
                             <button
-                                key={cat.id}
-                                onClick={() => setSelectedCategory(cat.id)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-colors ${selectedCategory === cat.id
-                                    ? 'bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 shadow-md'
-                                    : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 shadow-sm'
-                                    }`}
+                                key={category.id}
+                                onClick={() => setSelectedCategory(category.id)}
+                                className={cn(
+                                    'rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap',
+                                    selectedCategory === category.id
+                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900'
+                                        : 'section-card'
+                                )}
                             >
-                                <span>{cat.label}</span>
+                                {category.label}
                             </button>
                         ))}
-                    </div>
+                    </section>
 
-                    {/* List */}
                     {isLoading ? (
-                        <div className="flex justify-center py-12">
-                            <Loader2 className="animate-spin text-indigo-500" size={32} />
+                        <div className="flex justify-center py-16">
+                            <Loader2 className="animate-spin text-violet-500" size={32} />
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* Active Wishes */}
-                            <AnimatePresence mode='popLayout'>
-                                {activeWishes.map((wish) => {
-                                    const CategoryIcon = CATEGORIES.find(c => c.id === wish.category)?.icon || Sparkles;
-                                    return (
-                                        <motion.div
-                                            key={wish.id}
-                                            layout
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                            className="glass-card p-4 rounded-2xl flex items-start gap-4 group"
-                                        >
-                                            <button
-                                                onClick={() => handleToggle(wish.id, wish.completed)}
-                                                className="mt-1 text-stone-300 hover:text-indigo-500 transition-colors"
-                                            >
-                                                <Circle size={24} />
-                                            </button>
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-start">
-                                                    <h3 className="font-semibold text-stone-800 dark:text-stone-100 text-lg leading-tight mb-1">
-                                                        {wish.text}
-                                                    </h3>
-                                                    <button
-                                                        onClick={() => handleDelete(wish.id)}
-                                                        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                                {wish.description && (
-                                                    <p className="text-stone-600 dark:text-stone-400 text-sm mb-2">
-                                                        {wish.description}
-                                                    </p>
-                                                )}
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium flex items-center gap-1 ${CATEGORIES.find(c => c.id === wish.category)?.color || 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
-                                                        }`}>
-                                                        <CategoryIcon size={10} />
-                                                        {(wish.category || 'Otro').toUpperCase()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                            </AnimatePresence>
+                            <div className="space-y-3">
+                                <AnimatePresence mode="popLayout">
+                                    {activeWishes.map((wish) => {
+                                        const category = CATEGORIES.find((item) => item.id === wish.category) || CATEGORIES[CATEGORIES.length - 1];
+                                        const CategoryIcon = category.icon;
 
-                            {/* Completed Section */}
+                                        return (
+                                            <motion.article
+                                                key={wish.id}
+                                                layout
+                                                initial={{ opacity: 0, y: 12 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.98 }}
+                                                className="section-card rounded-[1.7rem] p-4"
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <button
+                                                        onClick={() => handleToggle(wish.id, wish.completed)}
+                                                        className="mt-1 shrink-0 text-stone-300 transition-colors hover:text-violet-500"
+                                                    >
+                                                        <Circle size={22} />
+                                                    </button>
+
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">
+                                                                    {wish.text}
+                                                                </h2>
+                                                                {wish.description && (
+                                                                    <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">
+                                                                        {wish.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            <button
+                                                                onClick={() => handleDelete(wish.id)}
+                                                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+
+                                                        <div className={cn('mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em]', category.color)}>
+                                                            <CategoryIcon size={12} />
+                                                            {wish.category || 'Otro'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.article>
+                                        );
+                                    })}
+                                </AnimatePresence>
+
+                                {activeWishes.length === 0 && wishes.length > 0 && (
+                                    <EmptyState title="Nada por aqui" description="Cambia la categoria." />
+                                )}
+
+                                {wishes.length === 0 && (
+                                    <EmptyState
+                                        title="Sin deseos"
+                                        description="Agrega el primero."
+                                        icon={<Sparkles size={28} className="text-violet-500 dark:text-violet-200" />}
+                                    />
+                                )}
+                            </div>
+
                             {completedWishes.length > 0 && (
-                                <div>
-                                    <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3 pl-2">Cumplidos ({completedWishes.length})</h3>
-                                    <div className="space-y-3 opacity-60">
+                                <section>
+                                    <p className="section-label mb-3">Cumplidos</p>
+                                    <div className="space-y-3">
                                         {completedWishes.map((wish) => (
-                                            <div key={wish.id} className="bg-stone-50 dark:bg-stone-800/50 p-4 rounded-xl flex items-center gap-3">
-                                                <button
-                                                    onClick={() => handleToggle(wish.id, wish.completed)}
-                                                    className="text-green-500"
-                                                >
-                                                    <CheckCircle2 size={24} />
-                                                </button>
-                                                <span className="line-through text-stone-500 dark:text-stone-400 flex-1">{wish.text}</span>
+                                            <div
+                                                key={wish.id}
+                                                className="rounded-[1.5rem] border border-white/60 bg-white/45 px-4 py-3 text-stone-500 shadow-sm dark:border-white/8 dark:bg-white/5 dark:text-stone-400"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <button onClick={() => handleToggle(wish.id, wish.completed)} className="text-emerald-500">
+                                                        <CheckCircle2 size={22} />
+                                                    </button>
+                                                    <span className="line-through">{wish.text}</span>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            )}
-
-                            {wishes.length === 0 && (
-                                <div className="text-center py-12 px-6">
-                                    <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-400">
-                                        <Sparkles size={32} />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-stone-700 dark:text-stone-200 mb-2">Lista vacía</h3>
-                                    <p className="text-stone-500 dark:text-stone-400 text-sm">
-                                        ¿Qué sueño quieres cumplir con amor?<br />¡Agrega el primero!
-                                    </p>
-                                </div>
+                                </section>
                             )}
                         </div>
                     )}
                 </>
             )}
 
-            {/* Coupons Tab Content */}
             {activeTab === 'coupons' && (
-                <>
+                <div className="space-y-4">
                     {couponsLoading ? (
-                        <div className="flex justify-center py-12">
+                        <div className="flex justify-center py-16">
                             <Loader2 className="animate-spin text-rose-500" size={32} />
                         </div>
                     ) : (
-                        <div className="space-y-4">
-                            {/* Active Coupons */}
-                            <AnimatePresence mode='popLayout'>
+                        <>
+                            <AnimatePresence mode="popLayout">
                                 {activeCoupons.map((coupon) => (
-                                    <motion.div
+                                    <motion.article
                                         key={coupon.id}
                                         layout
-                                        initial={{ opacity: 0, y: 20 }}
+                                        initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="relative p-6 rounded-2xl border-2 border-dashed glass-card border-rose-300 dark:border-rose-500/50 hover:shadow-md overflow-hidden group"
+                                        exit={{ opacity: 0, scale: 0.98 }}
+                                        className="section-card relative overflow-hidden rounded-[1.8rem] border-2 border-dashed border-rose-300 p-5 dark:border-rose-400/30"
                                     >
-                                        {/* Ticket cutouts */}
-                                        <div className="absolute top-1/2 -left-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
-                                        <div className="absolute top-1/2 -right-3 w-6 h-6 bg-stone-50 dark:bg-stone-900 rounded-full" />
+                                        <div className="absolute left-[-0.7rem] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[var(--bg-via)]" />
+                                        <div className="absolute right-[-0.7rem] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[var(--bg-via)]" />
 
-                                        <button
-                                            onClick={() => handleDeleteCoupon(coupon.id)}
-                                            className="absolute top-2 right-2 p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all z-10 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg text-rose-500">
-                                                <Ticket size={24} />
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
+                                                    <Ticket size={22} />
+                                                </div>
+                                                <h2 className="mt-4 text-lg font-semibold text-stone-900 dark:text-stone-100">
+                                                    {coupon.title}
+                                                </h2>
                                             </div>
-                                            <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold rounded-full uppercase">
-                                                Disponible
-                                            </span>
+
+                                            <button
+                                                onClick={() => handleDeleteCoupon(coupon.id)}
+                                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
 
-                                        <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4 break-words">{coupon.title}</h3>
-
-                                        <button
-                                            onClick={() => handleRedeemCoupon(coupon.id)}
-                                            className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm font-medium active:scale-95 transition-all"
-                                        >
-                                            Canjear Cupón
+                                        <button onClick={() => handleRedeemCoupon(coupon.id)} className="primary-button mt-5 w-full">
+                                            Canjear cupon
                                         </button>
-                                    </motion.div>
+                                    </motion.article>
                                 ))}
                             </AnimatePresence>
 
-                            {/* Redeemed Section */}
+                            {coupons.length === 0 && (
+                                <EmptyState
+                                    title="Sin cupones"
+                                    description="Crea uno nuevo."
+                                    icon={<Ticket size={28} className="text-rose-500 dark:text-rose-200" />}
+                                />
+                            )}
+
                             {redeemedCoupons.length > 0 && (
-                                <div>
-                                    <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3 pl-2">Canjeados ({redeemedCoupons.length})</h3>
-                                    <div className="space-y-3 opacity-60">
+                                <section>
+                                    <p className="section-label mb-3">Canjeados</p>
+                                    <div className="space-y-3">
                                         {redeemedCoupons.map((coupon) => (
-                                            <div key={coupon.id} className="bg-stone-100 dark:bg-stone-800/50 p-4 rounded-xl flex items-center gap-3 border-2 border-dashed border-stone-300 dark:border-stone-700">
-                                                <div className="p-2 bg-stone-200 dark:bg-stone-700 rounded-lg text-stone-400">
-                                                    <Ticket size={20} />
+                                            <div
+                                                key={coupon.id}
+                                                className="rounded-[1.5rem] border border-dashed border-white/60 bg-white/45 px-4 py-3 text-stone-500 shadow-sm dark:border-white/8 dark:bg-white/5 dark:text-stone-400"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-stone-100 text-stone-500 dark:bg-white/8 dark:text-stone-300">
+                                                        <Ticket size={16} />
+                                                    </div>
+                                                    <span className="flex-1 line-through">{coupon.title}</span>
                                                 </div>
-                                                <span className="line-through text-stone-500 dark:text-stone-400 flex-1">{coupon.title}</span>
-                                                <span className="px-2 py-0.5 bg-stone-200 dark:bg-stone-700 text-stone-500 text-xs font-bold rounded-full">USADO</span>
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </section>
                             )}
-
-                            {coupons.length === 0 && (
-                                <div className="text-center py-12 px-6">
-                                    <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-400">
-                                        <Ticket size={32} />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-stone-700 dark:text-stone-200 mb-2">Sin cupones</h3>
-                                    <p className="text-stone-500 dark:text-stone-400 text-sm">
-                                        ¡Crea cupones especiales para tu amor!<br />Ej: "Vale por un abrazo"
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                        </>
                     )}
-                </>
+                </div>
             )}
 
-            {/* Add Modal */}
             <AnimatePresence>
                 {isAdding && (
-                    <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="modal-backdrop"
+                        onClick={() => setIsAdding(false)}
+                    >
                         <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 py-12 px-4 flex items-end sm:items-center justify-center"
-                            onClick={() => setIsAdding(false)}
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            onClick={(event) => event.stopPropagation()}
+                            className="modal-card"
                         >
-                            <motion.div
-                                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-                                onClick={e => e.stopPropagation()}
-                                className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl"
-                            >
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold dark:text-stone-100">Nuevo Deseo ✨</h2>
-                                    <button onClick={() => setIsAdding(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full">
-                                        <X size={20} className="dark:text-stone-300" />
-                                    </button>
+                            <div className="mb-5 flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="section-label">Nuevo deseo</p>
+                                    <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                        Nuevo deseo
+                                    </h2>
+                                </div>
+                                <button
+                                    onClick={() => setIsAdding(false)}
+                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleAddWish} className="space-y-4">
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Que quieren hacer</span>
+                                    <input
+                                        autoFocus
+                                        value={newWish.text}
+                                        onChange={(event) => setNewWish({ ...newWish, text: event.target.value })}
+                                        placeholder="Ej. Escapada de fin de semana"
+                                        className="input-shell"
+                                        required
+                                    />
+                                </label>
+
+                                <div>
+                                    <span className="section-label mb-2 block">Categoria</span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {CATEGORIES.map((category) => {
+                                            const Icon = category.icon;
+
+                                            return (
+                                                <button
+                                                    key={category.id}
+                                                    type="button"
+                                                    onClick={() => setNewWish({ ...newWish, category: category.id })}
+                                                    className={cn(
+                                                        'rounded-[1.2rem] border px-3 py-3 text-sm font-medium transition-all',
+                                                        newWish.category === category.id
+                                                            ? 'border-violet-400 bg-violet-50 text-violet-700 dark:border-violet-300/40 dark:bg-violet-500/10 dark:text-violet-200'
+                                                            : 'border-white/70 bg-white/60 text-stone-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-300'
+                                                    )}
+                                                >
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Icon size={16} />
+                                                        {category.label}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
-                                <form onSubmit={handleAddWish} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">¿Qué quieres hacer?</label>
-                                        <input
-                                            autoFocus
-                                            value={newWish.text}
-                                            onChange={e => setNewWish({ ...newWish, text: e.target.value })}
-                                            placeholder="Ej. Viajar a París..."
-                                            className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-indigo-200 dark:text-stone-100"
-                                            required
-                                        />
-                                    </div>
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Detalles</span>
+                                    <textarea
+                                        value={newWish.description}
+                                        onChange={(event) => setNewWish({ ...newWish, description: event.target.value })}
+                                        placeholder="Algo breve para recordar la idea"
+                                        className="textarea-shell min-h-[7rem]"
+                                    />
+                                </label>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2">Categoría</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {CATEGORIES.map(cat => (
-                                                <button
-                                                    key={cat.id}
-                                                    type="button"
-                                                    onClick={() => setNewWish({ ...newWish, category: cat.id })}
-                                                    className={`p-2 rounded-xl text-xs font-medium border-2 transition-all flex flex-col items-center gap-1 ${newWish.category === cat.id
-                                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                                                        : 'border-transparent bg-stone-50 dark:bg-stone-700 text-stone-500 dark:text-stone-400'
-                                                        }`}
-                                                >
-                                                    <cat.icon size={16} />
-                                                    {cat.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">Detalles (Opcional)</label>
-                                        <textarea
-                                            value={newWish.description}
-                                            onChange={e => setNewWish({ ...newWish, description: e.target.value })}
-                                            placeholder="Más información..."
-                                            className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-indigo-200 h-20 resize-none dark:text-stone-100"
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={!newWish.text || isSubmitting}
-                                        className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
-                                    >
-                                        {isSubmitting ? 'Guardando...' : 'Agregar a la Lista'}
-                                    </button>
-                                </form>
-                            </motion.div>
+                                <button
+                                    type="submit"
+                                    disabled={!newWish.text || isSubmitting}
+                                    className="primary-button w-full disabled:opacity-60"
+                                >
+                                    {isSubmitting ? 'Guardando...' : 'Guardar deseo'}
+                                </button>
+                            </form>
                         </motion.div>
-                    </>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Add Coupon Modal */}
             <AnimatePresence>
                 {isAddingCoupon && (
-                    <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="modal-backdrop"
+                        onClick={() => setIsAddingCoupon(false)}
+                    >
                         <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 py-12 px-4 flex items-end sm:items-center justify-center"
-                            onClick={() => setIsAddingCoupon(false)}
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            onClick={(event) => event.stopPropagation()}
+                            className="modal-card"
                         >
-                            <motion.div
-                                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-                                onClick={e => e.stopPropagation()}
-                                className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl"
-                            >
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold dark:text-stone-100">Nuevo Cupón 🎟️</h2>
-                                    <button onClick={() => setIsAddingCoupon(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full">
-                                        <X size={20} className="dark:text-stone-300" />
-                                    </button>
+                            <div className="mb-5 flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="section-label">Nuevo cupon</p>
+                                    <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                        Nuevo cupon
+                                    </h2>
                                 </div>
+                                <button
+                                    onClick={() => setIsAddingCoupon(false)}
+                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
 
-                                <form onSubmit={handleAddCoupon} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-1">¿Qué vale este cupón?</label>
-                                        <input
-                                            autoFocus
-                                            value={newCouponTitle}
-                                            onChange={e => setNewCouponTitle(e.target.value)}
-                                            placeholder="Ej. Vale por un abrazo..."
-                                            className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-rose-200 dark:text-stone-100"
-                                            required
-                                        />
-                                    </div>
+                            <form onSubmit={handleAddCoupon} className="space-y-4">
+                                <label className="block">
+                                    <span className="section-label mb-2 block">Que vale este cupon</span>
+                                    <input
+                                        autoFocus
+                                        value={newCouponTitle}
+                                        onChange={(event) => setNewCouponTitle(event.target.value)}
+                                        placeholder="Ej. Vale por elegir la cita"
+                                        className="input-shell"
+                                        required
+                                    />
+                                </label>
 
-                                    <button
-                                        type="submit"
-                                        disabled={!newCouponTitle.trim() || isSubmitting}
-                                        className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold shadow-lg shadow-rose-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
-                                    >
-                                        {isSubmitting ? 'Creando...' : 'Crear Cupón'}
-                                    </button>
-                                </form>
-                            </motion.div>
+                                <button
+                                    type="submit"
+                                    disabled={!newCouponTitle.trim() || isSubmitting}
+                                    className="primary-button w-full disabled:opacity-60"
+                                >
+                                    {isSubmitting ? 'Creando...' : 'Guardar cupon'}
+                                </button>
+                            </form>
                         </motion.div>
-                    </>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

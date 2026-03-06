@@ -56,18 +56,17 @@ const MemoryCard = React.memo(({ memory, index, onSelect, onDelete }: { memory: 
         <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }} // Reduced delay for faster feel
+            transition={{ delay: index * 0.05 }}
             className="relative pl-6 group"
         >
-            {/* Dot */}
-            <div className="absolute -left-[21px] top-2 w-4 h-4 bg-soft-blush rounded-full border-4 border-sand" />
+            <div className="absolute -left-[21px] top-3 h-4 w-4 rounded-full border-4 border-[var(--bg-via)] bg-rose-400" />
 
             <div
-                className="glass-card p-5 rounded-2xl cursor-pointer hover:shadow-md transition-shadow relative"
+                className="section-card relative cursor-pointer rounded-[1.7rem] p-5 transition-shadow"
                 onClick={() => onSelect(memory)}
             >
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-medium text-soft-blush uppercase tracking-wider block">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-rose-500">
                         {format(parseISO(memory.date), "d 'de' MMMM, yyyy", { locale: es })}
                     </span>
                     <button
@@ -75,20 +74,20 @@ const MemoryCard = React.memo(({ memory, index, onSelect, onDelete }: { memory: 
                             e.stopPropagation();
                             onDelete(memory.id);
                         }}
-                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+                        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
                     >
                         <Trash2 size={18} />
                     </button>
                 </div>
 
-                <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 mb-2">{memory.title}</h3>
+                <h3 className="mb-2 text-lg font-semibold text-stone-900 dark:text-stone-100">{memory.title}</h3>
                 {memory.description && (
-                    <p className="text-stone-600 dark:text-stone-400 text-sm mb-3 line-clamp-2 break-words">{memory.description}</p>
+                    <p className="mb-4 text-sm leading-6 text-stone-500 dark:text-stone-400 line-clamp-2 break-words">{memory.description}</p>
                 )}
                 {(memory.media_url || memory.image || memory.external_url) && (
-                    <div className="relative w-full h-48 rounded-xl overflow-hidden bg-stone-100">
+                    <div className="relative h-48 w-full overflow-hidden rounded-[1.2rem] bg-stone-100">
                         {memory.external_url ? (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-200 text-stone-500">
+                            <div className="flex h-full w-full flex-col items-center justify-center bg-stone-200 text-stone-500">
                                 <Video size={48} className="mb-2 text-soft-blush" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Video de Drive</span>
                             </div>
@@ -176,7 +175,7 @@ export const Story: React.FC = () => {
                 return;
             }
             console.error('Error Supabase:', err);
-            setError(errorMessage || 'Error al cargar los datos. Por favor revisa tu conexión.');
+            setError(errorMessage || 'Error al cargar los datos. Revisa tu conexion.');
         } finally {
             setIsLoading(false);
         }
@@ -358,42 +357,45 @@ export const Story: React.FC = () => {
 
     return (
         <div className="page-shell">
-            <header className="page-header flex justify-between items-center mb-6">
-                <div className="flex items-center gap-2">
-                    {currentFolder && (
-                        <button
-                            onClick={() => setFolderPath(prev => prev.slice(0, -1))}
-                            className="p-2 -ml-2 hover:bg-black/5 rounded-full transition-colors"
-                        >
-                            <ChevronLeft size={24} className="text-stone-800 dark:text-stone-100" />
-                        </button>
-                    )}
-                    <h1 className="page-title">
-                        {currentFolder ? currentFolder.name : 'Nuestra Historia 📖'}
-                    </h1>
-                </div>
+            <header className="page-header">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="page-kicker">{currentFolder ? 'Carpeta actual' : 'Linea del tiempo'}</p>
+                        <div className="mt-2 flex items-center gap-2">
+                            {currentFolder && (
+                                <button
+                                    onClick={() => setFolderPath(prev => prev.slice(0, -1))}
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-stone-600 shadow-sm transition-colors hover:text-rose-500 dark:bg-white/6 dark:text-stone-300"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                            )}
+                            <h1 className="page-title">
+                                {currentFolder ? currentFolder.name : 'Nuestra historia'}
+                            </h1>
+                        </div>
+                    </div>
 
-                {!currentFolder ? (
-                    <button
-                        onClick={() => setIsAddingFolder(true)}
-                        className="w-10 h-10 bg-stone-800 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                    >
-                        <Plus size={24} />
-                    </button>
-                ) : (
-                    <div className="relative">
+                    {!currentFolder ? (
+                        <button
+                            onClick={() => setIsAddingFolder(true)}
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-stone-900 text-white shadow-lg"
+                        >
+                            <Plus size={20} />
+                        </button>
+                    ) : (
                         <button
                             onClick={() => setShowAddMenu(true)}
-                            className="w-11 h-11 bg-soft-blush text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 text-white shadow-lg"
                         >
-                            <Plus size={24} />
+                            <Plus size={20} />
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </header>
 
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
+                <div className="rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-red-600">
                     <span className="font-bold">Error:</span> {error}
                 </div>
             )}
@@ -404,8 +406,15 @@ export const Story: React.FC = () => {
                 </div>
             ) : (
                 <>
-                    {/* View: Folder Grid (Always visible for current level) */}
-                    <div className="grid grid-cols-2 gap-4 mb-8">
+                    {!currentFolder && folders.length === 0 && (
+                        <div className="section-card mb-6 rounded-[1.8rem] px-5 py-10 text-center">
+                            <p className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                Sin carpetas todavia
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="mb-8 grid grid-cols-2 gap-4">
                         {folders.map((folder) => (
                             <motion.div
                                 key={folder.id}
@@ -419,23 +428,23 @@ export const Story: React.FC = () => {
                                     onClick={() => setFolderPath([...folderPath, folder])}
                                     whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 255, 255, 0.8)' }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="glass-card dark:bg-stone-800/60 p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-center aspect-square w-full transition-colors"
+                                    className="section-card aspect-square w-full rounded-[1.8rem] p-5 text-center transition-colors"
                                 >
-                                    <div className="w-12 h-12 bg-stone-100 dark:bg-stone-700 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 shadow-sm">
+                                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-stone-600 shadow-sm dark:bg-stone-700 dark:text-stone-300">
                                         <Folder size={24} fill="currentColor" className="text-stone-300 dark:text-stone-500" />
                                     </div>
-                                    <span className="font-bold text-stone-800 dark:text-stone-100 line-clamp-2 text-sm">{folder.name}</span>
+                                    <span className="line-clamp-2 text-sm font-bold text-stone-800 dark:text-stone-100">{folder.name}</span>
                                 </motion.button>
                             </motion.div>
                         ))}
                     </div>
 
                     {currentFolder && (
-                        <div className="relative pl-4 border-l-2 border-stone-200 space-y-8">
+                        <div className="relative space-y-8 border-l-2 border-stone-200 pl-4 dark:border-white/10">
                             {memories.length === 0 && folders.length === 0 && (
-                                <div className="text-center py-12">
-                                    <p className="text-stone-400 dark:text-stone-500 text-lg font-medium">
-                                        No hay carpetas aún. ¡Crea la primera!
+                                <div className="section-card rounded-[1.7rem] px-5 py-10 text-center">
+                                    <p className="text-lg font-medium text-stone-500 dark:text-stone-400">
+                                        Aun no hay recuerdos aqui. Agrega el primero.
                                     </p>
                                 </div>
                             )}
@@ -461,41 +470,41 @@ export const Story: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        className="modal-backdrop"
                         onClick={() => setShowAddMenu(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-3xl p-6"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card"
                             onClick={e => e.stopPropagation()}
                         >
-                            <h2 className="text-xl font-bold mb-6 text-center dark:text-stone-100">¿Qué deseas agregar?</h2>
+                            <h2 className="display-font mb-6 text-center text-[2rem] leading-none text-stone-900 dark:text-stone-100">Que quieres agregar</h2>
                             <div className="grid grid-cols-2 gap-4">
                                 <button
                                     onClick={() => {
                                         setShowAddMenu(false);
                                         setIsAddingFolder(true);
                                     }}
-                                    className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-stone-50 dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 transition-colors"
+                                    className="section-card rounded-[1.5rem] p-5"
                                 >
-                                    <div className="w-12 h-12 bg-stone-200 dark:bg-stone-600 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300">
+                                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300">
                                         <Folder size={24} />
                                     </div>
-                                    <span className="font-medium text-stone-800 dark:text-stone-100">Sub-carpeta</span>
+                                    <span className="mt-3 block font-medium text-stone-800 dark:text-stone-100">Subcarpeta</span>
                                 </button>
                                 <button
                                     onClick={() => {
                                         setShowAddMenu(false);
                                         setIsAddingMemory(true);
                                     }}
-                                    className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-soft-blush/10 dark:bg-soft-blush/20 hover:bg-soft-blush/20 dark:hover:bg-soft-blush/30 transition-colors"
+                                    className="section-card rounded-[1.5rem] p-5"
                                 >
-                                    <div className="w-12 h-12 bg-soft-blush rounded-full flex items-center justify-center text-white">
+                                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-pink-500 text-white">
                                         <Upload size={24} />
                                     </div>
-                                    <span className="font-medium text-soft-blush dark:text-soft-blush">Recuerdo</span>
+                                    <span className="mt-3 block font-medium text-stone-800 dark:text-stone-100">Recuerdo</span>
                                 </button>
                             </div>
                         </motion.div>
@@ -510,17 +519,17 @@ export const Story: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        className="modal-backdrop"
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-3xl p-6"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold dark:text-stone-100">Nueva Carpeta</h2>
-                                <button onClick={() => setIsAddingFolder(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full dark:text-stone-300">
+                                <h2 className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">Nueva carpeta</h2>
+                                <button onClick={() => setIsAddingFolder(false)} className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -529,14 +538,14 @@ export const Story: React.FC = () => {
                                     autoFocus
                                     value={newFolderName}
                                     onChange={e => setNewFolderName(e.target.value)}
-                                    placeholder="Nombre de la carpeta..."
-                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4 dark:text-stone-100 dark:placeholder:text-stone-400"
+                                    placeholder="Nombre de la carpeta"
+                                    className="input-shell mb-4"
                                 />
                                 <button
                                     type="submit"
-                                    className="w-full bg-stone-800 dark:bg-stone-900 text-white py-3 rounded-xl font-medium"
+                                    className="primary-button w-full"
                                 >
-                                    Crear Carpeta
+                                    Crear carpeta
                                 </button>
                             </form>
                         </motion.div>
@@ -551,17 +560,17 @@ export const Story: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0 backdrop-blur-sm"
+                        className="modal-backdrop"
                     >
                         <motion.div
-                            initial={{ y: "100%" }}
+                            initial={{ y: 24, opacity: 0 }}
                             animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            className="bg-white dark:bg-stone-800 w-full max-w-md rounded-3xl p-6 pb-10 sm:pb-6"
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card max-w-md pb-6"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold dark:text-stone-100">Nuevo Recuerdo</h2>
-                                <button onClick={() => setIsAddingMemory(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full dark:text-stone-300">
+                                <h2 className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">Nuevo recuerdo</h2>
+                                <button onClick={() => setIsAddingMemory(false)} className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -573,7 +582,7 @@ export const Story: React.FC = () => {
                                         required
                                         value={newMemory.title}
                                         onChange={e => setNewMemory({ ...newMemory, title: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100 dark:placeholder:text-stone-400"
+                                        className="input-shell"
                                         placeholder="Ej. Cena de aniversario"
                                     />
                                 </div>
@@ -585,7 +594,7 @@ export const Story: React.FC = () => {
                                         type="date"
                                         value={newMemory.date}
                                         onChange={e => setNewMemory({ ...newMemory, date: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all dark:text-stone-100"
+                                        className="input-shell"
                                     />
                                 </div>
 
@@ -594,33 +603,33 @@ export const Story: React.FC = () => {
                                     <textarea
                                         value={newMemory.description}
                                         onChange={e => setNewMemory({ ...newMemory, description: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all resize-none h-24 dark:text-stone-100 dark:placeholder:text-stone-400"
+                                        className="textarea-shell h-24"
                                         placeholder="La noche que nos reímos tanto que..."
                                     />
                                 </div>
 
                                 {/* Custom File Input */}
                                 {/* Custom File Input / Drive Link Toggle */}
-                                <div className="flex gap-2 mb-4 bg-stone-100 p-1 rounded-xl">
+                                <div className="pill-toggle grid w-full grid-cols-2">
                                     <button
                                         type="button"
                                         onClick={() => setUploadMode('file')}
-                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${uploadMode === 'file'
-                                            ? 'bg-white text-stone-800 shadow-sm'
-                                            : 'text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'
+                                        className={`${uploadMode === 'file'
+                                            ? 'is-active'
+                                            : ''
                                             }`}
                                     >
-                                        Subir Archivo
+                                        Subir archivo
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setUploadMode('drive')}
-                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${uploadMode === 'drive'
-                                            ? 'bg-white text-stone-800 shadow-sm'
-                                            : 'text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'
+                                        className={`${uploadMode === 'drive'
+                                            ? 'is-active'
+                                            : ''
                                             }`}
                                     >
-                                        Enlace de Drive
+                                        Enlace Drive
                                     </button>
                                 </div>
 
@@ -636,7 +645,7 @@ export const Story: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="w-full py-4 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center text-stone-500 hover:border-soft-blush hover:text-soft-blush transition-colors"
+                                            className="flex w-full flex-col items-center justify-center rounded-[1.4rem] border-2 border-dashed border-stone-300 py-4 text-stone-500 transition-colors hover:border-soft-blush hover:text-soft-blush"
                                         >
                                             {previewUrl ? (
                                                 <div className="relative w-full h-32 px-4">
@@ -663,10 +672,10 @@ export const Story: React.FC = () => {
                                             href="https://drive.google.com/drive/folders/1wZ9HbaSj74oW9O5IfQOGtrqa0RXD1Cn6?usp=sharing"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-50 text-blue-600 rounded-xl font-medium hover:bg-blue-100 transition-colors"
+                                            className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-blue-50 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-100"
                                         >
                                             <Folder size={20} />
-                                            📂 Ir a nuestra Carpeta de Videos
+                                            Ir a nuestra carpeta de videos
                                             <ExternalLink size={16} />
                                         </a>
 
@@ -679,7 +688,7 @@ export const Story: React.FC = () => {
                                                     value={driveLink}
                                                     onChange={e => setDriveLink(e.target.value)}
                                                     placeholder="https://drive.google.com/file/d/..."
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-stone-50 border-transparent focus:bg-white focus:ring-2 focus:ring-soft-blush/20 transition-all"
+                                                    className="input-shell has-icon-sm"
                                                 />
                                             </div>
                                             <p className="text-xs text-stone-400 mt-1 ml-1">
@@ -692,9 +701,9 @@ export const Story: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={(!selectedFile && !driveLink) || !newMemory.title || isUploading}
-                                    className="w-full bg-stone-800 text-white py-4 rounded-xl font-medium hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="primary-button w-full disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    {isUploading ? 'Guardando...' : 'Guardar Recuerdo'}
+                                    {isUploading ? 'Guardando...' : 'Guardar recuerdo'}
                                 </button>
                             </form>
                         </motion.div>
@@ -705,49 +714,49 @@ export const Story: React.FC = () => {
             {/* Edit Memory Modal */}
             <AnimatePresence>
                 {isEditingMemory && selectedMemory && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="modal-backdrop z-[60]">
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white dark:bg-stone-800 rounded-3xl p-6 w-full max-w-md shadow-2xl"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card max-w-md"
                         >
-                            <h2 className="text-xl font-bold mb-4 dark:text-stone-100">Editar Recuerdo</h2>
+                            <h2 className="display-font mb-4 text-[2rem] leading-none text-stone-900 dark:text-stone-100">Editar recuerdo</h2>
                             <form onSubmit={handleUpdate} className="space-y-4">
                                 <input
                                     type="text"
                                     value={editMemoryData.title}
                                     onChange={(e) => setEditMemoryData({ ...editMemoryData, title: e.target.value })}
                                     placeholder="Título..."
-                                    className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-600 dark:text-stone-100"
+                                    className="input-shell"
                                     required
                                 />
                                 <input
                                     type="date"
                                     value={editMemoryData.date}
                                     onChange={(e) => setEditMemoryData({ ...editMemoryData, date: e.target.value })}
-                                    className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-600 dark:text-stone-100"
+                                    className="input-shell"
                                     required
                                 />
                                 <textarea
                                     value={editMemoryData.description}
                                     onChange={(e) => setEditMemoryData({ ...editMemoryData, description: e.target.value })}
                                     placeholder="Descripción..."
-                                    className="w-full p-4 rounded-xl bg-stone-50 dark:bg-stone-700 border-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-600 h-24 resize-none dark:text-stone-100"
+                                    className="textarea-shell h-24"
                                 />
 
                                 <div className="flex gap-2 pt-2">
                                     <button
                                         type="button"
                                         onClick={() => setIsEditingMemory(false)}
-                                        className="flex-1 py-3 rounded-xl font-medium text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700"
+                                        className="secondary-button flex-1"
                                         disabled={isUploading}
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-3 rounded-xl font-medium bg-stone-800 dark:bg-stone-900 text-white hover:bg-stone-900 dark:hover:bg-black disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="primary-button flex flex-1 items-center justify-center gap-2 disabled:opacity-50"
                                         disabled={isUploading}
                                     >
                                         {isUploading ? <Loader2 className="animate-spin" /> : 'Guardar'}
@@ -876,17 +885,17 @@ export const Story: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        className="modal-backdrop"
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-3xl p-6"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            className="modal-card"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold dark:text-stone-100">Renombrar Carpeta</h2>
-                                <button onClick={() => setIsEditingFolder(false)} className="p-2 bg-stone-100 dark:bg-stone-700 rounded-full dark:text-stone-300">
+                                <h2 className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">Renombrar carpeta</h2>
+                                <button onClick={() => setIsEditingFolder(false)} className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -895,14 +904,14 @@ export const Story: React.FC = () => {
                                     autoFocus
                                     value={editFolderName}
                                     onChange={e => setEditFolderName(e.target.value)}
-                                    placeholder="Nombre de la carpeta..."
-                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-700 border-transparent focus:bg-white dark:focus:bg-stone-600 focus:ring-2 focus:ring-soft-blush/20 transition-all mb-4 dark:text-stone-100"
+                                    placeholder="Nombre de la carpeta"
+                                    className="input-shell mb-4"
                                 />
                                 <button
                                     type="submit"
-                                    className="w-full bg-stone-800 dark:bg-stone-900 text-white py-3 rounded-xl font-medium"
+                                    className="primary-button w-full"
                                 >
-                                    Guardar Cambios
+                                    Guardar cambios
                                 </button>
                             </form>
                         </motion.div>

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Image as ImageIcon, X, Loader2, Play, Search, Filter, Video } from 'lucide-react';
 import { getAllMemories } from '../supabaseClient';
 import { toast } from 'sonner';
+import { PageHeader } from '../components/ui/PageHeader';
+import { EmptyState } from '../components/ui/EmptyState';
 
 interface Memory {
     id: string;
@@ -35,7 +37,7 @@ export const Gallery: React.FC = () => {
                 setMemories(data || []);
             } catch (error) {
                 console.error(error);
-                toast.error('Error al cargar la galeria');
+                toast.error('No se pudo cargar la galeria.');
             } finally {
                 setIsLoading(false);
             }
@@ -68,120 +70,130 @@ export const Gallery: React.FC = () => {
         });
     }, [memories, filter, searchTerm]);
 
-    const imageCount = memories.filter((m) => m.media_type === 'image').length;
-    const videoCount = memories.filter((m) => m.media_type === 'video').length;
+    const imageCount = memories.filter((memory) => memory.media_type === 'image').length;
+    const videoCount = memories.filter((memory) => memory.media_type === 'video').length;
 
     return (
         <div className="page-shell">
-            <header className="page-header">
-                <h1 className="page-title flex items-center gap-2">
-                    <ImageIcon className="text-rose-500" />
-                    Galeria de recuerdos
-                </h1>
-                <p className="page-subtitle">
-                    Busca, filtra y vuelve rapido a tus momentos favoritos.
-                </p>
-            </header>
+            <PageHeader kicker="Recuerdos" title="Galeria" />
 
-            <div className="glass-card rounded-2xl p-3 mb-4 space-y-3">
+            <section className="section-card rounded-[1.9rem] p-4">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                        <p className="section-label">Filtros</p>
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                            Buscar
+                        </h2>
+                    </div>
+
+                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
+                        <ImageIcon size={20} />
+                    </div>
+                </div>
+
                 <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
                     <input
                         type="text"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(event) => setSearchTerm(event.target.value)}
                         placeholder="Buscar por titulo o descripcion"
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/80 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-sm"
+                        className="input-shell has-icon-sm"
                     />
                 </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    <div className="flex items-center gap-1 text-stone-400 text-xs font-semibold uppercase">
+                <div className="scrollbar-hide mt-4 flex items-center gap-2 overflow-x-auto pb-1">
+                    <div className="inline-flex items-center gap-1 rounded-full bg-white/65 px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-stone-500 dark:bg-white/6 dark:text-stone-300">
                         <Filter size={12} />
                         Tipo
                     </div>
+
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold ${filter === 'all' ? 'bg-stone-800 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-300'}`}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap ${filter === 'all' ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : 'section-card'}`}
                     >
                         Todo ({memories.length})
                     </button>
                     <button
                         onClick={() => setFilter('image')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold ${filter === 'image' ? 'bg-stone-800 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-300'}`}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap ${filter === 'image' ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : 'section-card'}`}
                     >
                         Fotos ({imageCount})
                     </button>
                     <button
                         onClick={() => setFilter('video')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold ${filter === 'video' ? 'bg-stone-800 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-300'}`}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap ${filter === 'video' ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : 'section-card'}`}
                     >
                         Videos ({videoCount})
                     </button>
                 </div>
-            </div>
+            </section>
 
             {isLoading ? (
                 <div className="flex justify-center py-20">
                     <Loader2 className="animate-spin text-rose-500" size={32} />
                 </div>
             ) : filteredMemories.length === 0 ? (
-                <div className="text-center py-20 opacity-70">
-                    <p>No se encontraron recuerdos con ese filtro.</p>
-                </div>
+                <EmptyState
+                    title="Sin resultados"
+                    description="Cambia el filtro o busca otra palabra."
+                    icon={<ImageIcon size={28} className="text-rose-500 dark:text-rose-200" />}
+                />
             ) : (
-                <div className="columns-2 sm:columns-3 gap-3 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                     {filteredMemories.map((memory, index) => (
-                        <motion.div
+                        <motion.button
                             key={memory.id}
-                            initial={{ opacity: 0, y: 16 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.03 }}
-                            className="break-inside-avoid relative group rounded-2xl overflow-hidden cursor-zoom-in shadow-md"
+                            transition={{ delay: index * 0.02 }}
                             onClick={() => setSelectedItem(memory)}
+                            className="group section-card relative overflow-hidden rounded-[1.45rem] p-0 text-left"
                         >
-                            {memory.media_type === 'video' ? (
-                                memory.external_url ? (
-                                    <div className="relative aspect-video bg-black/10 flex items-center justify-center">
-                                        <div className="text-center">
-                                            <div className="mx-auto w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-2">
-                                                <Video size={18} className="text-white" />
+                            <div className="relative aspect-[0.82] overflow-hidden bg-stone-100 dark:bg-white/6">
+                                {memory.media_type === 'video' ? (
+                                    memory.external_url ? (
+                                        <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-stone-900 to-stone-700 text-white">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-md">
+                                                <Video size={20} />
                                             </div>
-                                            <p className="text-xs text-white/90">Video externo</p>
+                                            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+                                                Video externo
+                                            </p>
                                         </div>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                                    </div>
+                                    ) : (
+                                        <>
+                                            <video
+                                                src={memory.media_url}
+                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                muted
+                                                loop
+                                                playsInline
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/18">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur-md">
+                                                    <Play size={15} className="ml-0.5 fill-current" />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )
                                 ) : (
-                                    <div className="relative aspect-video bg-black/10">
-                                        <video
-                                            src={memory.media_url}
-                                            className="w-full h-full object-cover"
-                                            muted
-                                            loop
-                                            playsInline
-                                            onMouseOver={(e) => e.currentTarget.play()}
-                                            onMouseOut={(e) => e.currentTarget.pause()}
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-transparent transition-all">
-                                            <div className="w-8 h-8 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center">
-                                                <Play size={14} className="text-white fill-white ml-0.5" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            ) : (
-                                <img
-                                    src={memory.media_url}
-                                    alt={memory.title || 'Recuerdo'}
-                                    className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500"
-                                    loading="lazy"
-                                />
-                            )}
+                                    <img
+                                        src={memory.media_url}
+                                        alt={memory.title || 'Recuerdo'}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        loading="lazy"
+                                    />
+                                )}
 
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                                <p className="text-white text-xs font-medium truncate">{memory.title}</p>
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8">
+                                    <p className="text-sm font-semibold text-white">{memory.title || 'Sin titulo'}</p>
+                                    {memory.description && (
+                                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/75">{memory.description}</p>
+                                    )}
+                                </div>
                             </div>
-                        </motion.div>
+                        </motion.button>
                     ))}
                 </div>
             )}
@@ -192,29 +204,29 @@ export const Gallery: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/92 p-4 backdrop-blur-xl"
                         onClick={() => setSelectedItem(null)}
                     >
                         <button
                             onClick={() => setSelectedItem(null)}
-                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
                             aria-label="Cerrar"
                         >
-                            <X size={24} />
+                            <X size={20} />
                         </button>
 
                         <motion.div
-                            initial={{ scale: 0.92, opacity: 0 }}
+                            initial={{ scale: 0.94, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.92, opacity: 0 }}
-                            className="relative max-w-full max-h-[90vh] w-auto h-auto rounded-lg overflow-hidden shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
+                            exit={{ scale: 0.94, opacity: 0 }}
+                            className="relative max-h-[90vh] w-full max-w-md overflow-hidden rounded-[1.8rem] bg-black"
+                            onClick={(event) => event.stopPropagation()}
                         >
                             {selectedItem.media_type === 'video' ? (
                                 selectedItem.external_url ? (
                                     <iframe
                                         src={getDriveEmbedUrl(selectedItem.external_url)}
-                                        className="w-[90vw] max-w-[900px] h-[60vh]"
+                                        className="h-[60vh] w-full"
                                         allow="autoplay; fullscreen"
                                         title={selectedItem.title}
                                     />
@@ -223,23 +235,23 @@ export const Gallery: React.FC = () => {
                                         src={selectedItem.media_url}
                                         controls
                                         autoPlay
-                                        className="max-h-[85vh] max-w-full w-auto"
+                                        className="max-h-[72vh] w-full bg-black object-contain"
                                     />
                                 )
                             ) : (
                                 <img
                                     src={selectedItem.media_url}
                                     alt={selectedItem.title}
-                                    className="max-h-[85vh] max-w-full w-auto object-contain"
+                                    className="max-h-[72vh] w-full bg-black object-contain"
                                 />
                             )}
 
-                            {selectedItem.title && (
-                                <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm p-4 text-white">
-                                    <h3 className="text-lg font-bold">{selectedItem.title}</h3>
-                                    {selectedItem.description && <p className="text-sm opacity-80">{selectedItem.description}</p>}
-                                </div>
-                            )}
+                            <div className="bg-black/88 px-4 py-4 text-white">
+                                <h3 className="text-lg font-semibold">{selectedItem.title || 'Sin titulo'}</h3>
+                                {selectedItem.description && (
+                                    <p className="mt-2 text-sm leading-6 text-white/75">{selectedItem.description}</p>
+                                )}
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

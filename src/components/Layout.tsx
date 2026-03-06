@@ -14,22 +14,20 @@ export const Layout: React.FC = () => {
     useEffect(() => {
         if (!user) {
             navigate('/login');
-            return;
         }
     }, [user, navigate]);
 
     if (!user) {
-        return null; // Or a loading spinner
+        return null;
     }
 
     return (
-        <div className="min-h-screen min-h-[100dvh] flex justify-center lg:items-center lg:py-10">
-            {/* Mobile: Full Screen | Desktop: Floating Phone */}
-            <div className="w-full max-w-md bg-stone-50 dark:bg-stone-900 min-h-screen min-h-[100dvh] h-[100dvh] lg:min-h-[850px] lg:h-[850px] lg:max-h-[90vh] lg:rounded-[3rem] lg:shadow-2xl lg:border-[8px] lg:border-white/30 dark:lg:border-stone-800/30 relative overflow-hidden flex flex-col transition-all duration-500">
+        <div className="relative min-h-screen min-h-[100dvh] overflow-hidden md:px-5 md:py-5">
+            <div className="pointer-events-none absolute inset-x-0 top-0 hidden h-36 bg-gradient-to-b from-white/22 to-transparent md:block" />
 
-                {/* Content Area with Scroll */}
+            <div className="relative mx-auto flex min-h-screen min-h-[100dvh] w-full max-w-[28rem] flex-col overflow-hidden bg-[color:var(--surface-1)] md:min-h-[calc(100dvh-2.5rem)] md:max-h-[58rem] md:rounded-[2rem] md:border md:border-white/50 md:shadow-[0_32px_90px_rgba(77,42,55,0.24)] dark:md:border-white/10">
                 <div
-                    className={`flex-1 scrollbar-hide ${isChatPage ? 'overflow-hidden pb-0' : 'overflow-y-auto'}`}
+                    className={`relative flex-1 ${isChatPage ? 'overflow-hidden' : 'overflow-y-auto overscroll-y-contain'}`}
                 >
                     <SwipeablePages>
                         <Outlet />
@@ -37,11 +35,8 @@ export const Layout: React.FC = () => {
                 </div>
 
                 {!isChatPage && <BottomNav />}
-
-                {/* PWA Install Banner */}
                 {!isChatPage && <PWAInstallBanner />}
             </div>
         </div>
     );
 };
-

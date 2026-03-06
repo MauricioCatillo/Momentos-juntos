@@ -12,6 +12,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@fontsource/caveat": "^5.2.8",
+    "@fontsource/cormorant-garamond": "^5.2.11",
     "@fontsource/outfit": "^5.2.8",
     "@supabase/supabase-js": "^2.84.0",
     "clsx": "^2.1.1",

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
@@ -15,11 +15,28 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { trigger } = useHaptic();
+    const [isSwipeEnabled, setIsSwipeEnabled] = useState(false);
 
     const x = useMotionValue(0);
     const opacity = useTransform(x, [-150, 0, 150], [0.5, 1, 0.5]);
 
     const currentIndex = PAGE_ORDER.indexOf(location.pathname);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+            return;
+        }
+
+        const mediaQuery = window.matchMedia('(pointer: fine)');
+        const updateSwipeAvailability = () => {
+            setIsSwipeEnabled(mediaQuery.matches);
+        };
+
+        updateSwipeAvailability();
+        mediaQuery.addEventListener('change', updateSwipeAvailability);
+
+        return () => mediaQuery.removeEventListener('change', updateSwipeAvailability);
+    }, []);
 
     const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const threshold = 80;
@@ -44,7 +61,7 @@ export const SwipeablePages: React.FC<SwipeablePagesProps> = ({ children }) => {
     }, [currentIndex, navigate, trigger, x]);
 
     // Don't enable swipe on chat page
-    if (location.pathname === '/chat') {
+    if (location.pathname === '/chat' || !isSwipeEnabled) {
         return <>{children}</>;
     }
 

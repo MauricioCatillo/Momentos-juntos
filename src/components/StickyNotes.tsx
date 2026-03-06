@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase, getNotes, addNote, deleteNote } from '../supabaseClient';
 import { useApp } from '../context/AppContext';
 import { sendPushNotification } from '../utils/notifications';
+import { EmptyState } from './ui/EmptyState';
 
 interface Note {
     id: string;
@@ -22,8 +23,8 @@ interface StickyNotesProps {
 }
 
 export const StickyNotes: React.FC<StickyNotesProps> = ({
-    title = 'Pizarrón de Notas',
-    showPushNotification = false
+    title = 'Tablon de notas',
+    showPushNotification = false,
 }) => {
     const { user } = useApp();
     const [notes, setNotes] = useState<Note[]>([]);
@@ -40,42 +41,32 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                 console.error('Error loading notes:', error);
             }
         };
-        loadNotes();
 
-        // Realtime subscription for live updates
+        void loadNotes();
+
         const channel = supabase
             .channel('notes_realtime')
             .on(
                 'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notes',
-                },
+                { event: 'INSERT', schema: 'public', table: 'notes' },
                 (payload) => {
                     const insertedNote = payload.new as Note;
                     setNotes((prev) => {
-                        // Avoid duplicates
-                        if (prev.some(n => n.id === insertedNote.id)) return prev;
+                        if (prev.some((note) => note.id === insertedNote.id)) return prev;
                         return [insertedNote, ...prev];
                     });
 
-                    // Show toast if note was added by partner
                     if (user && insertedNote.author && insertedNote.author !== user.id) {
-                        toast.success('¡Nueva nota de tu amor! 💌');
+                        toast.success('Nueva nota recibida.');
                     }
                 }
             )
             .on(
                 'postgres_changes',
-                {
-                    event: 'DELETE',
-                    schema: 'public',
-                    table: 'notes',
-                },
+                { event: 'DELETE', schema: 'public', table: 'notes' },
                 (payload) => {
                     const deletedId = payload.old.id;
-                    setNotes((prev) => prev.filter(n => n.id !== deletedId));
+                    setNotes((prev) => prev.filter((note) => note.id !== deletedId));
                 }
             )
             .subscribe();
@@ -85,90 +76,95 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         };
     }, [user]);
 
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAdd = async (event: React.FormEvent) => {
+        event.preventDefault();
         if (!newNote.trim()) return;
 
         try {
             const note = await addNote(newNote, selectedColor);
-            // Note: realtime subscription will add it to the list, but we add optimistically too
             setNotes((prev) => {
-                if (prev.some(n => n.id === note.id)) return prev;
+                if (prev.some((item) => item.id === note.id)) return prev;
                 return [note, ...prev];
             });
             setNewNote('');
             setIsAdding(false);
-            toast.success('Nota agregada ✨');
+            toast.success('Nota agregada.');
 
-            // Send push notification if enabled
             if (showPushNotification) {
-                sendPushNotification('¡Hay una nueva nota! 💌');
+                sendPushNotification('Hay una nueva nota.');
             }
         } catch (error) {
             console.error('Error adding note:', error);
-            toast.error('Error al agregar nota');
+            toast.error('No se pudo guardar la nota.');
         }
     };
 
     const handleDelete = async (id: string) => {
         try {
             await deleteNote(id);
-            setNotes(notes.filter(n => n.id !== id));
+            setNotes(notes.filter((note) => note.id !== id));
         } catch (error) {
             console.error('Error deleting note:', error);
         }
     };
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-stone-600 dark:text-stone-400">
-                    <StickyNote size={20} />
-                    <h3 className="font-bold text-lg">{title}</h3>
+        <section className="section-card rounded-[1.95rem] p-5">
+            <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                    <p className="section-label">Notas</p>
+                    <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        {title}
+                    </h2>
                 </div>
+
                 <button
                     onClick={() => setIsAdding(true)}
-                    className="w-11 h-11 bg-white/50 dark:bg-stone-700 rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-stone-600 transition-colors active:scale-95"
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-900 text-white shadow-lg dark:bg-white dark:text-stone-900"
                 >
-                    <Plus size={20} className="text-stone-600 dark:text-stone-300" />
+                    <Plus size={18} />
                 </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-                <AnimatePresence>
-                    {notes.map((note) => (
-                        <motion.div
-                            key={note.id}
-                            layout
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            className={`${note.color} p-4 rounded-xl shadow-sm relative group min-h-[120px] flex flex-col justify-between transform rotate-1 hover:rotate-0 transition-transform duration-300`}
-                            style={{ colorScheme: 'light' }}
-                        >
-                            <p
-                                className="font-handwriting text-sm leading-relaxed break-words"
-                                style={{ color: '#292524' }}
+            {notes.length === 0 ? (
+                <EmptyState
+                    title="Sin notas"
+                    description="Agrega una."
+                    icon={<StickyNote size={24} className="text-yellow-700 dark:text-yellow-200" />}
+                    className="border border-dashed border-stone-300/80 dark:border-white/10"
+                />
+            ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <AnimatePresence>
+                        {notes.map((note, index) => (
+                            <motion.article
+                                key={note.id}
+                                layout
+                                initial={{ opacity: 0, y: 12, rotate: index % 2 === 0 ? -2 : 2 }}
+                                animate={{ opacity: 1, y: 0, rotate: index % 2 === 0 ? -2 : 2 }}
+                                exit={{ opacity: 0, scale: 0.96 }}
+                                className={`${note.color} relative min-h-[9rem] rounded-[1.45rem] p-4 shadow-[0_18px_30px_rgba(66,54,28,0.12)]`}
+                                style={{ colorScheme: 'light' }}
                             >
-                                {note.content}
-                            </p>
-                            <button
-                                onClick={() => handleDelete(note.id)}
-                                className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 hover:bg-black/10 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center"
-                                style={{ color: '#57534e' }}
-                            >
-                                <X size={14} />
-                            </button>
-                            <span
-                                className="text-[10px] self-end mt-2"
-                                style={{ color: '#57534e' }}
-                            >
-                                {new Date(note.created_at).toLocaleDateString()}
-                            </span>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
+                                <button
+                                    onClick={() => handleDelete(note.id)}
+                                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-black/10"
+                                >
+                                    <X size={14} />
+                                </button>
+
+                                <p className="script-font pr-7 text-[1.3rem] leading-7 text-stone-800">
+                                    {note.content}
+                                </p>
+
+                                <span className="absolute bottom-3 right-4 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                                    {new Date(note.created_at).toLocaleDateString()}
+                                </span>
+                            </motion.article>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            )}
 
             <AnimatePresence>
                 {isAdding && (
@@ -176,49 +172,58 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        className="modal-backdrop"
+                        onClick={() => setIsAdding(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white dark:bg-stone-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-stone-800 dark:text-stone-100"
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            onClick={(event) => event.stopPropagation()}
+                            className="modal-card"
                         >
-                            <h3 className="font-bold text-lg mb-4 text-rose-500 dark:text-rose-400">Nueva Nota</h3>
+                            <div className="mb-5 flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="section-label">Nueva nota</p>
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                        Nueva nota
+                                    </h3>
+                                </div>
+                                <button
+                                    onClick={() => setIsAdding(false)}
+                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
                             <form onSubmit={handleAdd}>
                                 <textarea
                                     value={newNote}
-                                    onChange={e => setNewNote(e.target.value)}
-                                    className="w-full bg-stone-50 dark:bg-stone-700 rounded-xl p-4 mb-4 resize-none focus:ring-2 focus:ring-rose-300 dark:focus:ring-rose-500 outline-none text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 border-2 border-rose-200 dark:border-stone-600"
-                                    rows={3}
-                                    placeholder="Escribe algo bonito..."
+                                    onChange={(event) => setNewNote(event.target.value)}
+                                    className="textarea-shell min-h-[8rem]"
+                                    rows={4}
+                                    placeholder="Escribe algo corto, dulce o importante..."
                                     autoFocus
                                 />
 
-                                <div className="flex gap-2 mb-6">
-                                    {COLORS.map(color => (
+                                <div className="mt-4 flex gap-2">
+                                    {COLORS.map((color) => (
                                         <button
                                             key={color}
                                             type="button"
                                             onClick={() => setSelectedColor(color)}
-                                            className={`w-8 h-8 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-400 dark:border-white' : 'border-transparent'}`}
+                                            className={`h-9 w-9 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-700' : 'border-transparent'}`}
                                         />
                                     ))}
                                 </div>
 
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAdding(false)}
-                                        className="flex-1 py-3 rounded-xl bg-stone-100 dark:bg-stone-700 font-medium text-stone-700 dark:text-stone-300"
-                                    >
+                                <div className="mt-6 grid grid-cols-2 gap-3">
+                                    <button type="button" onClick={() => setIsAdding(false)} className="secondary-button px-4">
                                         Cancelar
                                     </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 py-3 rounded-xl bg-stone-800 dark:bg-rose-600 text-white font-medium"
-                                    >
-                                        Pegar Nota
+                                    <button type="submit" className="primary-button px-4">
+                                        Guardar
                                     </button>
                                 </div>
                             </form>
@@ -226,6 +231,6 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </section>
     );
 };

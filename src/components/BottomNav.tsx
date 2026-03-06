@@ -17,12 +17,11 @@ export const BottomNav: React.FC = () => {
     const { trigger } = useHaptic();
 
     return (
-        <div
-            className="w-full fixed bottom-0 left-0 z-50 pointer-events-none"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
-            <div className="w-full px-4 pb-4 pt-2 bg-gradient-to-t from-white/95 via-white/85 to-transparent dark:from-stone-950/95 dark:via-stone-950/80 pointer-events-auto">
-                <div className="max-w-md mx-auto rounded-[1.4rem] soft-panel backdrop-blur-xl p-2.5 border border-white/60 dark:border-white/10">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[rgba(252,246,244,0.98)] via-[rgba(252,246,244,0.85)] to-transparent dark:from-[rgba(18,15,21,0.98)] dark:via-[rgba(18,15,21,0.82)]" />
+
+            <div className="relative px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+                <div className="pointer-events-auto rounded-[1.85rem] border border-white/70 bg-white/72 p-2 shadow-[0_22px_48px_rgba(83,43,57,0.18)] backdrop-blur-2xl dark:border-white/10 dark:bg-[rgba(28,23,30,0.9)]">
                     <div className="grid grid-cols-5 gap-1.5">
                         {navItems.map(({ path, icon: Icon, label }) => (
                             <NavLink
@@ -31,8 +30,8 @@ export const BottomNav: React.FC = () => {
                                 onClick={() => trigger('light')}
                                 className={({ isActive }) =>
                                     cn(
-                                        'relative flex flex-col items-center justify-center py-2 rounded-xl min-h-[54px] transition-all duration-300',
-                                        isActive ? 'text-rose-700 dark:text-rose-300' : 'text-stone-500 dark:text-stone-400'
+                                        'relative flex min-h-[3.55rem] flex-col items-center justify-center rounded-2xl px-1 text-center transition-all duration-300',
+                                        isActive ? 'text-rose-700 dark:text-rose-200' : 'text-stone-500 dark:text-stone-400'
                                     )
                                 }
                             >
@@ -41,13 +40,19 @@ export const BottomNav: React.FC = () => {
                                         {isActive && (
                                             <motion.div
                                                 layoutId="bottom-nav-active"
-                                                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                                                className="absolute inset-0 rounded-xl bg-gradient-to-b from-rose-100 to-rose-50 dark:from-rose-900/40 dark:to-rose-900/20 border border-rose-200/70 dark:border-rose-500/30"
+                                                transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                                                className="absolute inset-0 rounded-2xl bg-gradient-to-b from-rose-100 via-white to-rose-50/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] dark:from-rose-500/28 dark:via-rose-500/14 dark:to-transparent"
                                             />
                                         )}
-                                        <div className="relative z-10 flex flex-col items-center">
-                                            <Icon size={20} strokeWidth={2.2} />
-                                            <span className={cn('text-[10px] font-semibold mt-1 tracking-wide', isActive ? 'opacity-100' : 'opacity-85')}>
+
+                                        <div className="relative z-10 flex flex-col items-center gap-1">
+                                            <Icon size={19} strokeWidth={2.2} />
+                                            <span
+                                                className={cn(
+                                                    'text-[0.62rem] font-semibold tracking-[0.14em] uppercase',
+                                                    isActive ? 'opacity-100' : 'opacity-80'
+                                                )}
+                                            >
                                                 {label}
                                             </span>
                                         </div>
