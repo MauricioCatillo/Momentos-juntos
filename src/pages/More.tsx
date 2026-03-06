@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarCheck2, ListTodo, MessageSquareText, StickyNote } from 'lucide-react';
+import { Bell, CalendarCheck2, ListTodo, MessageSquareText, StickyNote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { StickyNotes } from '../components/StickyNotes';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useApp } from '../context/AppContext';
+import { requestPushPermission } from '../utils/notifications';
 
 const MoreCard = ({
     title,
@@ -46,9 +48,29 @@ const MoreCard = ({
 export const More: React.FC = () => {
     const navigate = useNavigate();
     const { moods, bucketList, coupons } = useApp();
+    const [isEnablingNotifications, setIsEnablingNotifications] = useState(false);
     const todayMood = moods.find((mood) => new Date(mood.date).toDateString() === new Date().toDateString());
     const pendingPlans = bucketList.filter((item) => !item.completed).length;
     const activeCoupons = coupons.filter((coupon) => !coupon.redeemed).length;
+
+    const handleEnableNotifications = async () => {
+        if (isEnablingNotifications) return;
+
+        setIsEnablingNotifications(true);
+
+        try {
+            const granted = await requestPushPermission();
+
+            if (!granted) {
+                toast.error('No se pudieron activar las notificaciones.');
+                return;
+            }
+
+            toast.success('Notificaciones activadas.');
+        } finally {
+            setIsEnablingNotifications(false);
+        }
+    };
 
     return (
         <div className="page-shell">
@@ -87,6 +109,32 @@ export const More: React.FC = () => {
                         <p className="mt-3 text-2xl font-black text-stone-900 dark:text-stone-100">{activeCoupons}</p>
                     </div>
                 </div>
+            </section>
+
+            <section className="section-card rounded-[1.9rem] p-5">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="section-label">Notificaciones</p>
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                            Activalas una vez
+                        </h2>
+                        <p className="mt-3 text-sm leading-6 text-stone-500 dark:text-stone-400">
+                            Permite avisos del chat y de las notas en tu celular.
+                        </p>
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-200">
+                        <Bell size={20} />
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => void handleEnableNotifications()}
+                    disabled={isEnablingNotifications}
+                    className="primary-button mt-5 flex w-full items-center justify-center gap-2 disabled:opacity-60"
+                >
+                    <Bell size={16} />
+                    {isEnablingNotifications ? 'Activando...' : 'Activar notificaciones'}
+                </button>
             </section>
 
             <section className="grid gap-3">
