@@ -12,7 +12,23 @@ import App from './App.tsx'
 
 import { registerSW } from 'virtual:pwa-register'
 
-registerSW({ immediate: true })
+if (import.meta.env.PROD) {
+  registerSW({ immediate: true })
+} else if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      void registration.unregister()
+    })
+  })
+
+  if ('caches' in window) {
+    void caches.keys().then((cacheKeys) => {
+      cacheKeys.forEach((cacheKey) => {
+        void caches.delete(cacheKey)
+      })
+    })
+  }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

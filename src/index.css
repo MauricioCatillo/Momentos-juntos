@@ -205,6 +205,15 @@ p {
   gap: 1rem;
 }
 
+.app-scroll-region {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 .page-header {
   display: flex;
   flex-direction: column;
