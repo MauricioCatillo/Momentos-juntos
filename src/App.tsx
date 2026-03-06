@@ -46,9 +46,9 @@ function App() {
         oneSignalInitialized.current = true;
 
         await OneSignal.init({
-          appId: "b1cec79b-98e6-4881-ae74-8b626d302e15",
+          appId: "4eba265f-72e0-414a-a9b4-7bffdd1e56d7",
           allowLocalhostAsSecureOrigin: true,
-          serviceWorkerPath: '/sw.js',
+          serviceWorkerPath: "/OneSignalSDKWorker.js",
           serviceWorkerParam: { scope: '/' },
         });
 
