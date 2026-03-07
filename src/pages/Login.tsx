@@ -57,35 +57,11 @@ export const Login: React.FC = () => {
             <div className="pointer-events-none absolute left-[-4rem] top-[-3rem] h-52 w-52 rounded-full bg-[rgba(210,130,88,0.22)] blur-3xl" />
             <div className="pointer-events-none absolute bottom-[-6rem] right-[-4rem] h-64 w-64 rounded-full bg-[rgba(113,152,128,0.18)] blur-3xl" />
 
-            <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-[28rem] flex-col gap-5 rounded-[2.2rem] border border-[rgba(100,71,49,0.08)] bg-[rgba(255,252,247,0.9)] p-5 shadow-[0_30px_80px_rgba(88,56,34,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(24,20,17,0.92)]">
-                <motion.section
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.55 }}
-                    className="overflow-hidden rounded-[1.9rem] border border-white/60 bg-[linear-gradient(140deg,rgba(255,251,246,0.98)_0%,rgba(245,236,224,0.94)_52%,rgba(235,244,238,0.92)_100%)] p-5 shadow-[0_18px_40px_rgba(96,67,45,0.1)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(29,23,19,0.98)_0%,rgba(35,28,23,0.96)_52%,rgba(18,35,32,0.92)_100%)]"
-                >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-stone-900 text-white shadow-lg dark:bg-white dark:text-stone-900">
-                        <Heart className="h-7 w-7 fill-current" />
-                    </div>
-
-                    <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Mi Prometida</p>
-                    <h1 className="display-font mt-2 text-[2.8rem] leading-none text-stone-900 dark:text-stone-100">
-                        {isLogin ? 'Entren una vez' : 'Creen su acceso'}
-                    </h1>
-                    <p className="mt-4 max-w-[18rem] text-sm leading-6 text-stone-600 dark:text-stone-300">
-                        La sesion queda guardada en este celular para que no tengan que poner correo y contrasena cada vez.
-                    </p>
-
-                    <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-700 shadow-sm dark:bg-white/8 dark:text-stone-200">
-                        <ShieldCheck size={14} />
-                        Acceso persistente
-                    </div>
-                </motion.section>
-
+            <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-[28rem] flex-col justify-center rounded-[2.2rem] border border-[rgba(100,71,49,0.08)] bg-[rgba(255,252,247,0.9)] p-5 shadow-[0_30px_80px_rgba(88,56,34,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(24,20,17,0.92)]">
                 <motion.section
                     initial={{ opacity: 0, y: 22 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08, duration: 0.55 }}
+                    transition={{ duration: 0.55 }}
                     className="section-card rounded-[1.9rem] p-4 sm:p-5"
                 >
                     <div className="pill-toggle mb-4 grid w-full grid-cols-2">
@@ -112,10 +88,18 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="mb-5">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-stone-900 text-white shadow-lg dark:bg-white dark:text-stone-900">
+                            <Heart className="h-7 w-7 fill-current" />
+                        </div>
+                        <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Mi Prometida</p>
                         <p className="section-label">{isLogin ? 'Acceso rapido' : 'Nuevo acceso'}</p>
                         <h2 className="display-font mt-2 text-[2.2rem] leading-none text-stone-900 dark:text-stone-100">
                             {isLogin ? 'Vuelvan donde lo dejaron' : 'Crear acceso'}
                         </h2>
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-700 shadow-sm dark:bg-white/8 dark:text-stone-200">
+                            <ShieldCheck size={14} />
+                            Acceso persistente
+                        </div>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-3">
