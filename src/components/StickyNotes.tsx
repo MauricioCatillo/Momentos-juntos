@@ -146,7 +146,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
             <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
                     <p className="section-label">Notas</p>
-                    <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                    <h2 className="display-font mt-2 max-w-[12rem] text-[1.72rem] leading-[0.95] text-stone-900 sm:max-w-none sm:text-[2rem] dark:text-stone-100">
                         {title}
                     </h2>
                 </div>

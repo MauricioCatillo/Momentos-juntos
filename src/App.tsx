@@ -36,6 +36,17 @@ function App() {
             return;
         }
 
+        const notificationsAvailable = typeof window !== 'undefined' && 'Notification' in window;
+        const isLocalhost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+        const shouldInitOneSignal =
+            notificationsAvailable &&
+            window.isSecureContext &&
+            (!isLocalhost || import.meta.env.VITE_ENABLE_LOCAL_ONESIGNAL === 'true');
+
+        if (!shouldInitOneSignal) {
+            return;
+        }
+
         let foregroundListener: ((event: { notification: { display: () => void } }) => void) | null = null;
         let subscriptionListener: ((event: { current: { id?: string | null } }) => void) | null = null;
 

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Heart, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
+
+const SAVED_EMAIL_KEY = 'mi-prometida-saved-email';
 
 export const Login: React.FC = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -15,19 +17,30 @@ export const Login: React.FC = () => {
     const { login, signup } = useApp();
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const savedEmail = window.localStorage.getItem(SAVED_EMAIL_KEY);
+        if (savedEmail) {
+            setEmail(savedEmail);
+        }
+    }, []);
+
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setLoading(true);
         setError(null);
 
         try {
+            const normalizedEmail = email.trim();
+
             if (isLogin) {
-                await login(email, password);
+                await login(normalizedEmail, password);
+                window.localStorage.setItem(SAVED_EMAIL_KEY, normalizedEmail);
                 navigate('/');
                 return;
             }
 
-            await signup(email, password);
+            await signup(normalizedEmail, password);
+            window.localStorage.setItem(SAVED_EMAIL_KEY, normalizedEmail);
             toast.success('Cuenta creada. Ahora inicia sesion.');
             setIsLogin(true);
         } catch (err: unknown) {
@@ -41,25 +54,31 @@ export const Login: React.FC = () => {
 
     return (
         <div className="relative min-h-screen min-h-[100dvh] overflow-hidden px-4 py-5 sm:px-6">
-            <div className="pointer-events-none absolute left-[-4rem] top-[-4rem] h-48 w-48 rounded-full bg-rose-300/30 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-[-5rem] right-[-4rem] h-56 w-56 rounded-full bg-sky-300/25 blur-3xl" />
+            <div className="pointer-events-none absolute left-[-4rem] top-[-3rem] h-52 w-52 rounded-full bg-[rgba(210,130,88,0.22)] blur-3xl" />
+            <div className="pointer-events-none absolute bottom-[-6rem] right-[-4rem] h-64 w-64 rounded-full bg-[rgba(113,152,128,0.18)] blur-3xl" />
 
-            <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-[28rem] flex-col gap-6 rounded-[2.2rem] border border-white/65 bg-[rgba(255,251,248,0.82)] p-5 shadow-[0_30px_80px_rgba(88,44,58,0.2)] backdrop-blur-2xl dark:border-white/10 dark:bg-[rgba(24,20,29,0.9)]">
+            <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-[28rem] flex-col gap-5 rounded-[2.2rem] border border-[rgba(100,71,49,0.08)] bg-[rgba(255,252,247,0.9)] p-5 shadow-[0_30px_80px_rgba(88,56,34,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(24,20,17,0.92)]">
                 <motion.section
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.55 }}
-                    className="space-y-4 pt-1"
+                    className="overflow-hidden rounded-[1.9rem] border border-white/60 bg-[linear-gradient(140deg,rgba(255,251,246,0.98)_0%,rgba(245,236,224,0.94)_52%,rgba(235,244,238,0.92)_100%)] p-5 shadow-[0_18px_40px_rgba(96,67,45,0.1)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(29,23,19,0.98)_0%,rgba(35,28,23,0.96)_52%,rgba(18,35,32,0.92)_100%)]"
                 >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-gradient-to-br from-rose-500 to-pink-400 text-white shadow-lg shadow-rose-500/30">
-                        <Heart className="h-7 w-7 fill-white" />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-stone-900 text-white shadow-lg dark:bg-white dark:text-stone-900">
+                        <Heart className="h-7 w-7 fill-current" />
                     </div>
 
-                    <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-500">Mi Prometida</p>
-                        <h1 className="display-font text-[2.65rem] leading-none text-stone-900 dark:text-stone-100">
-                            {isLogin ? 'Entrar' : 'Crear cuenta'}
-                        </h1>
+                    <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Mi Prometida</p>
+                    <h1 className="display-font mt-2 text-[2.8rem] leading-none text-stone-900 dark:text-stone-100">
+                        {isLogin ? 'Entren una vez' : 'Creen su acceso'}
+                    </h1>
+                    <p className="mt-4 max-w-[18rem] text-sm leading-6 text-stone-600 dark:text-stone-300">
+                        La sesion queda guardada en este celular para que no tengan que poner correo y contrasena cada vez.
+                    </p>
+
+                    <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-700 shadow-sm dark:bg-white/8 dark:text-stone-200">
+                        <ShieldCheck size={14} />
+                        Acceso persistente
                     </div>
                 </motion.section>
 
@@ -93,8 +112,9 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="mb-5">
-                        <h2 className="display-font text-[2rem] leading-none text-stone-900 dark:text-stone-100">
-                            {isLogin ? 'Iniciar sesion' : 'Crear acceso'}
+                        <p className="section-label">{isLogin ? 'Acceso rapido' : 'Nuevo acceso'}</p>
+                        <h2 className="display-font mt-2 text-[2.2rem] leading-none text-stone-900 dark:text-stone-100">
+                            {isLogin ? 'Vuelvan donde lo dejaron' : 'Crear acceso'}
                         </h2>
                     </div>
 
@@ -107,6 +127,9 @@ export const Login: React.FC = () => {
                                 </div>
                                 <input
                                     type="email"
+                                    name="email"
+                                    autoComplete="email"
+                                    inputMode="email"
                                     required
                                     value={email}
                                     onChange={(event) => setEmail(event.target.value)}
@@ -124,6 +147,8 @@ export const Login: React.FC = () => {
                                 </div>
                                 <input
                                     type="password"
+                                    name="password"
+                                    autoComplete={isLogin ? 'current-password' : 'new-password'}
                                     required
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
@@ -132,6 +157,10 @@ export const Login: React.FC = () => {
                                 />
                             </div>
                         </label>
+
+                        <div className="rounded-[1.3rem] border border-white/60 bg-white/65 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-300">
+                            Despues del primer ingreso, la app recordara la sesion en este celular hasta que cierres sesion manualmente.
+                        </div>
 
                         {error && (
                             <motion.div
@@ -158,7 +187,6 @@ export const Login: React.FC = () => {
                             )}
                         </button>
                     </form>
-
                 </motion.section>
             </div>
         </div>
