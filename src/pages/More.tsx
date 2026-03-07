@@ -11,14 +11,12 @@ import { isPreviewModeEnabled } from '../lib/previewMode';
 
 const MoreCard = ({
     title,
-    description,
     helper,
     gradient,
     icon: Icon,
     onClick,
 }: {
     title: string;
-    description: string;
     helper: string;
     gradient: string;
     icon: React.ComponentType<{ size?: number }>;
@@ -40,7 +38,6 @@ const MoreCard = ({
                     <Icon size={20} />
                 </div>
             </div>
-            <p className="mt-3 text-sm leading-6 text-white/82">{description}</p>
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/70">{helper}</p>
         </div>
     </motion.button>
@@ -152,7 +149,6 @@ export const More: React.FC = () => {
             <PageHeader
                 kicker="Mas"
                 title="Herramientas utiles"
-                subtitle="Todo lo que no necesitan ver siempre, pero si tener a mano."
             />
 
             <section className="section-card rounded-[1.9rem] p-5">
@@ -193,9 +189,6 @@ export const More: React.FC = () => {
                         <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
                             {notificationUi.title}
                         </h2>
-                        <p className="mt-3 text-sm leading-6 text-stone-500 dark:text-stone-400">
-                            {notificationUi.description}
-                        </p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-200">
                         <NotificationIcon size={20} />
@@ -215,7 +208,6 @@ export const More: React.FC = () => {
             <section className="grid gap-3">
                 <MoreCard
                     title="Check-in diario"
-                    description="Registrar como estan hoy y dejar una nota corta sin darle una pantalla principal."
                     helper={todayMood ? 'Ya se registro hoy' : 'Falta registrar hoy'}
                     gradient="from-sky-500 to-cyan-500"
                     icon={CalendarCheck2}
@@ -223,7 +215,6 @@ export const More: React.FC = () => {
                 />
                 <MoreCard
                     title="Planes y cupones"
-                    description="Wishlist, tareas pendientes y cupones compartidos en un mismo lugar secundario."
                     helper={`${pendingPlans} planes pendientes y ${activeCoupons} cupones activos`}
                     gradient="from-violet-500 to-indigo-500"
                     icon={ListTodo}

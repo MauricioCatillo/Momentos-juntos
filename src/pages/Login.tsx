@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Heart, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
 
@@ -88,15 +88,20 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="mb-5">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-stone-900 text-white shadow-lg dark:bg-white dark:text-stone-900">
-                            <Heart className="h-7 w-7 fill-current" />
+                        <img
+                            src="/icon.svg"
+                            alt="Mi Prometida"
+                            className="h-14 w-14 rounded-[1.4rem] shadow-lg"
+                        />
+                        <div className="mt-5 flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Mi Prometida</p>
+                                <h1 className="display-font mt-2 text-[2.25rem] leading-none text-stone-900 dark:text-stone-100">
+                                    {isLogin ? 'Entrar' : 'Crear cuenta'}
+                                </h1>
+                            </div>
                         </div>
-                        <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Mi Prometida</p>
-                        <p className="section-label">{isLogin ? 'Acceso rapido' : 'Nuevo acceso'}</p>
-                        <h2 className="display-font mt-2 text-[2.2rem] leading-none text-stone-900 dark:text-stone-100">
-                            {isLogin ? 'Vuelvan donde lo dejaron' : 'Crear acceso'}
-                        </h2>
-                        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-700 shadow-sm dark:bg-white/8 dark:text-stone-200">
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-stone-700 shadow-sm dark:bg-white/8 dark:text-stone-200">
                             <ShieldCheck size={14} />
                             Acceso persistente
                         </div>
@@ -141,10 +146,6 @@ export const Login: React.FC = () => {
                                 />
                             </div>
                         </label>
-
-                        <div className="rounded-[1.3rem] border border-white/60 bg-white/65 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-300">
-                            Despues del primer ingreso, la app recordara la sesion en este celular hasta que cierres sesion manualmente.
-                        </div>
 
                         {error && (
                             <motion.div

@@ -37,25 +37,20 @@ interface LatestMessageData {
 
 const QuickLink = ({
     title,
-    description,
     icon: Icon,
     onClick,
 }: {
     title: string;
-    description: string;
     icon: React.ComponentType<{ size?: number }>;
     onClick: () => void;
 }) => (
     <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className="rounded-[1.45rem] border border-white/70 bg-white/70 p-4 text-left shadow-sm transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+        className="rounded-[1.45rem] border border-white/70 bg-white/72 px-4 py-3 text-left shadow-sm transition-colors hover:bg-white/88 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
     >
-        <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-                <p className="section-label">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">{description}</p>
-            </div>
+        <div className="flex items-center justify-between gap-3">
+            <p className="section-label text-stone-600 dark:text-stone-300">{title}</p>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-stone-900 text-white dark:bg-white dark:text-stone-900">
                 <Icon size={16} />
             </div>
@@ -81,7 +76,7 @@ const SummaryCard = ({
             <div className="min-w-0">
                 <p className="section-label">{kicker}</p>
                 <p className="mt-2 text-lg font-semibold text-stone-900 dark:text-stone-100">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">{body}</p>
+                <p className="mt-1.5 text-sm leading-6 text-stone-500 dark:text-stone-400">{body}</p>
             </div>
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(179,95,61,0.12)] text-[color:var(--accent)] dark:bg-[rgba(240,171,132,0.12)] dark:text-[color:var(--accent)]">
                 <Icon size={18} />
@@ -157,7 +152,7 @@ export const Home: React.FC = () => {
             excited: 'Con energia',
             neutral: 'Tranquilo',
             tired: 'Cansado',
-            sad: 'Necesita abrazo',
+            sad: 'Abrazo',
         };
 
         return todayMood ? moodMap[todayMood.mood] || 'Sin registro' : 'Sin registro';
@@ -177,7 +172,7 @@ export const Home: React.FC = () => {
         if (!settings.countdown?.date) {
             return {
                 title: 'Sin cuenta atras',
-                body: 'Guarden una fecha importante para verla aqui.',
+                body: 'Guarda una fecha.',
             };
         }
 
@@ -185,7 +180,7 @@ export const Home: React.FC = () => {
         if (Number.isNaN(parsedDate.getTime())) {
             return {
                 title: 'Fecha invalida',
-                body: 'Vuelvan a ajustar la fecha.',
+                body: 'Ajusta la fecha.',
             };
         }
 
@@ -203,7 +198,7 @@ export const Home: React.FC = () => {
         }
         : {
             title: 'Todavia no hay mensajes',
-            body: 'Empiecen la conversacion desde el chat.',
+            body: 'Escriban el primero.',
         };
 
     const handleCountdownEdit = () => {
@@ -262,16 +257,13 @@ export const Home: React.FC = () => {
 
     return (
         <div className="page-shell">
-            <section className="overflow-hidden rounded-[2rem] border border-[rgba(100,71,49,0.08)] bg-[linear-gradient(140deg,rgba(255,252,247,0.98)_0%,rgba(245,236,226,0.94)_52%,rgba(233,242,236,0.92)_100%)] p-5 shadow-[0_24px_54px_rgba(86,60,40,0.12)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(29,23,19,0.98)_0%,rgba(35,28,23,0.96)_52%,rgba(18,35,32,0.92)_100%)]">
+            <section className="overflow-hidden rounded-[2.1rem] border border-[rgba(100,71,49,0.08)] bg-[linear-gradient(135deg,rgba(255,252,247,0.98)_0%,rgba(243,236,228,0.94)_45%,rgba(230,240,234,0.92)_100%)] p-5 shadow-[0_24px_54px_rgba(86,60,40,0.12)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(29,23,19,0.98)_0%,rgba(35,28,23,0.96)_52%,rgba(18,35,32,0.92)_100%)]">
                 <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                         <p className="page-kicker">Inicio privado</p>
                         <h1 className="display-font mt-2 text-[3rem] leading-none text-stone-900 dark:text-stone-100">
                             Su rincon
                         </h1>
-                        <p className="mt-3 max-w-[16rem] text-sm leading-6 text-stone-600 dark:text-stone-300">
-                            Donde miran lo importante, anotan cosas rapidas y vuelven a hablar.
-                        </p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -292,14 +284,14 @@ export const Home: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                    <div className="rounded-[1.45rem] bg-white/78 p-4 shadow-sm dark:bg-white/6">
+                <div className="mt-6 grid grid-cols-[1.2fr_0.8fr] gap-3">
+                    <div className="rounded-[1.6rem] bg-white/78 p-4 shadow-sm dark:bg-white/6">
                         <p className="section-label">Juntos</p>
                         <p className="mt-3 text-3xl font-black text-stone-900 dark:text-stone-100">{relationshipDays}</p>
                     </div>
-                    <div className="rounded-[1.45rem] bg-white/78 p-4 shadow-sm dark:bg-white/6">
+                    <div className="rounded-[1.6rem] bg-stone-900 p-4 text-white shadow-sm dark:bg-white dark:text-stone-900">
                         <p className="section-label">Hoy</p>
-                        <p className="mt-3 text-xl font-semibold text-stone-900 dark:text-stone-100">{moodLabel}</p>
+                        <p className="mt-3 text-xl font-semibold">{moodLabel}</p>
                     </div>
                 </div>
 
@@ -315,25 +307,10 @@ export const Home: React.FC = () => {
 
             <StickyNotes showPushNotification={true} title="Notas a mano" />
 
-            <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <QuickLink
-                    title="Chat"
-                    description="Entren rapido al chat privado."
-                    icon={MessageCircle}
-                    onClick={() => navigate('/chat')}
-                />
-                <QuickLink
-                    title="Recuerdos"
-                    description="Historia, fotos y videos sin vueltas."
-                    icon={Sparkles}
-                    onClick={() => navigate('/memories')}
-                />
-                <QuickLink
-                    title="Mas"
-                    description="Check-in, wishlist y herramientas."
-                    icon={PanelsTopLeft}
-                    onClick={() => navigate('/more')}
-                />
+            <section className="grid grid-cols-3 gap-3">
+                <QuickLink title="Chat" icon={MessageCircle} onClick={() => navigate('/chat')} />
+                <QuickLink title="Recuerdos" icon={Sparkles} onClick={() => navigate('/memories')} />
+                <QuickLink title="Mas" icon={PanelsTopLeft} onClick={() => navigate('/more')} />
             </section>
 
             <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -353,8 +330,8 @@ export const Home: React.FC = () => {
                 />
                 <SummaryCard
                     kicker="Check-in"
-                    title={todayMood ? 'Ya registraron el dia' : 'Falta registrar hoy'}
-                    body={todayMood ? 'Pueden actualizarlo desde la seccion Mas.' : 'Respondan rapido como se sienten hoy.'}
+                    title={todayMood ? 'Listo' : 'Pendiente'}
+                    body={todayMood ? 'Actualicenlo cuando quieran.' : 'Registren como estan hoy.'}
                     icon={HeartHandshake}
                     onClick={() => navigate('/daily')}
                 />

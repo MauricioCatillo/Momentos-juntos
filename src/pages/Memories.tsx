@@ -19,13 +19,11 @@ interface Memory {
 
 const ShortcutCard = ({
     title,
-    description,
     gradient,
     icon: Icon,
     onClick,
 }: {
     title: string;
-    description: string;
     gradient: string;
     icon: React.ComponentType<{ size?: number }>;
     onClick: () => void;
@@ -40,7 +38,6 @@ const ShortcutCard = ({
             <div className="min-w-0">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/75">Vista</p>
                 <h2 className="mt-3 text-2xl font-semibold">{title}</h2>
-                <p className="mt-2 text-sm leading-6 text-white/80">{description}</p>
             </div>
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
                 <Icon size={20} />
@@ -88,7 +85,6 @@ export const Memories: React.FC = () => {
             <PageHeader
                 kicker="Recuerdos"
                 title="Todo en un solo lugar"
-                subtitle="Entra por la historia o por la galeria, pero desde una sola puerta principal."
             />
 
             <section className="section-card rounded-[1.9rem] p-5">
@@ -123,14 +119,12 @@ export const Memories: React.FC = () => {
             <section className="grid gap-3">
                 <ShortcutCard
                     title="Historia"
-                    description="Linea del tiempo, carpetas y recuerdos detallados."
                     gradient="from-rose-500 to-pink-500"
                     icon={Heart}
                     onClick={() => navigate('/story')}
                 />
                 <ShortcutCard
                     title="Galeria"
-                    description="Busqueda rapida, filtros por foto o video y vista ligera."
                     gradient="from-amber-500 to-orange-500"
                     icon={ImageIcon}
                     onClick={() => navigate('/gallery')}
