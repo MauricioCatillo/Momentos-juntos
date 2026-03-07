@@ -47,7 +47,7 @@ const QuickLink = ({
     <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className="rounded-[1.45rem] border border-white/70 bg-white/72 px-4 py-3 text-left shadow-sm transition-colors hover:bg-white/88 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+        className="w-full rounded-[1.45rem] border border-white/70 bg-white/72 px-4 py-3 text-left shadow-sm transition-colors hover:bg-white/88 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
     >
         <div className="flex items-center justify-between gap-3">
             <p className="section-label text-stone-600 dark:text-stone-300">{title}</p>
@@ -187,7 +187,7 @@ export const Home: React.FC = () => {
         const days = differenceInCalendarDays(parsedDate, new Date());
         return {
             title: `${days >= 0 ? days : 0} dias`,
-            body: `${settings.countdown.title || 'Cuenta atras'} · ${format(parsedDate, "d 'de' MMM", { locale: es })}`,
+            body: `${settings.countdown.title || 'Cuenta atras'} - ${format(parsedDate, "d 'de' MMM", { locale: es })}`,
         };
     }, [settings.countdown]);
 
@@ -307,17 +307,19 @@ export const Home: React.FC = () => {
 
             <StickyNotes showPushNotification={true} title="Notas a mano" />
 
-            <section className="grid grid-cols-3 gap-3">
+            <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 <QuickLink title="Chat" icon={MessageCircle} onClick={() => navigate('/chat')} />
                 <QuickLink title="Recuerdos" icon={Sparkles} onClick={() => navigate('/memories')} />
-                <QuickLink title="Mas" icon={PanelsTopLeft} onClick={() => navigate('/more')} />
+                <div className="col-span-2 md:col-span-1">
+                    <QuickLink title="Mas" icon={PanelsTopLeft} onClick={() => navigate('/more')} />
+                </div>
             </section>
 
             <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <SummaryCard
                     kicker="Proxima cita"
                     title={nextDate.title || 'Sin plan todavia'}
-                    body={nextDate.description ? `${formattedNextDate} · ${nextDate.description}` : formattedNextDate}
+                    body={nextDate.description ? `${formattedNextDate} - ${nextDate.description}` : formattedNextDate}
                     icon={CalendarDays}
                     onClick={handleNextDateEdit}
                 />

@@ -89,7 +89,7 @@ export const Login: React.FC = () => {
 
                     <div className="mb-5">
                         <img
-                            src="/icon.svg"
+                            src="/icon-192.png"
                             alt="Mi Prometida"
                             className="h-14 w-14 rounded-[1.4rem] shadow-lg"
                         />
