@@ -192,8 +192,11 @@ export const Chat: React.FC = () => {
     }, {} as Record<string, Message[]>);
 
     return (
-        <div className="flex h-full flex-col bg-[linear-gradient(180deg,rgba(253,247,244,0.95)_0%,rgba(248,233,239,0.88)_100%)] dark:bg-[linear-gradient(180deg,rgba(18,15,21,0.96)_0%,rgba(24,21,30,0.92)_100%)]">
-            <header className="relative z-10 border-b border-white/65 bg-white/60 px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-2xl dark:border-white/8 dark:bg-white/5">
+        <div className="flex h-full min-h-full flex-col overflow-hidden bg-[linear-gradient(180deg,rgba(253,247,244,0.95)_0%,rgba(248,233,239,0.88)_100%)] dark:bg-[linear-gradient(180deg,rgba(18,15,21,0.96)_0%,rgba(24,21,30,0.92)_100%)]">
+            <header
+                className="relative z-10 border-b border-white/65 bg-white/60 px-4 pb-4 backdrop-blur-2xl dark:border-white/8 dark:bg-white/5"
+                style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}
+            >
                 <div className="flex items-center justify-between gap-3">
                     <button
                         onClick={() => {
@@ -305,7 +308,8 @@ export const Chat: React.FC = () => {
 
             <form
                 onSubmit={sendMessage}
-                className="border-t border-white/65 bg-white/70 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-2xl dark:border-white/8 dark:bg-white/5"
+                className="border-t border-white/65 bg-white/70 px-4 pt-3 backdrop-blur-2xl dark:border-white/8 dark:bg-white/5"
+                style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1rem)' }}
             >
                 <div className="scrollbar-hide mb-3 flex gap-2 overflow-x-auto pb-1">
                     {quickMessages.map((message) => (
