@@ -390,9 +390,10 @@ p {
   inset: 0;
   z-index: 60;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1rem;
+  overflow-y: auto;
+  padding: max(env(safe-area-inset-top), 1rem) 1rem max(env(safe-area-inset-bottom), 1rem);
   background: var(--modal-backdrop);
   backdrop-filter: blur(12px);
 }
@@ -400,6 +401,8 @@ p {
 .modal-card {
   width: 100%;
   max-width: 26rem;
+  max-height: calc(100dvh - max(env(safe-area-inset-top), 1rem) - max(env(safe-area-inset-bottom), 1rem) - 1.5rem);
+  overflow-y: auto;
   border-radius: 1.75rem;
   background: linear-gradient(180deg, var(--surface-1) 0%, var(--surface-3) 100%);
   border: 1px solid var(--border-soft);

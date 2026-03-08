@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { Plus, X, StickyNote } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase, getNotes, addNote, deleteNote } from '../supabaseClient';
@@ -33,6 +34,25 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     const [isAdding, setIsAdding] = useState(false);
     const [newNote, setNewNote] = useState('');
     const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+
+    useEffect(() => {
+        if (!isAdding || typeof window === 'undefined') {
+            return;
+        }
+
+        const handleViewportChange = () => {
+            window.requestAnimationFrame(() => {
+                const focusedElement = document.activeElement as HTMLElement | null;
+                focusedElement?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+            });
+        };
+
+        window.visualViewport?.addEventListener('resize', handleViewportChange);
+
+        return () => {
+            window.visualViewport?.removeEventListener('resize', handleViewportChange);
+        };
+    }, [isAdding]);
 
     const closeAddModal = () => {
         setIsAdding(false);
@@ -141,8 +161,85 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         }
     };
 
+    const addModal =
+        isAdding && typeof document !== 'undefined'
+            ? createPortal(
+                <AnimatePresence>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="modal-backdrop"
+                        onClick={closeAddModal}
+                    >
+                        <motion.div
+                            initial={{ y: 24, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 24, opacity: 0 }}
+                            onClick={(event) => event.stopPropagation()}
+                            className="modal-card"
+                        >
+                            <div className="mb-5 flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="section-label">Nueva nota</p>
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                        Nueva nota
+                                    </h3>
+                                </div>
+                                <button
+                                    onClick={closeAddModal}
+                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleAdd} className="space-y-4">
+                                <textarea
+                                    value={newNote}
+                                    onChange={(event) => setNewNote(event.target.value)}
+                                    rows={4}
+                                    placeholder="Escribe algo corto, dulce o importante..."
+                                    autoFocus
+                                    onFocus={() => {
+                                        window.requestAnimationFrame(() => {
+                                            const focusedElement = document.activeElement as HTMLElement | null;
+                                            focusedElement?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+                                        });
+                                    }}
+                                    className="textarea-shell min-h-[6.5rem]"
+                                />
+
+                                <div className="flex flex-wrap gap-2">
+                                    {COLORS.map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            onClick={() => setSelectedColor(color)}
+                                            className={`h-9 w-9 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-700' : 'border-transparent'}`}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div className="sticky bottom-0 grid grid-cols-2 gap-3 bg-[color:var(--surface-1)] pb-1 pt-4">
+                                    <button type="button" onClick={closeAddModal} className="secondary-button px-4">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" className="primary-button px-4">
+                                        Guardar
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                </AnimatePresence>,
+                document.body
+            )
+            : null;
+
     return (
-        <section className="section-card rounded-[1.95rem] p-5">
+        <>
+            <section className="section-card rounded-[1.95rem] p-5">
             <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
                     <p className="section-label">Notas</p>
@@ -198,72 +295,8 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                     </AnimatePresence>
                 </div>
             )}
-
-            <AnimatePresence>
-                {isAdding && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="modal-backdrop"
-                        onClick={closeAddModal}
-                    >
-                        <motion.div
-                            initial={{ y: 24, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 24, opacity: 0 }}
-                            onClick={(event) => event.stopPropagation()}
-                            className="modal-card"
-                        >
-                            <div className="mb-5 flex items-start justify-between gap-3">
-                                <div>
-                                    <p className="section-label">Nueva nota</p>
-                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
-                                        Nueva nota
-                                    </h3>
-                                </div>
-                                <button
-                                    onClick={closeAddModal}
-                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleAdd}>
-                                <textarea
-                                    value={newNote}
-                                    onChange={(event) => setNewNote(event.target.value)}
-                                    className="textarea-shell min-h-[8rem]"
-                                    rows={4}
-                                    placeholder="Escribe algo corto, dulce o importante..."
-                                    autoFocus
-                                />
-
-                                <div className="mt-4 flex gap-2">
-                                    {COLORS.map((color) => (
-                                        <button
-                                            key={color}
-                                            type="button"
-                                            onClick={() => setSelectedColor(color)}
-                                            className={`h-9 w-9 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-700' : 'border-transparent'}`}
-                                        />
-                                    ))}
-                                </div>
-
-                                <div className="mt-6 grid grid-cols-2 gap-3">
-                                    <button type="button" onClick={closeAddModal} className="secondary-button px-4">
-                                        Cancelar
-                                    </button>
-                                    <button type="submit" className="primary-button px-4">
-                                        Guardar
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </section>
+            </section>
+            {addModal}
+        </>
     );
 };
