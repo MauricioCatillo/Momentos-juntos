@@ -54,10 +54,12 @@ export const Login: React.FC = () => {
 
     return (
         <div className="relative min-h-screen min-h-[100dvh] overflow-hidden px-4 py-5 sm:px-6">
-            <div className="pointer-events-none absolute left-[-4rem] top-[-3rem] h-52 w-52 rounded-full bg-[rgba(210,130,88,0.22)] blur-3xl" />
-            <div className="pointer-events-none absolute bottom-[-6rem] right-[-4rem] h-64 w-64 rounded-full bg-[rgba(113,152,128,0.18)] blur-3xl" />
+            {/* Animated gradient orbs */}
+            <div className="pointer-events-none absolute left-[-5rem] top-[-4rem] h-64 w-64 rounded-full bg-[rgba(232,86,124,0.2)] blur-[80px] animate-[float-orb-1_12s_ease-in-out_infinite]" />
+            <div className="pointer-events-none absolute bottom-[-7rem] right-[-5rem] h-72 w-72 rounded-full bg-[rgba(155,122,245,0.18)] blur-[80px] animate-[float-orb-2_15s_ease-in-out_infinite]" />
+            <div className="pointer-events-none absolute left-[40%] top-[30%] h-40 w-40 rounded-full bg-[rgba(240,184,102,0.12)] blur-[60px]" />
 
-            <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-[28rem] flex-col justify-center rounded-[2.2rem] border border-[rgba(100,71,49,0.08)] bg-[rgba(255,252,247,0.9)] p-5 shadow-[0_30px_80px_rgba(88,56,34,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(24,20,17,0.92)]">
+            <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-[28rem] flex-col justify-center">
                 <motion.section
                     initial={{ opacity: 0, y: 22 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -91,17 +93,17 @@ export const Login: React.FC = () => {
                         <img
                             src="/icon-192.png"
                             alt="Mi Prometida"
-                            className="h-14 w-14 rounded-[1.4rem] shadow-lg"
+                            className="h-14 w-14 rounded-[1.4rem] shadow-lg ring-2 ring-white/10"
                         />
                         <div className="mt-5 flex items-center justify-between gap-3">
                             <div>
                                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Mi Prometida</p>
-                                <h1 className="display-font mt-2 text-[2.25rem] leading-none text-stone-900 dark:text-stone-100">
+                                <h1 className="display-font mt-2 text-[2.25rem] leading-none text-[color:var(--text-primary)]">
                                     {isLogin ? 'Entrar' : 'Crear cuenta'}
                                 </h1>
                             </div>
                         </div>
-                        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-stone-700 shadow-sm dark:bg-white/8 dark:text-stone-200">
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-secondary)] backdrop-blur-md dark:border-white/[0.06]">
                             <ShieldCheck size={14} />
                             Acceso persistente
                         </div>
@@ -111,7 +113,7 @@ export const Login: React.FC = () => {
                         <label className="block">
                             <span className="section-label mb-2 block">Correo</span>
                             <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex w-16 items-center justify-center text-stone-400">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex w-16 items-center justify-center text-[color:var(--text-tertiary)]">
                                     <Mail size={18} />
                                 </div>
                                 <input
@@ -131,7 +133,7 @@ export const Login: React.FC = () => {
                         <label className="block">
                             <span className="section-label mb-2 block">Contrasena</span>
                             <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex w-16 items-center justify-center text-stone-400">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex w-16 items-center justify-center text-[color:var(--text-tertiary)]">
                                     <Lock size={18} />
                                 </div>
                                 <input
@@ -151,7 +153,7 @@ export const Login: React.FC = () => {
                             <motion.div
                                 initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200"
+                                className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400"
                             >
                                 {error}
                             </motion.div>
@@ -160,7 +162,7 @@ export const Login: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="primary-button inline-flex w-full items-center justify-center gap-2"
+                            className="primary-button glow-accent inline-flex w-full items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <Loader2 className="animate-spin" size={18} />

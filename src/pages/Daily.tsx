@@ -8,11 +8,11 @@ import { requestPushPermission } from '../utils/notifications';
 import { PageHeader } from '../components/ui/PageHeader';
 
 const MOODS = [
-    { id: 'happy', label: 'Feliz', icon: Smile, accent: 'from-yellow-400 to-orange-400' },
+    { id: 'happy', label: 'Feliz', icon: Smile, accent: 'from-yellow-400 to-orange-500' },
     { id: 'excited', label: 'Con energia', icon: Zap, accent: 'from-amber-500 to-orange-500' },
     { id: 'neutral', label: 'Tranquilo', icon: Meh, accent: 'from-stone-400 to-stone-500' },
-    { id: 'tired', label: 'Cansado', icon: Moon, accent: 'from-sky-500 to-blue-500' },
-    { id: 'sad', label: 'Necesita abrazo', icon: Frown, accent: 'from-indigo-500 to-violet-500' },
+    { id: 'tired', label: 'Cansado', icon: Moon, accent: 'from-sky-500 to-blue-600' },
+    { id: 'sad', label: 'Necesita abrazo', icon: Frown, accent: 'from-violet-500 to-indigo-600' },
 ] as const;
 
 const MoodButton = React.memo(
@@ -35,8 +35,8 @@ const MoodButton = React.memo(
                 className={cn(
                     'flex h-full min-h-[7.2rem] flex-col rounded-[1.4rem] border p-3 text-center transition-all duration-300',
                     isSelected
-                        ? 'border-white/75 bg-white text-stone-900 shadow-[0_18px_34px_rgba(103,61,76,0.16)] dark:border-white/10 dark:bg-white/8 dark:text-stone-100'
-                        : 'border-white/65 bg-white/55 text-stone-500 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-stone-400'
+                        ? 'border-white/15 bg-white/10 text-[color:var(--text-primary)] shadow-[0_18px_34px_rgba(0,0,0,0.15)] dark:border-white/10 dark:bg-white/[0.06]'
+                        : 'border-white/10 bg-white/5 text-[color:var(--text-tertiary)] shadow-sm dark:border-white/[0.06] dark:bg-white/[0.03]'
                 )}
             >
                 <div
@@ -101,7 +101,7 @@ export const Daily: React.FC = () => {
                 <div className="mb-5 flex items-start justify-between gap-3">
                     <div>
                         <p className="section-label">Mood del dia</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             Como te sientes hoy
                         </h2>
                     </div>
@@ -116,7 +116,7 @@ export const Daily: React.FC = () => {
 
                             toast.success('Notificaciones activadas.');
                         }}
-                        className="inline-flex min-h-[2.8rem] shrink-0 items-center justify-center gap-2 rounded-full border border-white/70 bg-white/65 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-stone-600 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-stone-200"
+                        className="inline-flex min-h-[2.8rem] shrink-0 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--text-secondary)] shadow-sm backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]"
                     >
                         <Bell size={14} />
                         Alertas
@@ -140,7 +140,7 @@ export const Daily: React.FC = () => {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
-                            className="mt-5 rounded-[1.2rem] bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-200"
+                            className="mt-5 rounded-[1.2rem] border border-rose-500/15 bg-rose-500/8 px-4 py-3 text-sm text-rose-300 dark:border-rose-500/10 dark:bg-rose-500/6"
                         >
                             {feedback}
                         </motion.div>
@@ -152,13 +152,13 @@ export const Daily: React.FC = () => {
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
                         <p className="section-label">Nota</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             Nota
                         </h2>
                     </div>
 
                     {todayMood && (
-                        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-400">
                             <CheckCircle2 size={14} />
                             Guardado hoy
                         </div>
@@ -175,7 +175,7 @@ export const Daily: React.FC = () => {
                 />
 
                 <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-xs text-stone-400">{moodNote.length}/220</span>
+                    <span className="text-xs text-[color:var(--text-tertiary)]">{moodNote.length}/220</span>
                     <button onClick={handleSaveNote} className="primary-button px-5 text-sm">
                         Guardar nota
                     </button>
@@ -185,7 +185,7 @@ export const Daily: React.FC = () => {
             {moods.length > 0 && (
                 <section className="section-card rounded-[1.95rem] p-5">
                     <p className="section-label">Ultimos dias</p>
-                    <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                    <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                         Historial rapido
                     </h2>
 
@@ -197,7 +197,7 @@ export const Daily: React.FC = () => {
                             return (
                                 <div
                                     key={mood.id}
-                                    className="rounded-[1.35rem] border border-white/65 bg-white/58 p-3 text-center shadow-sm dark:border-white/10 dark:bg-white/5"
+                                    className="rounded-[1.35rem] border border-white/10 bg-white/5 p-3 text-center shadow-sm backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]"
                                     title={mood.note || ''}
                                 >
                                     <div
@@ -208,7 +208,7 @@ export const Daily: React.FC = () => {
                                     >
                                         <moodConfig.icon size={18} />
                                     </div>
-                                    <span className="mt-3 block text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400">
+                                    <span className="mt-3 block text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-tertiary)]">
                                         {new Date(mood.date).toLocaleDateString(undefined, { weekday: 'short' })}
                                     </span>
                                 </div>

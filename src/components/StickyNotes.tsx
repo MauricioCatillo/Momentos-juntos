@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { Plus, X, StickyNote } from 'lucide-react';
+import { Plus, X, StickyNote, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase, getNotes, addNote, deleteNote } from '../supabaseClient';
 import { useApp } from '../context/AppContext';
@@ -17,7 +17,42 @@ interface Note {
     author?: string;
 }
 
-const COLORS = ['bg-yellow-200', 'bg-rose-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200'];
+const NOTE_ACCENTS = [
+    { bg: 'bg-rose-500/10 dark:bg-rose-500/8', border: 'border-l-rose-400', dot: 'bg-rose-400' },
+    { bg: 'bg-violet-500/10 dark:bg-violet-500/8', border: 'border-l-violet-400', dot: 'bg-violet-400' },
+    { bg: 'bg-sky-500/10 dark:bg-sky-500/8', border: 'border-l-sky-400', dot: 'bg-sky-400' },
+    { bg: 'bg-emerald-500/10 dark:bg-emerald-500/8', border: 'border-l-emerald-400', dot: 'bg-emerald-400' },
+    { bg: 'bg-amber-500/10 dark:bg-amber-500/8', border: 'border-l-amber-400', dot: 'bg-amber-400' },
+];
+
+const COLOR_OPTIONS = [
+    { id: 'rose', class: 'bg-rose-400', value: 'bg-rose-200' },
+    { id: 'violet', class: 'bg-violet-400', value: 'bg-purple-200' },
+    { id: 'sky', class: 'bg-sky-400', value: 'bg-blue-200' },
+    { id: 'emerald', class: 'bg-emerald-400', value: 'bg-green-200' },
+    { id: 'amber', class: 'bg-amber-400', value: 'bg-yellow-200' },
+];
+
+function getAccentForColor(color: string): typeof NOTE_ACCENTS[number] {
+    if (color.includes('rose') || color.includes('pink')) return NOTE_ACCENTS[0];
+    if (color.includes('purple') || color.includes('violet') || color.includes('indigo')) return NOTE_ACCENTS[1];
+    if (color.includes('blue') || color.includes('sky') || color.includes('cyan')) return NOTE_ACCENTS[2];
+    if (color.includes('green') || color.includes('emerald') || color.includes('teal')) return NOTE_ACCENTS[3];
+    return NOTE_ACCENTS[4]; // amber/yellow default
+}
+
+function getRelativeTime(dateStr: string): string {
+    const now = Date.now();
+    const diff = now - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'ahora';
+    if (mins < 60) return `hace ${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `hace ${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `hace ${days}d`;
+    return new Date(dateStr).toLocaleDateString();
+}
 
 interface StickyNotesProps {
     title?: string;
@@ -33,7 +68,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     const [notes, setNotes] = useState<Note[]>([]);
     const [isAdding, setIsAdding] = useState(false);
     const [newNote, setNewNote] = useState('');
-    const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+    const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0].value);
 
     useEffect(() => {
         if (!isAdding || typeof window === 'undefined') {
@@ -57,7 +92,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     const closeAddModal = () => {
         setIsAdding(false);
         setNewNote('');
-        setSelectedColor(COLORS[0]);
+        setSelectedColor(COLOR_OPTIONS[0].value);
     };
 
     useEffect(() => {
@@ -182,13 +217,13 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                             <div className="mb-5 flex items-start justify-between gap-3">
                                 <div>
                                     <p className="section-label">Nueva nota</p>
-                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
-                                        Nueva nota
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
+                                        Escribe algo
                                     </h3>
                                 </div>
                                 <button
                                     onClick={closeAddModal}
-                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                    className="rounded-full p-2 text-[color:var(--text-tertiary)] transition-colors hover:bg-white/10 hover:text-[color:var(--text-primary)]"
                                 >
                                     <X size={18} />
                                 </button>
@@ -211,12 +246,12 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                 />
 
                                 <div className="flex flex-wrap gap-2">
-                                    {COLORS.map((color) => (
+                                    {COLOR_OPTIONS.map((opt) => (
                                         <button
-                                            key={color}
+                                            key={opt.id}
                                             type="button"
-                                            onClick={() => setSelectedColor(color)}
-                                            className={`h-9 w-9 rounded-full ${color} border-2 ${selectedColor === color ? 'border-stone-700' : 'border-transparent'}`}
+                                            onClick={() => setSelectedColor(opt.value)}
+                                            className={`h-9 w-9 rounded-full ${opt.class} border-2 transition-all ${selectedColor === opt.value ? 'scale-110 border-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
                                         />
                                     ))}
                                 </div>
@@ -240,61 +275,68 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     return (
         <>
             <section className="section-card rounded-[1.95rem] p-5">
-            <div className="mb-5 flex items-start justify-between gap-3">
-                <div>
-                    <p className="section-label">Notas</p>
-                    <h2 className="display-font mt-2 max-w-[12rem] text-[1.72rem] leading-[0.95] text-stone-900 sm:max-w-none sm:text-[2rem] dark:text-stone-100">
-                        {title}
-                    </h2>
+                <div className="mb-5 flex items-start justify-between gap-3">
+                    <div>
+                        <p className="section-label">Notas</p>
+                        <h2 className="display-font mt-2 max-w-[12rem] text-[1.72rem] leading-[0.95] text-[color:var(--text-primary)] sm:max-w-none sm:text-[2rem]">
+                            {title}
+                        </h2>
+                    </div>
+
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => setIsAdding(true)}
+                        className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[color:var(--accent)] to-[#c44490] text-white shadow-lg glow-accent"
+                    >
+                        <Plus size={18} />
+                    </motion.button>
                 </div>
 
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-900 text-white shadow-lg dark:bg-white dark:text-stone-900"
-                >
-                    <Plus size={18} />
-                </button>
-            </div>
+                {notes.length === 0 ? (
+                    <EmptyState
+                        title="Sin notas"
+                        description="Agrega una."
+                        icon={<StickyNote size={24} className="text-[color:var(--accent)]" />}
+                        className="border border-dashed border-white/10 dark:border-white/[0.06]"
+                    />
+                ) : (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <AnimatePresence>
+                            {notes.map((note, index) => {
+                                const accent = getAccentForColor(note.color);
+                                return (
+                                    <motion.article
+                                        key={note.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ delay: index * 0.04 }}
+                                        className={`group relative min-h-[7rem] overflow-hidden rounded-2xl border border-white/10 ${accent.bg} border-l-[3px] ${accent.border} p-4 backdrop-blur-sm dark:border-white/[0.06]`}
+                                    >
+                                        <button
+                                            onClick={() => handleDelete(note.id)}
+                                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-[color:var(--text-tertiary)] opacity-0 transition-all hover:bg-red-500/15 hover:text-red-400 group-hover:opacity-100"
+                                        >
+                                            <Trash2 size={13} />
+                                        </button>
 
-            {notes.length === 0 ? (
-                <EmptyState
-                    title="Sin notas"
-                    description="Agrega una."
-                    icon={<StickyNote size={24} className="text-yellow-700 dark:text-yellow-200" />}
-                    className="border border-dashed border-stone-300/80 dark:border-white/10"
-                />
-            ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <AnimatePresence>
-                        {notes.map((note, index) => (
-                            <motion.article
-                                key={note.id}
-                                layout
-                                initial={{ opacity: 0, y: 12, rotate: index % 2 === 0 ? -2 : 2 }}
-                                animate={{ opacity: 1, y: 0, rotate: index % 2 === 0 ? -2 : 2 }}
-                                exit={{ opacity: 0, scale: 0.96 }}
-                                className={`${note.color} relative min-h-[9rem] rounded-[1.45rem] p-4 shadow-[0_18px_30px_rgba(66,54,28,0.12)]`}
-                                style={{ colorScheme: 'light' }}
-                            >
-                                <button
-                                    onClick={() => handleDelete(note.id)}
-                                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-black/10"
-                                >
-                                    <X size={14} />
-                                </button>
+                                        <p className="pr-7 text-[0.92rem] leading-6 text-[color:var(--text-primary)]">
+                                            {note.content}
+                                        </p>
 
-                                <p className="script-font pr-7 text-[1.3rem] leading-7 text-stone-800">
-                                    {note.content}
-                                </p>
-
-                                <span className="absolute bottom-3 right-4 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-stone-500">
-                                    {new Date(note.created_at).toLocaleDateString()}
-                                </span>
-                            </motion.article>
-                        ))}
-                    </AnimatePresence>
-                </div>
-            )}
+                                        <div className="mt-3 flex items-center gap-2">
+                                            <div className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
+                                            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-tertiary)]">
+                                                {getRelativeTime(note.created_at)}
+                                            </span>
+                                        </div>
+                                    </motion.article>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+                )}
             </section>
             {addModal}
         </>

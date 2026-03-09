@@ -7,10 +7,11 @@ import {
     MessageCircle,
     MoonStar,
     NotebookTabs,
-    PanelsTopLeft,
     Sparkles,
     SunMedium,
+    PanelsTopLeft,
     X,
+    Heart,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { differenceInCalendarDays, differenceInDays, format } from 'date-fns';
@@ -35,68 +36,63 @@ interface LatestMessageData {
     created_at: string;
 }
 
+const InfoPill = ({
+    label,
+    value,
+    icon: Icon,
+    onClick,
+    accent,
+}: {
+    label: string;
+    value: string;
+    icon: React.ComponentType<{ size?: number }>;
+    onClick?: () => void;
+    accent?: string;
+}) => {
+    const Wrapper = onClick ? motion.button : motion.div;
+    return (
+        <Wrapper
+            whileTap={onClick ? { scale: 0.97 } : undefined}
+            onClick={onClick}
+            className={`flex min-w-[8.5rem] shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left backdrop-blur-md transition-colors dark:border-white/[0.06] dark:bg-white/[0.03] ${onClick ? 'cursor-pointer hover:bg-white/8 dark:hover:bg-white/[0.06]' : ''}`}
+        >
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${accent || 'bg-[color:var(--accent)]/15 text-[color:var(--accent)]'}`}>
+                <Icon size={16} />
+            </div>
+            <div className="min-w-0">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-tertiary)]">
+                    {label}
+                </p>
+                <p className="mt-0.5 truncate text-sm font-semibold text-[color:var(--text-primary)]">
+                    {value}
+                </p>
+            </div>
+        </Wrapper>
+    );
+};
+
 const QuickLink = ({
     title,
     icon: Icon,
     onClick,
+    gradient,
 }: {
     title: string;
     icon: React.ComponentType<{ size?: number }>;
     onClick: () => void;
+    gradient: string;
 }) => (
     <motion.button
-        whileTap={{ scale: 0.98 }}
+        whileTap={{ scale: 0.97 }}
         onClick={onClick}
-        className="w-full rounded-[1.45rem] border border-white/70 bg-white/72 px-4 py-3 text-left shadow-sm transition-colors hover:bg-white/88 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+        className="group flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-left backdrop-blur-md transition-all hover:bg-white/8 dark:border-white/[0.06] dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
     >
-        <div className="flex items-center justify-between gap-3">
-            <p className="section-label text-stone-600 dark:text-stone-300">{title}</p>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-stone-900 text-white dark:bg-white dark:text-stone-900">
-                <Icon size={16} />
-            </div>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg`}>
+            <Icon size={16} />
         </div>
+        <span className="text-sm font-semibold text-[color:var(--text-primary)]">{title}</span>
     </motion.button>
 );
-
-const SummaryCard = ({
-    kicker,
-    title,
-    body,
-    icon: Icon,
-    onClick,
-}: {
-    kicker: string;
-    title: string;
-    body: string;
-    icon: React.ComponentType<{ size?: number }>;
-    onClick?: () => void;
-}) => {
-    const content = (
-        <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-                <p className="section-label">{kicker}</p>
-                <p className="mt-2 text-lg font-semibold text-stone-900 dark:text-stone-100">{title}</p>
-                <p className="mt-1.5 text-sm leading-6 text-stone-500 dark:text-stone-400">{body}</p>
-            </div>
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(179,95,61,0.12)] text-[color:var(--accent)] dark:bg-[rgba(240,171,132,0.12)] dark:text-[color:var(--accent)]">
-                <Icon size={18} />
-            </div>
-        </div>
-    );
-
-    if (!onClick) {
-        return <div className="section-card rounded-[1.6rem] p-4">{content}</div>;
-    }
-
-    return (
-        <button
-            onClick={onClick}
-            className="section-card rounded-[1.6rem] p-4 text-left transition-transform hover:-translate-y-0.5"
-        >
-            {content}
-        </button>
-    );
-};
 
 export const Home: React.FC = () => {
     const { moods, user, logout, theme, toggleTheme } = useApp();
@@ -155,11 +151,11 @@ export const Home: React.FC = () => {
             sad: 'Abrazo',
         };
 
-        return todayMood ? moodMap[todayMood.mood] || 'Sin registro' : 'Sin registro';
+        return todayMood ? moodMap[todayMood.mood] || 'Sin registro' : 'Pendiente';
     }, [todayMood]);
 
     const formattedNextDate = useMemo(() => {
-        if (!nextDate.datetime) return 'Todavia no definieron una fecha.';
+        if (!nextDate.datetime) return 'Sin fecha definida';
 
         try {
             return format(new Date(nextDate.datetime), "EEEE d 'de' MMMM, HH:mm", { locale: es });
@@ -170,35 +166,29 @@ export const Home: React.FC = () => {
 
     const countdownCopy = useMemo(() => {
         if (!settings.countdown?.date) {
-            return {
-                title: 'Sin cuenta atras',
-                body: 'Guarda una fecha.',
-            };
+            return { title: 'Sin fecha', body: 'Guarda una.' };
         }
 
         const parsedDate = new Date(settings.countdown.date);
         if (Number.isNaN(parsedDate.getTime())) {
-            return {
-                title: 'Fecha invalida',
-                body: 'Ajusta la fecha.',
-            };
+            return { title: 'Invalida', body: 'Ajustala.' };
         }
 
         const days = differenceInCalendarDays(parsedDate, new Date());
         return {
             title: `${days >= 0 ? days : 0} dias`,
-            body: `${settings.countdown.title || 'Cuenta atras'} - ${format(parsedDate, "d 'de' MMM", { locale: es })}`,
+            body: settings.countdown.title || 'Cuenta atras',
         };
     }, [settings.countdown]);
 
     const messageCopy = latestMessage
         ? {
-            title: latestMessage.content,
-            body: format(new Date(latestMessage.created_at), "HH:mm 'de' EEEE", { locale: es }),
+            title: latestMessage.content.length > 30 ? latestMessage.content.slice(0, 30) + '…' : latestMessage.content,
+            body: format(new Date(latestMessage.created_at), "HH:mm", { locale: es }),
         }
         : {
-            title: 'Todavia no hay mensajes',
-            body: 'Escriban el primero.',
+            title: 'Sin mensajes',
+            body: '',
         };
 
     const handleCountdownEdit = () => {
@@ -257,95 +247,87 @@ export const Home: React.FC = () => {
 
     return (
         <div className="page-shell">
-            <section className="overflow-hidden rounded-[2.1rem] border border-[rgba(100,71,49,0.08)] bg-[linear-gradient(135deg,rgba(255,252,247,0.98)_0%,rgba(243,236,228,0.94)_45%,rgba(230,240,234,0.92)_100%)] p-5 shadow-[0_24px_54px_rgba(86,60,40,0.12)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(29,23,19,0.98)_0%,rgba(35,28,23,0.96)_52%,rgba(18,35,32,0.92)_100%)]">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                        <p className="page-kicker">Inicio privado</p>
-                        <h1 className="display-font mt-2 text-[3rem] leading-none text-stone-900 dark:text-stone-100">
-                            Su rincon
-                        </h1>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={toggleTheme}
-                            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/80 text-stone-700 shadow-sm transition-colors hover:text-[color:var(--accent)] dark:border-white/10 dark:bg-white/8 dark:text-stone-200"
-                            title={theme === 'dark' ? 'Cambiar a claro' : 'Cambiar a oscuro'}
-                        >
-                            {theme === 'dark' ? <SunMedium size={18} /> : <MoonStar size={18} />}
-                        </button>
-                        <button
-                            onClick={logout}
-                            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/80 text-stone-700 shadow-sm transition-colors hover:text-red-500 dark:border-white/10 dark:bg-white/8 dark:text-stone-200"
-                            title="Cerrar sesion"
-                        >
-                            <LogOut size={18} />
-                        </button>
-                    </div>
+            {/* ─── Compact Greeting ──────────────────────── */}
+            <section className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="page-kicker">Su rincon privado</p>
+                    <h1 className="display-font mt-1 text-[2.4rem] leading-none text-[color:var(--text-primary)]">
+                        Hola, <span className="gradient-text">{user?.email?.split('@')[0] || 'amor'}</span>
+                    </h1>
                 </div>
 
-                <div className="mt-6 grid grid-cols-[1.2fr_0.8fr] gap-3">
-                    <div className="rounded-[1.6rem] bg-white/78 p-4 shadow-sm dark:bg-white/6">
-                        <p className="section-label">Juntos</p>
-                        <p className="mt-3 text-3xl font-black text-stone-900 dark:text-stone-100">{relationshipDays}</p>
-                    </div>
-                    <div className="rounded-[1.6rem] bg-stone-900 p-4 text-white shadow-sm dark:bg-white dark:text-stone-900">
-                        <p className="section-label">Hoy</p>
-                        <p className="mt-3 text-xl font-semibold">{moodLabel}</p>
-                    </div>
-                </div>
-
-                <div className="mt-5 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                    <div className="shrink-0 rounded-full bg-stone-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white dark:bg-white dark:text-stone-900">
-                        {user?.email?.split('@')[0] || 'amor'}
-                    </div>
-                    <div className="shrink-0 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-600 dark:border-white/10 dark:bg-white/8 dark:text-stone-300">
-                        {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
-                    </div>
+                <div className="flex items-center gap-1.5">
+                    <button
+                        onClick={toggleTheme}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[color:var(--text-secondary)] backdrop-blur-md transition-colors hover:text-[color:var(--accent)] dark:border-white/[0.06] dark:bg-white/[0.03]"
+                        title={theme === 'dark' ? 'Cambiar a claro' : 'Cambiar a oscuro'}
+                    >
+                        {theme === 'dark' ? <SunMedium size={16} /> : <MoonStar size={16} />}
+                    </button>
+                    <button
+                        onClick={logout}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[color:var(--text-secondary)] backdrop-blur-md transition-colors hover:text-red-400 dark:border-white/[0.06] dark:bg-white/[0.03]"
+                        title="Cerrar sesion"
+                    >
+                        <LogOut size={16} />
+                    </button>
                 </div>
             </section>
 
+            {/* ─── Day counter + Date pill ──────────────── */}
+            <section className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-[color:var(--accent)] to-[#c44490] px-4 py-2 text-white shadow-lg">
+                    <Heart size={12} className="fill-current" />
+                    <span className="text-xs font-bold">{relationshipDays} dias juntos</span>
+                </div>
+                <div className="shrink-0 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-[color:var(--text-secondary)] backdrop-blur-md dark:border-white/[0.06]">
+                    {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
+                </div>
+            </section>
+
+            {/* ─── Notes (FIRST – always visible) ────────── */}
             <StickyNotes showPushNotification={true} title="Notas a mano" />
 
-            <section className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                <QuickLink title="Chat" icon={MessageCircle} onClick={() => navigate('/chat')} />
-                <QuickLink title="Recuerdos" icon={Sparkles} onClick={() => navigate('/memories')} />
-                <div className="col-span-2 md:col-span-1">
-                    <QuickLink title="Mas" icon={PanelsTopLeft} onClick={() => navigate('/more')} />
-                </div>
-            </section>
-
-            <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <SummaryCard
-                    kicker="Proxima cita"
-                    title={nextDate.title || 'Sin plan todavia'}
-                    body={nextDate.description ? `${formattedNextDate} - ${nextDate.description}` : formattedNextDate}
-                    icon={CalendarDays}
-                    onClick={handleNextDateEdit}
-                />
-                <SummaryCard
-                    kicker="Ultimo mensaje"
-                    title={messageCopy.title}
-                    body={messageCopy.body}
-                    icon={MessageCircle}
-                    onClick={() => navigate('/chat')}
-                />
-                <SummaryCard
-                    kicker="Check-in"
-                    title={todayMood ? 'Listo' : 'Pendiente'}
-                    body={todayMood ? 'Actualicenlo cuando quieran.' : 'Registren como estan hoy.'}
+            {/* ─── Info Strip (scrollable) ────────────────── */}
+            <section className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide chip-scroll">
+                <InfoPill
+                    label="Estado"
+                    value={moodLabel}
                     icon={HeartHandshake}
                     onClick={() => navigate('/daily')}
+                    accent="bg-amber-500/15 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400"
                 />
-                <SummaryCard
-                    kicker="Cuenta atras"
-                    title={countdownCopy.title}
-                    body={countdownCopy.body}
+                <InfoPill
+                    label="Cuenta atras"
+                    value={countdownCopy.title}
                     icon={NotebookTabs}
                     onClick={handleCountdownEdit}
+                    accent="bg-violet-500/15 text-violet-500 dark:bg-violet-500/10 dark:text-violet-400"
+                />
+                <InfoPill
+                    label="Proxima cita"
+                    value={nextDate.title || 'Sin plan'}
+                    icon={CalendarDays}
+                    onClick={handleNextDateEdit}
+                    accent="bg-sky-500/15 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400"
+                />
+                <InfoPill
+                    label="Ultimo mensaje"
+                    value={messageCopy.title}
+                    icon={MessageCircle}
+                    onClick={() => navigate('/chat')}
+                    accent="bg-rose-500/15 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400"
                 />
             </section>
 
+            {/* ─── Quick Links ─────────────────────────────── */}
+            <section className="flex gap-2.5">
+                <QuickLink title="Chat" icon={MessageCircle} onClick={() => navigate('/chat')} gradient="from-rose-500 to-pink-600" />
+                <QuickLink title="Recuerdos" icon={Sparkles} onClick={() => navigate('/memories')} gradient="from-violet-500 to-indigo-600" />
+                <QuickLink title="Mas" icon={PanelsTopLeft} onClick={() => navigate('/more')} gradient="from-amber-500 to-orange-600" />
+            </section>
+
+            {/* ─── Countdown Modal ──────────────────────── */}
             <AnimatePresence>
                 {showCountdownModal && (
                     <motion.div
@@ -364,13 +346,13 @@ export const Home: React.FC = () => {
                             <div className="mb-5 flex items-start justify-between gap-3">
                                 <div>
                                     <p className="section-label">Cuenta atras</p>
-                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                                         Guardar fecha
                                     </h3>
                                 </div>
                                 <button
                                     onClick={() => setShowCountdownModal(false)}
-                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                    className="rounded-full p-2 text-[color:var(--text-tertiary)] transition-colors hover:bg-white/10 hover:text-[color:var(--text-primary)]"
                                 >
                                     <X size={18} />
                                 </button>
@@ -416,6 +398,7 @@ export const Home: React.FC = () => {
                 )}
             </AnimatePresence>
 
+            {/* ─── Next Date Modal ──────────────────────── */}
             <AnimatePresence>
                 {showNextDateModal && (
                     <motion.div
@@ -434,13 +417,13 @@ export const Home: React.FC = () => {
                             <div className="mb-5 flex items-start justify-between gap-3">
                                 <div>
                                     <p className="section-label">Proxima cita</p>
-                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                                    <h3 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                                         Ajustar plan
                                     </h3>
                                 </div>
                                 <button
                                     onClick={() => setShowNextDateModal(false)}
-                                    className="rounded-full p-2 text-stone-400 transition-colors hover:bg-black/5 hover:text-stone-700 dark:hover:bg-white/5 dark:hover:text-stone-200"
+                                    className="rounded-full p-2 text-[color:var(--text-tertiary)] transition-colors hover:bg-white/10 hover:text-[color:var(--text-primary)]"
                                 >
                                     <X size={18} />
                                 </button>

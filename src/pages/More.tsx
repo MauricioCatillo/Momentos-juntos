@@ -25,20 +25,20 @@ const MoreCard = ({
     <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative overflow-hidden rounded-[1.7rem] bg-gradient-to-br ${gradient} p-5 text-left text-white shadow-[0_20px_42px_rgba(84,48,61,0.16)]`}
+        className={`relative overflow-hidden rounded-[1.7rem] bg-gradient-to-br ${gradient} p-5 text-left text-white shadow-[0_20px_42px_rgba(0,0,0,0.2)]`}
     >
-        <div className="absolute right-[-1.2rem] top-[-1.2rem] h-24 w-24 rounded-full bg-white/15 blur-2xl" />
+        <div className="absolute right-[-1.2rem] top-[-1.2rem] h-24 w-24 rounded-full bg-white/10 blur-2xl" />
         <div className="relative z-10">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/75">Acceso</p>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/70">Acceso</p>
                     <h2 className="mt-3 text-2xl font-semibold">{title}</h2>
                 </div>
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
                     <Icon size={20} />
                 </div>
             </div>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/70">{helper}</p>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/65">{helper}</p>
         </div>
     </motion.button>
 );
@@ -155,29 +155,29 @@ export const More: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <p className="section-label">Resumen rapido</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             Menos ruido, mas orden
                         </h2>
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-200">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/12 text-sky-400 dark:bg-sky-500/10">
                         <MessageSquareText size={20} />
                     </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-3">
-                    <div className="rounded-[1.35rem] border border-white/70 bg-white/65 p-4 text-center shadow-sm dark:border-white/10 dark:bg-white/5">
+                    <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]">
                         <p className="section-label">Check-in</p>
-                        <p className="mt-3 text-sm font-semibold text-stone-900 dark:text-stone-100">
+                        <p className="mt-3 text-sm font-semibold text-[color:var(--text-primary)]">
                             {todayMood ? 'Listo' : 'Pendiente'}
                         </p>
                     </div>
-                    <div className="rounded-[1.35rem] border border-white/70 bg-white/65 p-4 text-center shadow-sm dark:border-white/10 dark:bg-white/5">
+                    <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]">
                         <p className="section-label">Planes</p>
-                        <p className="mt-3 text-2xl font-black text-stone-900 dark:text-stone-100">{pendingPlans}</p>
+                        <p className="mt-3 text-2xl font-black text-[color:var(--text-primary)]">{pendingPlans}</p>
                     </div>
-                    <div className="rounded-[1.35rem] border border-white/70 bg-white/65 p-4 text-center shadow-sm dark:border-white/10 dark:bg-white/5">
+                    <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]">
                         <p className="section-label">Cupones</p>
-                        <p className="mt-3 text-2xl font-black text-stone-900 dark:text-stone-100">{activeCoupons}</p>
+                        <p className="mt-3 text-2xl font-black text-[color:var(--text-primary)]">{activeCoupons}</p>
                     </div>
                 </div>
             </section>
@@ -186,11 +186,11 @@ export const More: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <p className="section-label">Notificaciones</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             {notificationUi.title}
                         </h2>
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-200">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400 dark:bg-amber-500/10">
                         <NotificationIcon size={20} />
                     </div>
                 </div>
@@ -209,14 +209,14 @@ export const More: React.FC = () => {
                 <MoreCard
                     title="Check-in diario"
                     helper={todayMood ? 'Ya se registro hoy' : 'Falta registrar hoy'}
-                    gradient="from-sky-500 to-cyan-500"
+                    gradient="from-sky-500 to-cyan-600"
                     icon={CalendarCheck2}
                     onClick={() => navigate('/daily')}
                 />
                 <MoreCard
                     title="Planes y cupones"
                     helper={`${pendingPlans} planes pendientes y ${activeCoupons} cupones activos`}
-                    gradient="from-violet-500 to-indigo-500"
+                    gradient="from-violet-500 to-indigo-600"
                     icon={ListTodo}
                     onClick={() => navigate('/wishlist')}
                 />
@@ -226,11 +226,11 @@ export const More: React.FC = () => {
                 <div className="mb-5 flex items-start justify-between gap-3">
                     <div>
                         <p className="section-label">Notas</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-stone-900 dark:text-stone-100">
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             Pendientes compartidos
                         </h2>
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-500 dark:bg-rose-500/15 dark:text-rose-200">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/12 text-rose-400 dark:bg-rose-500/10">
                         <StickyNote size={20} />
                     </div>
                 </div>
