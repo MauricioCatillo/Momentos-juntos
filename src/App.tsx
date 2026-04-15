@@ -1,8 +1,7 @@
 import React, { Suspense, useEffect, useRef } from 'react';
-import OneSignal from 'react-onesignal';
 import { Toaster } from 'sonner';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import { Layout } from './components/Layout';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { supabase } from './supabaseClient';
@@ -28,11 +27,12 @@ const LoadingSpinner = () => (
   </div>
 );
 
-function App() {
+const NotificationBootstrap = () => {
+    const { user } = useApp();
     const oneSignalInitialized = useRef(false);
 
     useEffect(() => {
-        if (isPreviewModeEnabled()) {
+        if (isPreviewModeEnabled() || !user) {
             return;
         }
 
@@ -47,72 +47,96 @@ function App() {
             return;
         }
 
+        let cancelled = false;
+        let onesignal: typeof import('react-onesignal').default | null = null;
         let foregroundListener: ((event: { notification: { display: () => void } }) => void) | null = null;
         let subscriptionListener: ((event: { current: { id?: string | null } }) => void) | null = null;
+        let idleCallbackId: number | null = null;
+        let timeoutId: ReturnType<typeof window.setTimeout> | null = null;
 
-    const runOneSignal = async () => {
-      if (oneSignalInitialized.current) return;
-
-      try {
-        oneSignalInitialized.current = true;
-
-        await OneSignal.init({
-          appId: "4eba265f-72e0-414a-a9b4-7bffdd1e56d7",
-          allowLocalhostAsSecureOrigin: true,
-          serviceWorkerPath: "/OneSignalSDKWorker.js",
-          serviceWorkerParam: { scope: '/' },
-        });
-
-        // Ensure notifications display even when app is in foreground
-        foregroundListener = (event) => {
-          event.notification.display();
-        };
-        OneSignal.Notifications.addEventListener('foregroundWillDisplay', foregroundListener);
-
-        // function to save player id
         const savePlayerId = async (id: string | undefined | null) => {
-          if (!id) return;
+            if (!id) return;
 
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
             await supabase.from('player_ids').upsert({
-              user_id: user.id,
-              player_id: id,
-              updated_at: new Date().toISOString()
+                user_id: user.id,
+                player_id: id,
+                updated_at: new Date().toISOString(),
             }, { onConflict: 'user_id' });
-          }
         };
 
-        // Save Player ID to Supabase for targeted notifications
-        // Check if we already have an ID
-        await savePlayerId(OneSignal.User.PushSubscription.id);
+        const runOneSignal = async () => {
+            if (oneSignalInitialized.current || cancelled) return;
 
-        // Listen for future changes (e.g. after permission granted)
-        subscriptionListener = (event) => {
-          savePlayerId(event.current.id);
+            try {
+                const { default: OneSignal } = await import('react-onesignal');
+                if (cancelled || oneSignalInitialized.current) return;
+
+                onesignal = OneSignal;
+                oneSignalInitialized.current = true;
+
+                await OneSignal.init({
+                    appId: '4eba265f-72e0-414a-a9b4-7bffdd1e56d7',
+                    allowLocalhostAsSecureOrigin: true,
+                    serviceWorkerPath: '/OneSignalSDKWorker.js',
+                    serviceWorkerParam: { scope: '/' },
+                });
+
+                foregroundListener = (event) => {
+                    event.notification.display();
+                };
+                OneSignal.Notifications.addEventListener('foregroundWillDisplay', foregroundListener);
+
+                await savePlayerId(OneSignal.User.PushSubscription.id);
+
+                subscriptionListener = (event) => {
+                    void savePlayerId(event.current.id);
+                };
+                OneSignal.User.PushSubscription.addEventListener('change', subscriptionListener);
+            } catch (error) {
+                oneSignalInitialized.current = false;
+                console.error('OneSignal init error:', error);
+            }
         };
-        OneSignal.User.PushSubscription.addEventListener("change", subscriptionListener);
 
-      } catch (error) {
-        oneSignalInitialized.current = false;
-        console.error("OneSignal init error:", error);
-      }
-    };
+        if ('requestIdleCallback' in window) {
+            idleCallbackId = window.requestIdleCallback(() => {
+                void runOneSignal();
+            }, { timeout: 2000 });
+        } else {
+            timeoutId = window.setTimeout(() => {
+                void runOneSignal();
+            }, 1200);
+        }
 
-    runOneSignal();
+        return () => {
+            cancelled = true;
 
-    return () => {
-      if (foregroundListener) {
-        OneSignal.Notifications.removeEventListener?.('foregroundWillDisplay', foregroundListener);
-      }
-      if (subscriptionListener) {
-        OneSignal.User.PushSubscription.removeEventListener?.('change', subscriptionListener);
-      }
-    };
-  }, []);
+            if (idleCallbackId !== null && 'cancelIdleCallback' in window) {
+                window.cancelIdleCallback(idleCallbackId);
+            }
+
+            if (timeoutId !== null) {
+                window.clearTimeout(timeoutId);
+            }
+
+            if (foregroundListener) {
+                onesignal?.Notifications.removeEventListener?.('foregroundWillDisplay', foregroundListener);
+            }
+
+            if (subscriptionListener) {
+                onesignal?.User.PushSubscription.removeEventListener?.('change', subscriptionListener);
+            }
+        };
+    }, [user]);
+
+    return null;
+};
+
+function App() {
 
   return (
     <AppProvider>
+      <NotificationBootstrap />
       <Toaster position="top-center" richColors />
       <BrowserRouter>
         <RouteErrorBoundary>

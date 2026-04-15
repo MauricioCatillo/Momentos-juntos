@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,8 +14,11 @@ export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { login, signup } = useApp();
+    const { login, signup, user, loading: authLoading } = useApp();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const redirectTo = location.state?.from?.pathname || '/';
 
     useEffect(() => {
         const savedEmail = window.localStorage.getItem(SAVED_EMAIL_KEY);
@@ -23,6 +26,12 @@ export const Login: React.FC = () => {
             setEmail(savedEmail);
         }
     }, []);
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            navigate(redirectTo, { replace: true });
+        }
+    }, [authLoading, navigate, redirectTo, user]);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -35,7 +44,7 @@ export const Login: React.FC = () => {
             if (isLogin) {
                 await login(normalizedEmail, password);
                 window.localStorage.setItem(SAVED_EMAIL_KEY, normalizedEmail);
-                navigate('/');
+                navigate(redirectTo, { replace: true });
                 return;
             }
 

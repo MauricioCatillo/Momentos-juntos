@@ -89,16 +89,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setState((prev) => ({ ...prev, session, user: session?.user ?? null, loading: false }));
-        });
+        void supabase.auth.getSession()
+            .then(({ data: { session } }) => {
+                setState((prev) => ({ ...prev, session, user: session?.user ?? null, loading: false }));
+            })
+            .catch((error) => {
+                console.error('Error restoring session:', error);
+                setState((prev) => ({ ...prev, loading: false }));
+            });
 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setState((prev) => {
-                if (prev.session?.access_token === session?.access_token) return prev;
-                return { ...prev, session, user: session?.user ?? null };
+                if (prev.session?.access_token === session?.access_token && prev.user?.id === session?.user?.id && !prev.loading) {
+                    return prev;
+                }
+
+                return { ...prev, session, user: session?.user ?? null, loading: false };
             });
         });
 
@@ -169,7 +177,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [previewMode, state.user]);
 
     const login = async (email: string, password: string) => {
-        await signInWithEmail(email, password);
+        const { session, user } = await signInWithEmail(email, password);
+
+        setState((prev) => ({
+            ...prev,
+            session: session ?? prev.session,
+            user: user ?? session?.user ?? prev.user,
+            loading: false,
+        }));
     };
 
     const signup = async (email: string, password: string) => {
