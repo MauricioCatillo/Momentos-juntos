@@ -47,7 +47,7 @@ const StatusCard = ({
 }: {
     label: string;
     value: string;
-    caption: string;
+    caption?: string;
     icon: React.ComponentType<{ size?: number }>;
     accent: string;
     onClick: () => void;
@@ -63,7 +63,7 @@ const StatusCard = ({
                     {label}
                 </p>
                 <p className="mt-3 text-lg font-semibold text-[color:var(--text-primary)]">{value}</p>
-                <p className="mt-1 text-sm leading-5 text-[color:var(--text-secondary)]">{caption}</p>
+                {caption && <p className="mt-1 text-sm leading-5 text-[color:var(--text-secondary)]">{caption}</p>}
             </div>
             <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${accent}`}>
                 <Icon size={18} />
@@ -74,13 +74,11 @@ const StatusCard = ({
 
 const ShortcutTile = ({
     title,
-    helper,
     icon: Icon,
     gradient,
     onClick,
 }: {
     title: string;
-    helper: string;
     icon: React.ComponentType<{ size?: number }>;
     gradient: string;
     onClick: () => void;
@@ -103,8 +101,7 @@ const ShortcutTile = ({
                 </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-                <p className="text-sm leading-5 text-white/78">{helper}</p>
+            <div className="flex items-center justify-end">
                 <ChevronRight size={18} className="shrink-0 text-white/86" />
             </div>
         </div>
@@ -310,10 +307,6 @@ export const Home: React.FC = () => {
                     </div>
                 </div>
 
-                <p className="mt-4 max-w-[17rem] text-sm leading-6 text-white/76">
-                    Las notas, el chat y sus recuerdos quedan a un toque para que lo que mas usan siempre este primero.
-                </p>
-
                 <div className="mt-5 flex flex-wrap gap-2">
                     <div className="hero-chip text-sm font-medium text-white/84">
                         {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
@@ -342,7 +335,6 @@ export const Home: React.FC = () => {
             <StickyNotes
                 showPushNotification={true}
                 title="Notas entre ustedes"
-                subtitle="Como es lo que mas usan, ahora queda arriba y con acceso directo desde inicio."
                 variant="spotlight"
             />
 
@@ -350,7 +342,6 @@ export const Home: React.FC = () => {
                 <StatusCard
                     label="Cuenta atras"
                     value={countdownCopy.title}
-                    caption={countdownCopy.body}
                     icon={NotebookTabs}
                     accent="bg-white/70 text-[color:var(--accent)] dark:bg-white/10 dark:text-[color:var(--accent-strong)]"
                     onClick={handleCountdownEdit}
@@ -366,7 +357,7 @@ export const Home: React.FC = () => {
                 <StatusCard
                     label="Ultimo mensaje"
                     value={messageCopy.title}
-                    caption={messageCopy.body || 'Sin movimiento reciente'}
+                    caption={messageCopy.body}
                     icon={MessageCircle}
                     accent="bg-sky-500/14 text-sky-500 dark:bg-sky-500/10 dark:text-sky-300"
                     onClick={() => navigate('/chat')}
@@ -376,28 +367,24 @@ export const Home: React.FC = () => {
             <section className="grid grid-cols-2 gap-3">
                 <ShortcutTile
                     title="Chat"
-                    helper="Abrir conversacion y responder rapido."
                     icon={MessageCircle}
                     gradient="from-[#3b2024] via-[#934855] to-[#d97e72]"
                     onClick={() => navigate('/chat')}
                 />
                 <ShortcutTile
                     title="Check-in"
-                    helper="Registrar como estuvo el dia."
                     icon={HeartHandshake}
                     gradient="from-[#27443d] via-[#52786c] to-[#89b19b]"
                     onClick={() => navigate('/daily')}
                 />
                 <ShortcutTile
                     title="Recuerdos"
-                    helper="Entrar a fotos, historia y galeria."
                     icon={Sparkles}
                     gradient="from-[#4b3144] via-[#76516d] to-[#b48ba2]"
                     onClick={() => navigate('/memories')}
                 />
                 <ShortcutTile
                     title="Mas"
-                    helper="Herramientas, notas y pendientes."
                     icon={PanelsTopLeft}
                     gradient="from-[#6b4428] via-[#b47143] to-[#d8a173]"
                     onClick={() => navigate('/more')}

@@ -99,7 +99,6 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         setSelectedColor(COLOR_OPTIONS[0].value);
     };
 
-    const latestNote = notes[0];
     const isSpotlight = variant === 'spotlight';
 
     useEffect(() => {
@@ -294,7 +293,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                             {title}
                         </h2>
                         {subtitle && (
-                            <p className="mt-3 max-w-[18rem] text-sm leading-6 text-[color:var(--text-secondary)]">
+                            <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
                                 {subtitle}
                             </p>
                         )}
@@ -317,36 +316,10 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                     </div>
                 </div>
 
-                {isSpotlight && (
-                    <div className="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                        <div className="rounded-[1.45rem] border border-white/10 bg-white/55 px-4 py-4 shadow-sm backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.05]">
-                            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-tertiary)]">
-                                Acceso rapido
-                            </p>
-                            <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
-                                Deja un mensaje, un pendiente o algo bonito sin salir de inicio.
-                            </p>
-                            {latestNote && (
-                                <p className="mt-3 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--accent)]">
-                                    Ultima nota {getRelativeTime(latestNote.created_at)}
-                                </p>
-                            )}
-                        </div>
-
-                        <button
-                            onClick={() => setIsAdding(true)}
-                            className="primary-button inline-flex w-full items-center justify-center gap-2 px-5 sm:w-auto"
-                        >
-                            <StickyNote size={16} />
-                            Escribir nota
-                        </button>
-                    </div>
-                )}
-
                 {notes.length === 0 ? (
                     <EmptyState
                         title="Sin notas"
-                        description={isSpotlight ? 'Empieza una conversacion desde aqui.' : 'Agrega una.'}
+                        description=""
                         icon={<StickyNote size={24} className="text-[color:var(--accent)]" />}
                         className="border border-dashed border-white/10 dark:border-white/[0.06]"
                     />
