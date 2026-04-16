@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, BellRing, CalendarCheck2, ListTodo, MessageSquareText, StickyNote } from 'lucide-react';
+import { Bell, BellRing, CalendarCheck2, ListTodo, MessageSquareText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { StickyNotes } from '../components/StickyNotes';
@@ -230,21 +230,11 @@ export const More: React.FC = () => {
                 />
             </section>
 
-            <section className="section-card rounded-[1.9rem] p-5">
-                <div className="mb-5 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                        <p className="section-label">Notas</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
-                            Pendientes compartidos
-                        </h2>
-                    </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/12 text-rose-400 dark:bg-rose-500/10">
-                        <StickyNote size={20} />
-                    </div>
-                </div>
-
-                <StickyNotes showPushNotification={true} title="Notas compartidas" />
-            </section>
+            <StickyNotes
+                showPushNotification={true}
+                title="Pendientes compartidos"
+                subtitle="Si quieren dejarse recordatorios o mensajes rapidos, este sigue siendo su segundo acceso mas directo."
+            />
         </div>
     );
 };

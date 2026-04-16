@@ -311,7 +311,7 @@ export const Home: React.FC = () => {
                 </div>
 
                 <p className="mt-4 max-w-[17rem] text-sm leading-6 text-white/76">
-                    Revisa lo importante de hoy, salta al chat y mantengan su espacio compartido siempre a mano.
+                    Las notas, el chat y sus recuerdos quedan a un toque para que lo que mas usan siempre este primero.
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -338,6 +338,13 @@ export const Home: React.FC = () => {
                     </div>
                 </div>
             </motion.section>
+
+            <StickyNotes
+                showPushNotification={true}
+                title="Notas entre ustedes"
+                subtitle="Como es lo que mas usan, ahora queda arriba y con acceso directo desde inicio."
+                variant="spotlight"
+            />
 
             <section className="grid grid-cols-1 gap-3">
                 <StatusCard
@@ -396,8 +403,6 @@ export const Home: React.FC = () => {
                     onClick={() => navigate('/more')}
                 />
             </section>
-
-            <StickyNotes showPushNotification={true} title="Notas a mano" />
 
             <AnimatePresence>
                 {showCountdownModal && (
