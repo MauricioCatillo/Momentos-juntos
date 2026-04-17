@@ -56,16 +56,12 @@ function getRelativeTime(dateStr: string): string {
 
 interface StickyNotesProps {
     title?: string;
-    subtitle?: string;
     showPushNotification?: boolean;
-    variant?: 'default' | 'spotlight';
 }
 
 export const StickyNotes: React.FC<StickyNotesProps> = ({
     title = 'Tablon de notas',
-    subtitle,
     showPushNotification = false,
-    variant = 'default',
 }) => {
     const { user } = useApp();
     const previewMode = isPreviewModeEnabled();
@@ -98,9 +94,6 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
         setNewNote('');
         setSelectedColor(COLOR_OPTIONS[0].value);
     };
-
-    const latestNote = notes[0];
-    const isSpotlight = variant === 'spotlight';
 
     useEffect(() => {
         const loadNotes = async () => {
@@ -281,77 +274,33 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
 
     return (
         <>
-            <section
-                className={`section-card overflow-hidden rounded-[1.95rem] p-5 ${isSpotlight
-                    ? 'border-[color:var(--border-strong)] bg-[linear-gradient(165deg,rgba(255,251,247,0.94)_0%,rgba(252,238,244,0.9)_100%)] shadow-[0_26px_56px_rgba(96,48,54,0.14)] dark:bg-[linear-gradient(165deg,rgba(34,25,24,0.96)_0%,rgba(48,31,39,0.92)_100%)]'
-                    : ''
-                    }`}
-            >
+            <section className="section-card rounded-[1.95rem] p-5">
                 <div className="mb-5 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div>
                         <p className="section-label">Notas</p>
-                        <h2 className={`display-font mt-2 max-w-[14rem] leading-[0.95] text-[color:var(--text-primary)] sm:max-w-none ${isSpotlight ? 'text-[2.15rem] sm:text-[2.4rem]' : 'text-[1.72rem] sm:text-[2rem]'}`}>
+                        <h2 className="display-font mt-2 max-w-[12rem] text-[1.72rem] leading-[0.95] text-[color:var(--text-primary)] sm:max-w-none sm:text-[2rem]">
                             {title}
                         </h2>
-                        {subtitle && (
-                            <p className="mt-3 max-w-[18rem] text-sm leading-6 text-[color:var(--text-secondary)]">
-                                {subtitle}
-                            </p>
-                        )}
                     </div>
 
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                        {notes.length > 0 && (
-                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/45 px-3 py-2 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-secondary)] shadow-sm backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.05]">
-                                <span>{notes.length}</span>
-                                <span>{notes.length === 1 ? 'nota' : 'notas'}</span>
-                            </div>
-                        )}
-                        <motion.button
-                            whileTap={{ scale: 0.92 }}
-                            onClick={() => setIsAdding(true)}
-                            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[color:var(--accent)] to-[#c44490] text-white shadow-lg glow-accent"
-                        >
-                            <Plus size={18} />
-                        </motion.button>
-                    </div>
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => setIsAdding(true)}
+                        className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[color:var(--accent)] to-[#c44490] text-white shadow-lg glow-accent"
+                    >
+                        <Plus size={18} />
+                    </motion.button>
                 </div>
-
-                {isSpotlight && (
-                    <div className="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                        <div className="rounded-[1.45rem] border border-white/10 bg-white/55 px-4 py-4 shadow-sm backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.05]">
-                            <p className="text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-tertiary)]">
-                                Acceso rapido
-                            </p>
-                            <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
-                                Deja un mensaje, un pendiente o algo bonito sin salir de inicio.
-                            </p>
-                            {latestNote && (
-                                <p className="mt-3 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--accent)]">
-                                    Ultima nota {getRelativeTime(latestNote.created_at)}
-                                </p>
-                            )}
-                        </div>
-
-                        <button
-                            onClick={() => setIsAdding(true)}
-                            className="primary-button inline-flex w-full items-center justify-center gap-2 px-5 sm:w-auto"
-                        >
-                            <StickyNote size={16} />
-                            Escribir nota
-                        </button>
-                    </div>
-                )}
 
                 {notes.length === 0 ? (
                     <EmptyState
                         title="Sin notas"
-                        description={isSpotlight ? 'Empieza una conversacion desde aqui.' : 'Agrega una.'}
+                        description="Agrega una."
                         icon={<StickyNote size={24} className="text-[color:var(--accent)]" />}
                         className="border border-dashed border-white/10 dark:border-white/[0.06]"
                     />
                 ) : (
-                    <div className={`grid grid-cols-1 gap-3 ${isSpotlight ? '' : 'sm:grid-cols-2'}`}>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <AnimatePresence>
                             {notes.map((note, index) => {
                                 const accent = getAccentForColor(note.color);
@@ -363,7 +312,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         transition={{ delay: index * 0.04 }}
-                                        className={`group relative overflow-hidden rounded-2xl border border-white/10 ${accent.bg} border-l-[3px] ${accent.border} backdrop-blur-sm dark:border-white/[0.06] ${isSpotlight ? 'min-h-[8.5rem] p-[1.125rem]' : 'min-h-[7rem] p-4'}`}
+                                        className={`group relative min-h-[7rem] overflow-hidden rounded-2xl border border-white/10 ${accent.bg} border-l-[3px] ${accent.border} p-4 backdrop-blur-sm dark:border-white/[0.06]`}
                                     >
                                         <button
                                             onClick={() => handleDelete(note.id)}
@@ -372,7 +321,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                             <Trash2 size={13} />
                                         </button>
 
-                                        <p className={`pr-7 text-[color:var(--text-primary)] ${isSpotlight ? 'text-[1rem] leading-7' : 'text-[0.92rem] leading-6'}`}>
+                                        <p className="pr-7 text-[0.92rem] leading-6 text-[color:var(--text-primary)]">
                                             {note.content}
                                         </p>
 
