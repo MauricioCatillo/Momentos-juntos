@@ -11,11 +11,13 @@ import { isPreviewModeEnabled } from '../lib/previewMode';
 
 const UtilityCard = ({
     title,
+    helper,
     gradient,
     icon: Icon,
     onClick,
 }: {
     title: string;
+    helper: string;
     gradient: string;
     icon: React.ComponentType<{ size?: number }>;
     onClick: () => void;
@@ -37,6 +39,7 @@ const UtilityCard = ({
                     <Icon size={20} />
                 </div>
             </div>
+            <p className="mt-4 text-sm leading-6 text-white/78">{helper}</p>
         </div>
     </motion.button>
 );
@@ -147,6 +150,7 @@ export const More: React.FC = () => {
             <PageHeader
                 kicker="Mas"
                 title="Herramientas utiles"
+                subtitle="Todo lo operativo, claro y rapido desde el celular."
             />
 
             <section className="hero-panel">
@@ -162,6 +166,10 @@ export const More: React.FC = () => {
                         Resumen
                     </div>
                 </div>
+
+                <p className="mt-4 max-w-[16rem] text-sm leading-6 text-white/78">
+                    Desde aqui puedes revisar pendientes, permisos y accesos utiles sin perder tiempo.
+                </p>
 
                 <div className="mt-5 metric-strip">
                     <div className="metric-card">
@@ -186,6 +194,9 @@ export const More: React.FC = () => {
                         <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             {notificationUi.title}
                         </h2>
+                        <p className="mt-3 text-sm leading-6 text-[color:var(--text-secondary)]">
+                            {notificationUi.description}
+                        </p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400 dark:bg-amber-500/10">
                         <NotificationIcon size={20} />
@@ -205,12 +216,14 @@ export const More: React.FC = () => {
             <section className="grid gap-3">
                 <UtilityCard
                     title="Check-in diario"
+                    helper={todayMood ? 'Ya se registro hoy.' : 'Todavia falta registrar el estado de hoy.'}
                     gradient="from-[#254940] via-[#477366] to-[#82ad97]"
                     icon={CalendarCheck2}
                     onClick={() => navigate('/daily')}
                 />
                 <UtilityCard
                     title="Planes y cupones"
+                    helper={`${pendingPlans} planes pendientes y ${activeCoupons} cupones activos ahora mismo.`}
                     gradient="from-[#5b3651] via-[#8a5573] to-[#c693ab]"
                     icon={ListTodo}
                     onClick={() => navigate('/wishlist')}
@@ -220,6 +233,7 @@ export const More: React.FC = () => {
             <StickyNotes
                 showPushNotification={true}
                 title="Pendientes compartidos"
+                subtitle="Si quieren dejarse recordatorios o mensajes rapidos, este sigue siendo su segundo acceso mas directo."
             />
         </div>
     );
