@@ -71,13 +71,7 @@ export const Daily: React.FC = () => {
         void addMood(moodId, moodNote);
 
         const moodLabel = MOODS.find((mood) => mood.id === moodId)?.label;
-        setFeedback(
-            moodId === 'happy' || moodId === 'excited'
-                ? `Que bonito saber que hoy estas ${moodLabel?.toLowerCase()}.`
-                : moodId === 'neutral'
-                    ? 'Los dias tranquilos tambien cuentan.'
-                    : 'Recibido. Hoy toca mas cuidado y compania.'
-        );
+        setFeedback(`Guardado: ${moodLabel?.toLowerCase() ?? 'estado'}`);
 
         setTimeout(() => setFeedback(''), 3000);
     };
@@ -95,14 +89,13 @@ export const Daily: React.FC = () => {
 
     return (
         <div className="page-shell">
-            <PageHeader kicker="Diario" title="Conexion diaria" />
+            <PageHeader title="Diario" />
 
             <section className="section-card rounded-[1.95rem] p-5">
                 <div className="mb-5 flex items-start justify-between gap-3">
                     <div>
-                        <p className="section-label">Mood del dia</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
-                            Como te sientes hoy
+                        <h2 className="display-font text-[2rem] leading-none text-[color:var(--text-primary)]">
+                            Estado
                         </h2>
                     </div>
 
@@ -151,8 +144,7 @@ export const Daily: React.FC = () => {
             <section className="section-card rounded-[1.95rem] p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
-                        <p className="section-label">Nota</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
+                        <h2 className="display-font text-[2rem] leading-none text-[color:var(--text-primary)]">
                             Nota
                         </h2>
                     </div>
@@ -168,7 +160,7 @@ export const Daily: React.FC = () => {
                 <textarea
                     value={moodNote}
                     onChange={(event) => setMoodNoteDraft(event.target.value)}
-                    placeholder="Escribe como te fue, que te gusto o si necesitas algo del otro."
+                    placeholder="Escribe una nota"
                     className="textarea-shell min-h-[8rem]"
                     rows={4}
                     maxLength={220}
@@ -184,9 +176,8 @@ export const Daily: React.FC = () => {
 
             {moods.length > 0 && (
                 <section className="section-card rounded-[1.95rem] p-5">
-                    <p className="section-label">Ultimos dias</p>
-                    <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
-                        Historial rapido
+                    <h2 className="display-font text-[2rem] leading-none text-[color:var(--text-primary)]">
+                        Historial
                     </h2>
 
                     <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">

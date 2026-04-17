@@ -11,13 +11,11 @@ import { isPreviewModeEnabled } from '../lib/previewMode';
 
 const MoreCard = ({
     title,
-    helper,
     gradient,
     icon: Icon,
     onClick,
 }: {
     title: string;
-    helper: string;
     gradient: string;
     icon: React.ComponentType<{ size?: number }>;
     onClick: () => void;
@@ -31,14 +29,12 @@ const MoreCard = ({
         <div className="relative z-10">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/70">Acceso</p>
-                    <h2 className="mt-3 text-2xl font-semibold">{title}</h2>
+                    <h2 className="text-2xl font-semibold">{title}</h2>
                 </div>
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
                     <Icon size={20} />
                 </div>
             </div>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/65">{helper}</p>
         </div>
     </motion.button>
 );
@@ -147,16 +143,14 @@ export const More: React.FC = () => {
     return (
         <div className="page-shell">
             <PageHeader
-                kicker="Mas"
-                title="Herramientas utiles"
+                title="Mas"
             />
 
             <section className="section-card rounded-[1.9rem] p-5">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <p className="section-label">Resumen rapido</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
-                            Menos ruido, mas orden
+                        <h2 className="display-font text-[2rem] leading-none text-[color:var(--text-primary)]">
+                            Resumen
                         </h2>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/12 text-sky-400 dark:bg-sky-500/10">
@@ -208,35 +202,19 @@ export const More: React.FC = () => {
             <section className="grid gap-3">
                 <MoreCard
                     title="Check-in diario"
-                    helper={todayMood ? 'Ya se registro hoy' : 'Falta registrar hoy'}
                     gradient="from-sky-500 to-cyan-600"
                     icon={CalendarCheck2}
                     onClick={() => navigate('/daily')}
                 />
                 <MoreCard
                     title="Planes y cupones"
-                    helper={`${pendingPlans} planes pendientes y ${activeCoupons} cupones activos`}
                     gradient="from-violet-500 to-indigo-600"
                     icon={ListTodo}
                     onClick={() => navigate('/wishlist')}
                 />
             </section>
 
-            <section className="section-card rounded-[1.9rem] p-5">
-                <div className="mb-5 flex items-start justify-between gap-3">
-                    <div>
-                        <p className="section-label">Notas</p>
-                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
-                            Pendientes compartidos
-                        </h2>
-                    </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/12 text-rose-400 dark:bg-rose-500/10">
-                        <StickyNote size={20} />
-                    </div>
-                </div>
-
-                <StickyNotes showPushNotification={true} title="Notas compartidas" />
-            </section>
+            <StickyNotes showPushNotification={true} title="Notas" />
         </div>
     );
 };

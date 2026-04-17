@@ -8,6 +8,7 @@ import { useApp } from '../context/AppContext';
 import { sendPushNotification } from '../utils/notifications';
 import { EmptyState } from './ui/EmptyState';
 import { isPreviewModeEnabled } from '../lib/previewMode';
+import { ConfirmModal } from './ConfirmModal';
 
 interface Note {
     id: string;
@@ -60,7 +61,7 @@ interface StickyNotesProps {
 }
 
 export const StickyNotes: React.FC<StickyNotesProps> = ({
-    title = 'Tablon de notas',
+    title = 'Notas',
     showPushNotification = false,
 }) => {
     const { user } = useApp();
@@ -69,6 +70,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
     const [isAdding, setIsAdding] = useState(false);
     const [newNote, setNewNote] = useState('');
     const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0].value);
+    const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isAdding || typeof window === 'undefined') {
@@ -234,7 +236,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                     value={newNote}
                                     onChange={(event) => setNewNote(event.target.value)}
                                     rows={4}
-                                    placeholder="Escribe algo corto, dulce o importante..."
+                                    placeholder="Escribe una nota"
                                     autoFocus
                                     onFocus={() => {
                                         window.requestAnimationFrame(() => {
@@ -277,8 +279,7 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
             <section className="section-card rounded-[1.95rem] p-5">
                 <div className="mb-5 flex items-start justify-between gap-3">
                     <div>
-                        <p className="section-label">Notas</p>
-                        <h2 className="display-font mt-2 max-w-[12rem] text-[1.72rem] leading-[0.95] text-[color:var(--text-primary)] sm:max-w-none sm:text-[2rem]">
+                        <h2 className="display-font max-w-[12rem] text-[1.72rem] leading-[0.95] text-[color:var(--text-primary)] sm:max-w-none sm:text-[2rem]">
                             {title}
                         </h2>
                     </div>
@@ -295,7 +296,6 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                 {notes.length === 0 ? (
                     <EmptyState
                         title="Sin notas"
-                        description="Agrega una."
                         icon={<StickyNote size={24} className="text-[color:var(--accent)]" />}
                         className="border border-dashed border-white/10 dark:border-white/[0.06]"
                     />
@@ -315,13 +315,15 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                                         className={`group relative min-h-[7rem] overflow-hidden rounded-2xl border border-white/10 ${accent.bg} border-l-[3px] ${accent.border} p-4 backdrop-blur-sm dark:border-white/[0.06]`}
                                     >
                                         <button
-                                            onClick={() => handleDelete(note.id)}
-                                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-[color:var(--text-tertiary)] opacity-0 transition-all hover:bg-red-500/15 hover:text-red-400 group-hover:opacity-100"
+                                            type="button"
+                                            aria-label="Borrar nota"
+                                            onClick={() => setNoteToDelete(note.id)}
+                                            className="absolute right-3 top-3 flex min-h-[2.25rem] min-w-[2.25rem] items-center justify-center rounded-xl border border-white/10 bg-black/10 text-[color:var(--text-secondary)] backdrop-blur-sm transition-colors hover:bg-red-500/15 hover:text-red-400 dark:border-white/[0.08]"
                                         >
-                                            <Trash2 size={13} />
+                                            <Trash2 size={15} />
                                         </button>
 
-                                        <p className="pr-7 text-[0.92rem] leading-6 text-[color:var(--text-primary)]">
+                                        <p className="pr-10 text-[0.92rem] leading-6 text-[color:var(--text-primary)]">
                                             {note.content}
                                         </p>
 
@@ -339,6 +341,18 @@ export const StickyNotes: React.FC<StickyNotesProps> = ({
                 )}
             </section>
             {addModal}
+            <ConfirmModal
+                isOpen={noteToDelete !== null}
+                onClose={() => setNoteToDelete(null)}
+                onConfirm={() => {
+                    if (noteToDelete) {
+                        void handleDelete(noteToDelete);
+                    }
+                }}
+                title="Borrar nota"
+                message="Esta nota se eliminara."
+                confirmText="Borrar"
+            />
         </>
     );
 };

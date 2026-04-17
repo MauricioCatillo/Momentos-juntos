@@ -250,8 +250,7 @@ export const Home: React.FC = () => {
             {/* ─── Compact Greeting ──────────────────────── */}
             <section className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="page-kicker">Su rincon privado</p>
-                    <h1 className="display-font mt-1 text-[2.4rem] leading-none text-[color:var(--text-primary)]">
+                    <h1 className="display-font text-[2.4rem] leading-none text-[color:var(--text-primary)]">
                         Hola, <span className="gradient-text">{user?.email?.split('@')[0] || 'amor'}</span>
                     </h1>
                 </div>
@@ -286,7 +285,7 @@ export const Home: React.FC = () => {
             </section>
 
             {/* ─── Notes (FIRST – always visible) ────────── */}
-            <StickyNotes showPushNotification={true} title="Notas a mano" />
+            <StickyNotes showPushNotification={true} title="Notas" />
 
             {/* ─── Info Strip (scrollable) ────────────────── */}
             <section className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide chip-scroll">
