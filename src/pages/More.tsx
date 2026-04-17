@@ -9,7 +9,7 @@ import { useApp } from '../context/AppContext';
 import { requestPushPermission } from '../utils/notifications';
 import { isPreviewModeEnabled } from '../lib/previewMode';
 
-const UtilityCard = ({
+const MoreCard = ({
     title,
     helper,
     gradient,
@@ -25,10 +25,9 @@ const UtilityCard = ({
     <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative overflow-hidden rounded-[1.7rem] bg-gradient-to-br ${gradient} p-5 text-left text-white shadow-[0_18px_42px_rgba(48,31,22,0.18)]`}
+        className={`relative overflow-hidden rounded-[1.7rem] bg-gradient-to-br ${gradient} p-5 text-left text-white shadow-[0_20px_42px_rgba(0,0,0,0.2)]`}
     >
-        <div className="absolute inset-x-0 top-0 h-px bg-white/30" />
-        <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/12 blur-2xl" />
+        <div className="absolute right-[-1.2rem] top-[-1.2rem] h-24 w-24 rounded-full bg-white/10 blur-2xl" />
         <div className="relative z-10">
             <div className="flex items-start justify-between gap-3">
                 <div>
@@ -39,7 +38,7 @@ const UtilityCard = ({
                     <Icon size={20} />
                 </div>
             </div>
-            <p className="mt-4 text-sm leading-6 text-white/78">{helper}</p>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/65">{helper}</p>
         </div>
     </motion.button>
 );
@@ -150,53 +149,46 @@ export const More: React.FC = () => {
             <PageHeader
                 kicker="Mas"
                 title="Herramientas utiles"
-                subtitle="Todo lo operativo, claro y rapido desde el celular."
             />
 
-            <section className="hero-panel">
+            <section className="section-card rounded-[1.9rem] p-5">
                 <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                        <p className="hero-kicker">Centro de control</p>
-                        <h2 className="display-font mt-3 text-[2.5rem] leading-[0.94] text-white">
-                            Menos ruido, mas orden.
+                    <div>
+                        <p className="section-label">Resumen rapido</p>
+                        <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
+                            Menos ruido, mas orden
                         </h2>
                     </div>
-                    <div className="hero-chip shrink-0 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-white/88">
-                        <MessageSquareText size={12} />
-                        Resumen
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/12 text-sky-400 dark:bg-sky-500/10">
+                        <MessageSquareText size={20} />
                     </div>
                 </div>
 
-                <p className="mt-4 max-w-[16rem] text-sm leading-6 text-white/78">
-                    Desde aqui puedes revisar pendientes, permisos y accesos utiles sin perder tiempo.
-                </p>
-
-                <div className="mt-5 metric-strip">
-                    <div className="metric-card">
-                        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/64">Check-in</p>
-                        <p className="mt-2 text-base font-semibold text-white">{todayMood ? 'Listo' : 'Pendiente'}</p>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                    <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]">
+                        <p className="section-label">Check-in</p>
+                        <p className="mt-3 text-sm font-semibold text-[color:var(--text-primary)]">
+                            {todayMood ? 'Listo' : 'Pendiente'}
+                        </p>
                     </div>
-                    <div className="metric-card">
-                        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/64">Planes</p>
-                        <p className="mt-2 text-base font-semibold text-white">{pendingPlans}</p>
+                    <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]">
+                        <p className="section-label">Planes</p>
+                        <p className="mt-3 text-2xl font-black text-[color:var(--text-primary)]">{pendingPlans}</p>
                     </div>
-                    <div className="metric-card">
-                        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/64">Cupones</p>
-                        <p className="mt-2 text-base font-semibold text-white">{activeCoupons}</p>
+                    <div className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03]">
+                        <p className="section-label">Cupones</p>
+                        <p className="mt-3 text-2xl font-black text-[color:var(--text-primary)]">{activeCoupons}</p>
                     </div>
                 </div>
             </section>
 
             <section className="section-card rounded-[1.9rem] p-5">
                 <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div>
                         <p className="section-label">Notificaciones</p>
                         <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             {notificationUi.title}
                         </h2>
-                        <p className="mt-3 text-sm leading-6 text-[color:var(--text-secondary)]">
-                            {notificationUi.description}
-                        </p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400 dark:bg-amber-500/10">
                         <NotificationIcon size={20} />
@@ -214,17 +206,17 @@ export const More: React.FC = () => {
             </section>
 
             <section className="grid gap-3">
-                <UtilityCard
+                <MoreCard
                     title="Check-in diario"
-                    helper={todayMood ? 'Ya se registro hoy.' : 'Todavia falta registrar el estado de hoy.'}
-                    gradient="from-[#254940] via-[#477366] to-[#82ad97]"
+                    helper={todayMood ? 'Ya se registro hoy' : 'Falta registrar hoy'}
+                    gradient="from-sky-500 to-cyan-600"
                     icon={CalendarCheck2}
                     onClick={() => navigate('/daily')}
                 />
-                <UtilityCard
+                <MoreCard
                     title="Planes y cupones"
-                    helper={`${pendingPlans} planes pendientes y ${activeCoupons} cupones activos ahora mismo.`}
-                    gradient="from-[#5b3651] via-[#8a5573] to-[#c693ab]"
+                    helper={`${pendingPlans} planes pendientes y ${activeCoupons} cupones activos`}
+                    gradient="from-violet-500 to-indigo-600"
                     icon={ListTodo}
                     onClick={() => navigate('/wishlist')}
                 />
@@ -232,7 +224,7 @@ export const More: React.FC = () => {
 
             <section className="section-card rounded-[1.9rem] p-5">
                 <div className="mb-5 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div>
                         <p className="section-label">Notas</p>
                         <h2 className="display-font mt-2 text-[2rem] leading-none text-[color:var(--text-primary)]">
                             Pendientes compartidos

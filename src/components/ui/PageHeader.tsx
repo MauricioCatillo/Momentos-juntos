@@ -27,7 +27,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                     </div>
                     {action}
                 </div>
-                <div className="soft-divider" />
             </header>
         );
     }
@@ -37,7 +36,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {kicker && <p className="page-kicker">{kicker}</p>}
             <h1 className="page-title">{title}</h1>
             {subtitle && <p className="page-subtitle">{subtitle}</p>}
-            <div className="soft-divider" />
         </header>
     );
 };
